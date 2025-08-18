@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv
