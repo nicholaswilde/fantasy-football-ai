@@ -2,11 +2,6 @@
 version: '3'
 
 tasks:
-  install:
-    desc: "Install project dependencies"
-    cmds:
-      - pip install -r requirements.txt
-
   run:
     desc: "Run the main application"
     cmds:
