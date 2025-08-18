@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+  install:
+    desc: "Install project dependencies"
+    cmds:
+      - pip install -r requirements.txt
+
+  run:
+    desc: "Run the main application"
+    cmds:
+      - python fantasy_football_ai.py
+
+  lint:
+    desc: "Lint the code with flake8"
+    cmds:
+      - flake8 .
+
+  test:
+    desc: "Run tests"
+    cmds:
+      - echo "No tests configured yet."
