@@ -1,3 +1,4 @@
+---
 version: '3'
 
 tasks:
@@ -20,3 +21,24 @@ tasks:
     desc: "Run tests"
     cmds:
       - echo "No tests configured yet."
+  # A task to install all the necessary Python dependencies from requirements.txt.
+  deps:
+    desc: Install Python dependencies
+    cmds:
+      - pip install -r requirements.txt
+
+  # A task to download the latest player stats.
+  download:
+    desc: Download NFL player stats for 2023 and 2024 seasons
+    cmds:
+      - python scripts/download_stats.py
+
+  # A task to run the advanced analysis script.
+  analyze:
+    desc: Run the fantasy football analysis script
+    cmds:
+      - python scripts/analysis.py
+
+  default:
+    cmds:
+      - task -l
