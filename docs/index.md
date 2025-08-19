@@ -84,29 +84,9 @@ To provide Gemini with a list of available players for weekly pickups, create a 
 
 1.  Create a `my_team.md` file in the `data/` directory with your team's roster. You can use the following format:
 
+   
     ```markdown
-    # My Team
-
-    ## QB
-    - Player 1
-
-    ## RB
-    - Player 2
-    - Player 3
-
-    ## WR
-    - Player 4
-    - Player 5
-
-    ## TE
-    - Player 6
-
-    ## FLEX
-    - Player 7
-
-    ## BENCH
-    - Player 8
-    - Player 9
+    --8<-- "data/my_team.md.tmpl"
     ```
 
 2.  Run the analysis script:
