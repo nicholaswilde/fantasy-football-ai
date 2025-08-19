@@ -15,6 +15,9 @@ edit_uri: "edit/main/docs/"
 nav:
   - Home: index.md
 
+extra_css:
+  - stylesheets/extra.css
+
 extra:
   social:
     - icon: fontawesome/solid/house
