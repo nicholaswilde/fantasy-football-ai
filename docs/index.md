@@ -1,10 +1,4 @@
-# Welcome to the Fantasy Football AI Documentation
-
-This documentation is generated directly from the project's `README.md` to ensure consistency and provide comprehensive information about the Fantasy Football AI project.
-
----
-
-# :football: Fantasy Football AI
+# :football: Fantasy Football AI :robot:
 
 > Using AI to dominate your fantasy football league. It's like having a secret weapon, but for nerds.
 
@@ -139,3 +133,14 @@ task trade
 ## 👋 Contributing
 
 Contributions are welcome! Please feel free to submit a pull request or open an issue.
+
+
+## :scales: License
+
+[Apache License 2.0](https://raw.githubusercontent.com/nicholaswilde/fantasy-football-ai/refs/heads/main/LICENSE)
+
+## :pencil:Author
+
+This project was started in 2025 by [Nicholas Wilde][2].
+
+[2]: <https://nicholaswilde.io/>
