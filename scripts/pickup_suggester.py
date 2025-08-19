@@ -12,7 +12,7 @@ def load_available_players(file_path):
     try:
         df = pd.read_csv(file_path)
         # Rename columns to match player_stats_df for merging
-        df = df.rename(columns={'Player': 'player_display_name', 'Team': 'recent_team', 'Position': 'position'})
+        df = df.rename(columns={'name': 'player_display_name', 'pro_team': 'recent_team'})
         return df
     except FileNotFoundError:
         print(f"Error: Available players file not found at {file_path}")
@@ -116,9 +116,17 @@ def recommend_pickups(available_players_df, player_value_df, my_team_roster):
 
     # Prioritize positions with needs
     for pos, count in sorted(team_needs.items(), key=lambda item: item[1], reverse=True):
-        top_players_at_pos = merged_df[
-            (merged_df['position'] == pos) & (merged_df['Availability'].isin(['Available', 'Free Agent']))
-        ].sort_values(by='AvgPoints', ascending=False).head(count * 2) # Get a few more than needed
+        if pos == 'FLEX':
+            # For FLEX, recommend top RBs, WRs, TEs
+            flex_candidates = merged_df[merged_df['position'].isin(['RB', 'WR', 'TE'])]
+            top_players_at_pos = flex_candidates.sort_values(by='AvgPoints', ascending=False).head(count * 2)
+        elif pos in ['K', 'DST']:
+            print(f"\nNote: Recommendations for {pos} are not currently supported.")
+            continue
+        else:
+            top_players_at_pos = merged_df[
+                (merged_df['position'] == pos)
+            ].sort_values(by='AvgPoints', ascending=False).head(count * 2) # Get a few more than needed
 
         if not top_players_at_pos.empty:
             print(f"\nTop {pos} targets:")
@@ -128,9 +136,7 @@ def recommend_pickups(available_players_df, player_value_df, my_team_roster):
 
     # Also show top overall available players if no specific needs
     if not team_needs:
-        top_overall = merged_df[
-            merged_df['Availability'].isin(['Available', 'Free Agent'])
-        ].sort_values(by='AvgPoints', ascending=False).head(10)
+        top_overall = merged_df.sort_values(by='AvgPoints', ascending=False).head(10)
         if not top_overall.empty:
             print("\nTop overall available players (no specific team needs identified):")
             for _, row in top_overall.iterrows():

@@ -4,6 +4,7 @@ import nfl_data_py as nfl
 import pandas as pd
 import os
 import datetime
+import argparse
 
 def download_and_save_weekly_stats(years, output_file="data/player_stats.csv"):
     """
@@ -72,10 +73,17 @@ def download_and_save_weekly_stats(years, output_file="data/player_stats.csv"):
 
 
 if __name__ == "__main__":
-    # Define the years you want to download
-    seasons_to_download = [2023, 2024]
+    parser = argparse.ArgumentParser(description="Download weekly player stats for specified years.")
+    parser.add_argument(
+        "--years",
+        type=int,
+        nargs='+',
+        default=[2023, 2024],
+        help="A list of years to download data for (e.g., --years 2023 2024)."
+    )
+    args = parser.parse_args()
     
     # Run the function
-    download_and_save_weekly_stats(seasons_to_download)
+    download_and_save_weekly_stats(args.years)
 
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import pandas as pd
-from analysis import calculate_fantasy_points
 import os
 
 def suggest_trades(df, week):
@@ -55,11 +54,8 @@ if __name__ == "__main__":
         # Read the stats file
         stats_df = pd.read_csv(data_file)
 
-        # Calculate fantasy points for each player
-        stats_with_points = calculate_fantasy_points(stats_df)
-
         # Find the most recent week
-        most_recent_week = stats_with_points['week'].max()
+        most_recent_week = stats_df['week'].max()
 
         # Get trade suggestions
-        suggest_trades(stats_with_points, most_recent_week)
+        suggest_trades(stats_df, most_recent_week)

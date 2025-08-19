@@ -9,6 +9,8 @@ This project leverages the power of Google's Gemini AI to provide data-driven in
 *   **Player Stat Analysis**: Downloads and processes weekly player statistics from the `nfl_data_py` library.
 *   **Team Analysis**: Uses the Gemini AI to analyze your team's roster and provide feedback.
 *   **Trade Suggestions**: Identifies "buy-low" and "sell-high" trade candidates based on weekly performance versus season averages.
+*   **Available Player Downloads**: Fetches a list of all available players from your ESPN league.
+*   **League Settings**: Downloads your current league settings, including scoring and roster rules.
 *   **Customizable Tasks**: Uses `Taskfile` to easily run common commands for linting, installing dependencies, downloading data, and running analysis.
 
 ## :rocket: Getting Started
@@ -41,14 +43,22 @@ To use the Gemini API, you need to configure your API key.
 
 1.  Obtain an API key from Google AI Studio: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
 
-2.  Create a `.env` file from the template:
+2. Find your LEAGUE_ID from the URL of your ESPN fantasy football league.
+
+3. Find your ESPN_S2 and SWID cookies from your browser after logging into your ESPN account. See [this discussion][].
+
+4.  Create a `.env` file from the template:
     ```bash
     cp .env.tmpl .env
     ```
 
-3.  Add your API key to the `.env` file:
-    ```
+5.  Add your API key and ESPN credentials to the `.env` file:
+
+    ```ini
     GOOGLE_API_KEY="YOUR_API_KEY"
+    LEAGUE_ID="YOUR_LEAGUE_ID"
+    ESPN_S2="YOUR_ESPN_S2"
+    SWID="YOUR_SWID"
     ```
 
     ??? abstract ".env"
@@ -63,44 +73,49 @@ This project uses `Taskfile.yml` to define and run tasks. You can see a list of 
 
 ### :arrow_down: Download Player Stats
 
-To download the latest player stats, run the following command:
+To download the latest player stats (defaulting to the 2023 and 2024 seasons), run the following command:
 
 ```bash
 task download
 ```
 
+You can also specify the years to download by passing the `--years` argument:
+
+```bash
+task download -- --years 2022 2023
+```
+
 This will create a `player_stats.csv` file in the `data/` directory.
 
-### :clipboard: Manage Available Players
+### :clipboard: Download Available Players
 
-To provide Gemini with a list of available players for weekly pickups, create a `available_players.csv` file in the `data/` directory. This file should contain columns for `Player`, `Team`, `Position`, and `Availability` (e.g., 'Available', 'Waivers', 'Free Agent').
+To get a list of available players for weekly pickups, run the following command:
 
-!!! example "data/available_players.csv"
+```bash
+task available_players
+```
 
-    ```csv
-    Player,Team,Position,Availability
-    Patrick Mahomes,KC,QB,Available
-    Bijan Robinson,ATL,RB,Waivers
-    Garrett Wilson,NYJ,WR,Free Agent
-    Travis Kelce,KC,TE,Available
-    Justin Tucker,BAL,K,Free Agent
-    ```
+This will create an `available_players.csv` file in the `data/` directory.
 
 ### :bar_chart: Analyze Your Team
 
-1.  Create a `my_team.md` file in the `data/` directory with your team's roster. You can use the following format:
-
-    !!! abstract "data/my_team.md"
-    
-        ```markdown
-        --8<-- "data/my_team.md.tmpl"
-        ```
+1.  Get your team's roster and create the `my_team.md` file by running the following command:
+    ```bash
+    task my_team
+    ```
 
 2.  Run the analysis script:
-
     ```bash
     task analyze
     ```
+
+### :gear: Download League Settings
+
+To download your league's settings, run the following command:
+
+```bash
+task settings
+```
 
 ### :mag_right: Get Pickup Recommendations
 
@@ -131,4 +146,5 @@ Contributions are welcome! Please feel free to submit a pull request or open an 
 
 This project was started in 2025 by [Nicholas Wilde][2].
 
+[1]: <https://github.com/cwendt94/espn-api/discussions/150#discussioncomment-133615>
 [2]: <https://nicholaswilde.io/>

@@ -61,9 +61,9 @@ tasks:
 
   # A task to download the latest player stats.
   download:
-    desc: Download NFL player stats for 2023 and 2024 seasons
+    desc: "Download NFL player stats. Usage: task download -- --years 2022 2023"
     cmds:
-      - python3 scripts/download_stats.py
+      - python3 scripts/download_stats.py {{.CLI_ARGS}}
 
   # A task to have Gemini analyze your team.
   analyze:
@@ -83,10 +83,30 @@ tasks:
     cmds:
       - python3 scripts/trade_suggester.py
 
+  weekly_update:
+    desc: "Run the full weekly update: download stats, update team, get available players, analyze, and get suggestions."
+    cmds:
+      - task: download
+      - task: my_team
+      - task: available_players
+      - task: analyze
+      - task: pickup
+      - task: trade
+
   my_team:
     desc: Get your fantasy football team and create my_team.md
     cmds:
       - python3 scripts/get_my_team.py
+
+  available_players:
+    desc: Get available players from your league and create available_players.csv
+    cmds:
+      - python3 scripts/get_available_players.py
+      
+  settings:
+    desc: Get your league settings
+    cmds:
+      - python3 scripts/get_league_settings.py
 
   default:
     cmds:

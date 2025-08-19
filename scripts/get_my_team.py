@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+from datetime import datetime
 from espn_api.football import League
 from dotenv import load_dotenv
 
@@ -51,6 +52,9 @@ def get_my_team():
                 roster["BENCH"].append(player.name)
 
         with open("data/my_team.md", "w") as f:
+            now = datetime.now()
+            dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
+            f.write(f"<!-- Last updated: {dt_string} -->\n")
             f.write("# My Team\n\n")
             for position, players in roster.items():
                 f.write(f"## {position}\n")
