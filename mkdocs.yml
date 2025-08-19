@@ -102,10 +102,6 @@ markdown_extensions:
   - pymdownx.mark
   - pymdownx.snippets:
       base_path:
-        - ./include
-        - ./src
-        - ./docs
-        - ./scripts
         - ./
   - pymdownx.smartsymbols
   - pymdownx.superfences:
