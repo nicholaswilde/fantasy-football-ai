@@ -4,4 +4,4 @@ flake8
 google-generativeai
 python-dotenv
 pandas
-espn-api
+espn_api
