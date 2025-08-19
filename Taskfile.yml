@@ -5,8 +5,21 @@ vars:
   VER: '2.5'
   # GEMINI_MODEL: 'models/gemini-1.5-flash-latest'
   GEMINI_MODEL: 'models/gemini-2.5-flash'
-  
+  IMAGE: nicholaswilde/mkdocs-material
+  PORT: 8000
+    
 tasks:
+  serve:
+    desc: Serve the documentation locally using Docker.
+    cmds:
+      - >-
+        docker run --rm -it -p {{ .PORT }}:{{ .PORT}} -v ${PWD}:/docs
+        --platform linux/amd64 {{ .IMAGE }} serve
+        --dev-addr 0.0.0.0:{{ .PORT }} -f ./mkdocs.yml
+  export:
+    desc: Export the list of available tasks to task-list.txt.
+    cmds:
+      - task -l > task-list.txt
   encrypt:
     desc: Encrypt secret and environment files using sops.
     preconditions:
@@ -44,11 +57,7 @@ tasks:
     desc: Install Python dependencies
     cmds:
       - |
-        if [ -z "$VIRTUAL_ENV" ]; then
-          echo "Error: Virtual environment is not active. Please run 'source venv/bin/activate' first."
-          exit 1
-        fi
-      - pip install -r requirements.txt
+        source venv/bin/activate && pip install -r requirements.txt
 
   # A task to download the latest player stats.
   download:
@@ -61,6 +70,18 @@ tasks:
     desc: Have Gemini analyze your team
     cmds:
       - python3 scripts/analysis.py --model {{.GEMINI_MODEL}}
+
+  # A task to get pickup recommendations.
+  pickup:
+    desc: Get pickup recommendations based on available players and team needs
+    cmds:
+      - python3 scripts/pickup_suggester.py
+
+  # A task to get trade suggestions.
+  trade:
+    desc: Get trade suggestions based on player stats
+    cmds:
+      - python3 scripts/trade_suggester.py
 
   default:
     cmds:

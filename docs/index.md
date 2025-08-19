@@ -1,3 +1,9 @@
+# Welcome to the Fantasy Football AI Documentation
+
+This documentation is generated directly from the project's `README.md` to ensure consistency and provide comprehensive information about the Fantasy Football AI project.
+
+---
+
 # :football: Fantasy Football AI
 
 > Using AI to dominate your fantasy football league. It's like having a secret weapon, but for nerds.
@@ -111,8 +117,8 @@ Justin Tucker,BAL,K,Free Agent
 
 2.  Run the analysis script:
     ```bash
-task analyze
-```
+    task analyze
+    ```
 
 ### :mag_right: Get Pickup Recommendations
 
