@@ -69,16 +69,16 @@ This will create a `player_stats.csv` file in the `data/` directory.
 
 To provide Gemini with a list of available players for weekly pickups, create a `available_players.csv` file in the `data/` directory. This file should contain columns for `Player`, `Team`, `Position`, and `Availability` (e.g., 'Available', 'Waivers', 'Free Agent').
 
-Example `data/available_players.csv`:
+!!! example "data/available_players.csv"
 
-```csv
-Player,Team,Position,Availability
-Patrick Mahomes,KC,QB,Available
-Bijan Robinson,ATL,RB,Waivers
-Garrett Wilson,NYJ,WR,Free Agent
-Travis Kelce,KC,TE,Available
-Justin Tucker,BAL,K,Free Agent
-```
+    ```csv
+    Player,Team,Position,Availability
+    Patrick Mahomes,KC,QB,Available
+    Bijan Robinson,ATL,RB,Waivers
+    Garrett Wilson,NYJ,WR,Free Agent
+    Travis Kelce,KC,TE,Available
+    Justin Tucker,BAL,K,Free Agent
+    ```
 
 ### :bar_chart: Analyze Your Team
 
