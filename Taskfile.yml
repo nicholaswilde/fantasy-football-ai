@@ -5,34 +5,34 @@ tasks:
   run:
     desc: "Run the main application"
     cmds:
-      - python fantasy_football_ai.py
+      - python3 fantasy_football_ai.py
 
   lint:
     desc: "Lint the code with flake8"
     cmds:
       - flake8 .
-
-  test:
-    desc: "Run tests"
-    cmds:
-      - echo "No tests configured yet."
   # A task to install all the necessary Python dependencies from requirements.txt.
   deps:
     desc: Install Python dependencies
     cmds:
+      - |
+        if [ -z "$VIRTUAL_ENV" ]; then
+          echo "Error: Virtual environment is not active. Please run 'source venv/bin/activate' first."
+          exit 1
+        fi
       - pip install -r requirements.txt
 
   # A task to download the latest player stats.
   download:
     desc: Download NFL player stats for 2023 and 2024 seasons
     cmds:
-      - python scripts/download_stats.py
+      - python3 scripts/download_stats.py
 
   # A task to run the advanced analysis script.
   analyze:
     desc: Run the fantasy football analysis script
     cmds:
-      - python scripts/analysis.py
+      - python3 scripts/analysis.py
 
   default:
     cmds:

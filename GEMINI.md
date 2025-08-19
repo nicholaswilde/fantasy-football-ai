@@ -18,7 +18,25 @@
 
 **Workflow Instructions:**
 * **Context Awareness:** Always assume all prompts are related to my fantasy football league unless I specify otherwise.
-* **Data Analysis:** When asked to analyze data, use the files in the `data/` directory.
+* **Data Analysis:** When asked to analyze data, use the files in the `data/` directory, especially the `player_stats.csv` file.
 * **Script Execution:** You can be asked to write or run scripts within the `scripts/` directory. If I say `/run <script_name>`, you should act as a command-line interpreter.
 * **Output Format:** Provide analysis in clear, well-structured Markdown format. Use tables, lists, and bolding to make key insights easy to read.
 
+### Trade Analysis Instructions
+
+**Goal:** Provide me with actionable trade recommendations to improve my team.
+
+**Input Requirements:** When I ask for a trade recommendation, I will provide the following:
+* My current roster (e.g., a list of players).
+* The roster of a potential trade partner.
+* The player(s) I am considering trading away.
+* The player(s) I am considering trading for.
+
+**Recommendation Guidelines:**
+* Analyze the trade from both my team's perspective and the trade partner's perspective. Explain why the trade would be a win for both sides to make it more likely to be accepted.
+* Consider positional needs. Is the trade upgrading a weak position for me? Does it give the other team depth at a position they need?
+* Use the `consistency_std_dev` metric from the `analysis.py` script to highlight if a player is a consistent performer or a "boom/bust" type.
+* Provide a clear summary of the trade's impact on my team's overall strength and bye week conflicts.
+* Suggest alternative players to target from the other team's roster if the original trade is not favorable.
+
+**Output Format:** Present the analysis in a clean Markdown format with a section for "My Team's Perspective" and "Opponent's Perspective," followed by a concluding summary.

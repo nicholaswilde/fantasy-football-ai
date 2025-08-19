@@ -41,7 +41,8 @@ def calculate_fantasy_points(player_stats_df):
     player_stats_df['fantasy_points'] += player_stats_df['rushing_yards'] * scoring_rules['rushing_yards']
     player_stats_df['fantasy_points'] += player_stats_df['rushing_tds'] * scoring_rules['rushing_tds']
     player_stats_df['fantasy_points'] += player_stats_df['interceptions'] * scoring_rules['interceptions']
-    player_stats_df['fantasy_points'] += player_stats_df['fumbles_lost'] * scoring_rules['fumbles_lost']
+    if 'fumbles_lost' in player_stats_df.columns:
+        player_stats_df['fantasy_points'] += player_stats_df['fumbles_lost'] * scoring_rules['fumbles_lost']
 
     return player_stats_df
 
@@ -60,7 +61,7 @@ def get_advanced_draft_recommendations(df, num_recommendations=30):
     print("Generating advanced draft recommendations...")
     
     # Calculate average fantasy points per game
-    player_summary = df.groupby(['player_name', 'position', 'recent_team', 'team', 'bye_week'])['fantasy_points'].mean().reset_index()
+    player_summary = df.groupby(['player_name', 'position', 'recent_team'])['fantasy_points'].mean().reset_index()
     player_summary.rename(columns={'fantasy_points': 'avg_fantasy_points'}, inplace=True)
 
     # Calculate consistency (Standard Deviation of weekly points)
@@ -103,38 +104,6 @@ def get_advanced_draft_recommendations(df, num_recommendations=30):
     top_players = player_summary.sort_values(by='vor', ascending=False).head(num_recommendations)
 
     return top_players
-
-
-def check_bye_week_conflicts(df):
-    """
-    Checks for bye week conflicts among a list of players.
-
-    Args:
-        df (pd.DataFrame): A DataFrame containing player information with 'bye_week' column.
-
-    Returns:
-        pd.DataFrame: A DataFrame highlighting players with potential bye week conflicts.
-    """
-    print("Checking for bye week conflicts...")
-    
-    # Focus on the top 30 players by VOR as potential draft picks
-    top_players = get_advanced_draft_recommendations(df, num_recommendations=30)
-    
-    bye_week_counts = top_players['bye_week'].value_counts().reset_index()
-    bye_week_counts.columns = ['bye_week', 'player_count']
-    
-    conflicts = bye_week_counts[bye_week_counts['player_count'] > 2].sort_values(by='player_count', ascending=False)
-
-    if not conflicts.empty:
-        print("\n*** WARNING: Potential Bye Week Conflicts Detected! ***")
-        for index, row in conflicts.iterrows():
-            players_in_conflict = top_players[top_players['bye_week'] == row['bye_week']]
-            print(f"  > Week {int(row['bye_week'])}: {int(row['player_count'])} highly-ranked players are on bye.")
-            print(f"    Players: {', '.join(players_in_conflict['player_name'])}")
-    else:
-        print("\nNo major bye week conflicts found among top players.")
-    
-    return conflicts
 
 
 def get_trade_recommendations(df, team_roster=None, target_position='RB'):
@@ -185,9 +154,6 @@ if __name__ == "__main__":
         draft_recs = get_advanced_draft_recommendations(stats_with_points)
         print("\n--- Advanced Draft Recommendations (Top 30 Players by Value Over Replacement) ---")
         print(draft_recs[['player_name', 'recent_team', 'position', 'vor', 'consistency_std_dev']].to_markdown(index=False))
-
-        # Check for bye week conflicts
-        check_bye_week_conflicts(stats_with_points)
 
         # Example trade recommendations
         my_team = ['Patrick Mahomes', 'Tyreek Hill', 'Saquon Barkley'] # This is a placeholder for your actual team
