@@ -51,6 +51,12 @@ To use the Gemini API, you need to configure your API key.
     GOOGLE_API_KEY="YOUR_API_KEY"
     ```
 
+    ??? abstract ".env"
+
+        ```ini
+        --8<-- ".env.tmpl"
+        ```
+    
 ## :computer: Usage
 
 This project uses `Taskfile.yml` to define and run tasks. You can see a list of all available tasks by running `task -l`.
