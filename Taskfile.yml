@@ -1,6 +1,8 @@
 ---
 version: '3'
 
+dotenv: [".env"]
+
 vars:
   VER: '2.5'
   # GEMINI_MODEL: 'models/gemini-1.5-flash-latest'
