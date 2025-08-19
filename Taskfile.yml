@@ -5,8 +5,8 @@ dotenv: [".env"]
 
 vars:
   VER: '2.5'
-  # GEMINI_MODEL: 'models/gemini-1.5-flash-latest'
-  GEMINI_MODEL: 'models/gemini-2.5-flash'
+  # GEMINI_MODEL: 'gemini-1.5-flash-latest'
+  GEMINI_MODEL: 'gemini-2.5-flash'
   IMAGE: nicholaswilde/mkdocs-material
   PORT: 8000
     
@@ -82,7 +82,7 @@ tasks:
   analyze:
     desc: Have Gemini analyze your team
     cmds:
-      - python3 scripts/analysis.py --model {{.GEMINI_MODEL}}
+      - python3 scripts/analysis.py --model models/{{.GEMINI_MODEL}}
 
   # A task to get pickup recommendations.
   pickup:
