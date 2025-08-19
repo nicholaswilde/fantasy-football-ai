@@ -9,6 +9,12 @@ vars:
   PORT: 8000
     
 tasks:
+  init:
+    desc: Initialize the project by creating environment file from templates.
+    preconditions:
+      - test -f scripts/.env.tmpl
+    cmds:
+      - cp scripts/.env.tmpl .env
   serve:
     desc: Serve the documentation locally using Docker.
     cmds:
