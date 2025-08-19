@@ -54,13 +54,6 @@ To use the Gemini API, you need to configure your API key.
 
 5.  Add your API key and ESPN credentials to the `.env` file:
 
-    ```ini
-    GOOGLE_API_KEY="YOUR_API_KEY"
-    LEAGUE_ID="YOUR_LEAGUE_ID"
-    ESPN_S2="YOUR_ESPN_S2"
-    SWID="YOUR_SWID"
-    ```
-
     ??? abstract ".env"
 
         ```ini
