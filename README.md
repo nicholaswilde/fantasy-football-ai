@@ -42,7 +42,9 @@ This project leverages the power of Google's Gemini AI to provide data-driven in
 To use the Gemini API, you need to configure your API key. To get your fantasy football team, you need to configure your ESPN credentials.
 
 1.  Obtain an API key from Google AI Studio: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
+
 2.  Find your `LEAGUE_ID` from the URL of your ESPN fantasy football league.
+
 3.  Find your `ESPN_S2` and `SWID` cookies from your browser after logging into your ESPN account. See [this discussion][1].
 
 4.  Create a `.env` file from the template:
@@ -51,11 +53,15 @@ To use the Gemini API, you need to configure your API key. To get your fantasy f
     ```
 
 5.  Add your API key and ESPN credentials to the `.env` file:
+
+6. Specify Gemini AI model:
+
     ```
     GOOGLE_API_KEY="YOUR_API_KEY"
     LEAGUE_ID="YOUR_LEAGUE_ID"
     ESPN_S2="YOUR_ESPN_S2"
     SWID="YOUR_SWID"
+    GEMINI_MODEL="gemini-2.5-flash"
     ```
 
 ## :computer: Usage
