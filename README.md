@@ -1,40 +1,38 @@
-# Fantasy Football AI
+# :football: Fantasy Football AI
 
-This project leverages the power of Google's Gemini AI to provide you with an edge in your fantasy football league. Get data-driven insights on player stats, draft strategy, waiver wire pickups, and more.
+> Using AI to dominate your fantasy football league. It's like having a secret weapon, but for nerds.
+
+This project leverages the power of Google's Gemini AI to provide data-driven insights and analysis for your fantasy football league. It helps you make informed decisions on player stats, team analysis, and trade suggestions.
 
 ## Features
 
-*   **Player Analysis**: Ask for detailed statistics and analysis on any NFL player.
-*   **Draft Strategy**: Get recommendations for your fantasy draft, including top picks and sleepers.
-*   **Waiver Wire**: Find the best players to pick up from the waiver wire each week.
-*   **Trade Analysis**: Get a second opinion on potential trades.
+*   **Player Stat Analysis**: Downloads and processes weekly player statistics from the `nfl_data_py` library.
+*   **Team Analysis**: Uses the Gemini AI to analyze your team's roster and provide feedback.
+*   **Trade Suggestions**: Identifies "buy-low" and "sell-high" trade candidates based on weekly performance versus season averages.
+*   **Customizable Tasks**: Uses `Taskfile` to easily run common commands for linting, installing dependencies, downloading data, and running analysis.
 
 ## Getting Started
 
-### Setup and Installation
+### :hammer_and_wrench: Setup and Installation
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/fantasy-football.git
-    cd fantasy-football
+    git clone https://github.com/nicholaswilde/fantasy-football-ai.git
+    cd fantasy-football-ai
     ```
 
-2.  **Install `python3-venv`:**
-
-    *On Debian/Ubuntu-based systems, run the following command:*
-    ```bash
-    sudo apt-get install -y python3-venv
-    ```
+2.  **Install `task`:**
+    Follow the instructions at [taskfile.dev/installation](https://taskfile.dev/installation) to install `task`.
 
 3.  **Create a virtual environment:**
     ```bash
-    python -m venv venv
+    task bootstrap
     source venv/bin/activate  # On Windows use `venv\Scripts\activate`
     ```
 
 4.  **Install dependencies:**
     ```bash
-    pip install -r requirements.txt
+    task deps
     ```
 
 ### Configuration
@@ -43,25 +41,72 @@ To use the Gemini API, you need to configure your API key.
 
 1.  Obtain an API key from Google AI Studio: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
 
-2.  Set the API key as an environment variable:
+2.  Create a `.env` file from the template:
     ```bash
-    export GOOGLE_API_KEY="YOUR_API_KEY"
-    ```
-    On Windows, use the following command:
-    ```bash
-    set GOOGLE_API_KEY="YOUR_API_KEY"
+    cp .env.tmpl .env
     ```
 
-### Usage
+3.  Add your API key to the `.env` file:
+    ```
+    GOOGLE_API_KEY="YOUR_API_KEY"
+    ```
 
-Run the main script to interact with the Fantasy Football AI:
+## Usage
+
+This project uses `Taskfile.yml` to define and run tasks. You can see a list of all available tasks by running `task -l`.
+
+### Download Player Stats
+
+To download the latest player stats, run the following command:
 
 ```bash
-python fantasy_football_ai.py
+task download
 ```
 
-You can modify the `fantasy_football_ai.py` script to ask different questions or perform other tasks. For example, you could ask for a comparison between two players or for a list of sleeper picks for the upcoming season.
+This will create a `player_stats.csv` file in the `data/` directory.
 
-## Contributing
+### Analyze Your Team
+
+1.  Create a `my_team.md` file in the `data/` directory with your team's roster. You can use the following format:
+
+    ```markdown
+    # My Team
+
+    ## QB
+    - Player 1
+
+    ## RB
+    - Player 2
+    - Player 3
+
+    ## WR
+    - Player 4
+    - Player 5
+
+    ## TE
+    - Player 6
+
+    ## FLEX
+    - Player 7
+
+    ## BENCH
+    - Player 8
+    - Player 9
+    ```
+
+2.  Run the analysis script:
+    ```bash
+task analyze
+```
+
+### Get Trade Suggestions
+
+To get trade suggestions based on the latest player stats, run:
+
+```bash
+python3 scripts/trade_suggester.py
+```
+
+## 👋 Contributing
 
 Contributions are welcome! Please feel free to submit a pull request or open an issue.
