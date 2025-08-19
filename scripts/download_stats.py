@@ -58,6 +58,12 @@ def download_and_save_weekly_stats(years, output_file="data/player_stats.csv"):
         # Save the DataFrame to a CSV file.
         # `index=False` prevents pandas from writing the DataFrame index to the CSV.
         df.to_csv(output_file, index=False)
+        
+        # Update the last_updated.log file
+        now = datetime.datetime.now()
+        with open("data/last_updated.log", "w") as log_file:
+            log_file.write(f"Player stats last updated: {now.strftime('%Y-%m-%d %H:%M:%S')}")
+            print("Updated data/last_updated.log")
 
         print(f"Download complete! Weekly data for {len(years)} seasons saved to '{output_file}'.")
     except Exception as e:
