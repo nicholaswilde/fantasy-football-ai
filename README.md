@@ -37,18 +37,23 @@ This project leverages the power of Google's Gemini AI to provide data-driven in
 
 ### :gear: Configuration
 
-To use the Gemini API, you need to configure your API key.
+To use the Gemini API, you need to configure your API key. To get your fantasy football team, you need to configure your ESPN credentials.
 
 1.  Obtain an API key from Google AI Studio: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
+2.  Find your `LEAGUE_ID` from the URL of your ESPN fantasy football league.
+3.  Find your `ESPN_S2` and `SWID` cookies from your browser after logging into your ESPN account.
 
-2.  Create a `.env` file from the template:
+4.  Create a `.env` file from the template:
     ```bash
     cp .env.tmpl .env
     ```
 
-3.  Add your API key to the `.env` file:
+5.  Add your API key and ESPN credentials to the `.env` file:
     ```
     GOOGLE_API_KEY="YOUR_API_KEY"
+    LEAGUE_ID="YOUR_LEAGUE_ID"
+    ESPN_S2="YOUR_ESPN_S2"
+    SWID="YOUR_SWID"
     ```
 
 ## :computer: Usage
@@ -82,38 +87,15 @@ Justin Tucker,BAL,K,Free Agent
 
 ### :bar_chart: Analyze Your Team
 
-1.  Create a `my_team.md` file in the `data/` directory with your team's roster. You can use the following format:
-
-    ```markdown
-    # My Team
-
-    ## QB
-    - Player 1
-
-    ## RB
-    - Player 2
-    - Player 3
-
-    ## WR
-    - Player 4
-    - Player 5
-
-    ## TE
-    - Player 6
-
-    ## FLEX
-    - Player 7
-
-    ## BENCH
-    - Player 8
-    - Player 9
+1.  Get your team's roster and create the `my_team.md` file by running the following command:
+    ```bash
+    task my_team
     ```
 
 2.  Run the analysis script:
-
-```bash
-task analyze
-```
+    ```bash
+    task analyze
+    ```
 
 ### :mag_right: Get Pickup Recommendations
 

@@ -83,6 +83,11 @@ tasks:
     cmds:
       - python3 scripts/trade_suggester.py
 
+  my_team:
+    desc: Get your fantasy football team and create my_team.md
+    cmds:
+      - python3 scripts/get_my_team.py
+
   default:
     cmds:
       - task -l
