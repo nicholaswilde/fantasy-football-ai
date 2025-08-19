@@ -19,13 +19,20 @@ This project leverages the power of Google's Gemini AI to provide you with an ed
     cd fantasy-football
     ```
 
-2.  **Create a virtual environment:**
+2.  **Install `python3-venv`:**
+
+    *On Debian/Ubuntu-based systems, run the following command:*
+    ```bash
+    sudo apt-get install -y python3-venv
+    ```
+
+3.  **Create a virtual environment:**
     ```bash
     python -m venv venv
     source venv/bin/activate  # On Windows use `venv\Scripts\activate`
     ```
 
-3.  **Install dependencies:**
+4.  **Install dependencies:**
     ```bash
     pip install -r requirements.txt
     ```

@@ -40,3 +40,10 @@
 * Suggest alternative players to target from the other team's roster if the original trade is not favorable.
 
 **Output Format:** Present the analysis in a clean Markdown format with a section for "My Team's Perspective" and "Opponent's Perspective," followed by a concluding summary.
+
+### Trade Candidate Analysis
+
+When analyzing trade candidates, the following two categories will be used:
+
+*   **Sell-High Candidates:** Players who have performed significantly better than their average in the most recent week. Their high performance might be temporary, making them good candidates to trade away while their value is at a peak.
+*   **Buy-Low Candidates:** Players who have performed significantly worse than their average in the most recent week. Their low performance might be an anomaly, making them good candidates to acquire while their value is lower than their potential.

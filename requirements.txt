@@ -1,1 +1,5 @@
 tabulate
+nfl_data_py
+flake8
+google-generativeai
+python-dotenv

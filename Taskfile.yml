@@ -3,8 +3,22 @@ version: '3'
 
 vars:
   VER: '2.5'
+  # GEMINI_MODEL: 'models/gemini-1.5-flash-latest'
+  GEMINI_MODEL: 'models/gemini-2.5-flash'
   
 tasks:
+  encrypt:
+    desc: Encrypt secret and environment files using sops.
+    preconditions:
+      - test -f .env
+    cmds:
+      - sops -e --input-type dotenv --output-type dotenv .env > .env.enc
+  decrypt:
+    desc: Decrypt secret and environment files using sops.
+    preconditions:
+      - test -f .env.enc
+    cmds:
+      - sops -d --input-type dotenv --output-type dotenv .env.enc > .env
   gpro:
     desc: 'Run Gemini with the gemini-{{ .VER }}-pro model.'
     cmds:
@@ -42,11 +56,11 @@ tasks:
     cmds:
       - python3 scripts/download_stats.py
 
-  # A task to run the advanced analysis script.
+  # A task to have Gemini analyze your team.
   analyze:
-    desc: Run the fantasy football analysis script
+    desc: Have Gemini analyze your team
     cmds:
-      - python3 scripts/analysis.py
+      - python3 scripts/analysis.py --model {{.GEMINI_MODEL}}
 
   default:
     cmds:
