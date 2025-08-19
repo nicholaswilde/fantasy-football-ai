@@ -1,4 +1,4 @@
-# :football: Fantasy Football AI
+# :football: Fantasy Football AI :robot:
 
 > Using AI to dominate your fantasy football league. It's like having a secret weapon, but for nerds.
 
@@ -110,7 +110,8 @@ Justin Tucker,BAL,K,Free Agent
     ```
 
 2.  Run the analysis script:
-    ```bash
+
+```bash
 task analyze
 ```
 
