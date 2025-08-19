@@ -9,6 +9,11 @@ vars:
   PORT: 8000
     
 tasks:
+  update:
+    desc: Update Docker container
+    cmds:
+      - docker pull {{ .IMAGE }}
+      - docker image prune -a -f
   init:
     desc: Initialize the project by creating environment file from templates.
     preconditions:
