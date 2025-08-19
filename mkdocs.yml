@@ -39,7 +39,7 @@ theme:
   language: en
   icon:
     repo: fontawesome/brands/github
-    logo: material/wifi-sync
+    logo: material/football
   features:
     - navigation.top
     - navigation.tracking
