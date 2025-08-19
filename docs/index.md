@@ -84,12 +84,14 @@ To provide Gemini with a list of available players for weekly pickups, create a 
 
 1.  Create a `my_team.md` file in the `data/` directory with your team's roster. You can use the following format:
 
-   
-    ```markdown
-    --8<-- "data/my_team.md.tmpl"
-    ```
+    !!! abstract "data/my_team.md"
+    
+        ```markdown
+        --8<-- "data/my_team.md.tmpl"
+        ```
 
 2.  Run the analysis script:
+
     ```bash
     task analyze
     ```
