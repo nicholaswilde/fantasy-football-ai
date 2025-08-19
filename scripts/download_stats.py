@@ -3,6 +3,7 @@
 import nfl_data_py as nfl
 import pandas as pd
 import os
+import datetime
 
 def download_and_save_weekly_stats(years, output_file="data/player_stats.csv"):
     """
