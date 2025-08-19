@@ -134,3 +134,11 @@ task trade
 ## 👋 Contributing
 
 Contributions are welcome! Please feel free to submit a pull request or open an issue.
+
+## :balance_scale: License
+
+This project is licensed under the [Apache License 2.0](./LICENSE).
+
+## :pencil: Author
+
+This project was started in 2025 by [Nicholas Wilde](https://github.com/nicholaswilde/).
