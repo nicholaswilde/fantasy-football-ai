@@ -12,6 +12,12 @@ vars:
   SOURCE: 'source venv/bin/activate'
     
 tasks:
+  # Use this to run any task inside the Docker container.
+  docker:
+    desc: Run a task inside the Docker container
+    cmds:
+      - docker run -it --rm -v $(pwd):/app fantasy-football-ai {{.CLI_ARGS}}
+
   build:
     desc: Build the Dockerfile
     cmds:
