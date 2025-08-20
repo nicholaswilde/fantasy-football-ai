@@ -7,6 +7,8 @@ This project leverages the power of Google's Gemini AI to provide data-driven in
 ## :sparkles: Features
 
 *   **Player Stat Analysis**: Downloads and processes weekly player statistics from the `nfl_data_py` library.
+*   **Customizable Scoring Rules**: Define your league's scoring rules in `config.yaml` for accurate fantasy point calculations.
+*   **Report Generation**: Generates comprehensive Markdown reports summarizing draft recommendations, bye week conflicts, and trade suggestions.
 *   **Team Analysis**: Uses the Gemini AI to analyze your team's roster and provide feedback.
 *   **Trade Suggestions**: Identifies "buy-low" and "sell-high" trade candidates based on weekly performance versus season averages.
 *   **Available Player Downloads**: Fetches a list of all available players from your ESPN league.
@@ -59,6 +61,17 @@ To use the Gemini API, you need to configure your API key.
         ```ini
         --8<-- ".env.tmpl"
         ```
+
+6.  **Customize Scoring Rules (Optional)**:
+    The project includes a `config.yaml` file in the root directory. You can modify this file to adjust the fantasy football scoring rules to match your league's settings. This allows for flexible customization without changing the Python code.
+
+    ```yaml
+    # config.yaml example
+    scoring_rules:
+        passing_yards: 0.04
+        passing_touchdowns: 6
+        # ... other scoring rules
+    ```
     
 ## :computer: Usage
 
@@ -101,6 +114,26 @@ This will create an `available_players.csv` file in the `data/` directory.
     ```bash
     task analyze
     ```
+
+### :page_with_curl: Generate Report
+
+To generate a comprehensive report with draft recommendations, bye week analysis, and trade suggestions, run:
+
+```bash
+task report
+```
+
+This will create a `report.md` file in the `reports/` directory.
+
+### :art: Render Report
+
+To render the generated Markdown report (`reports/report.md`) to an HTML file and open it in your default web browser, run:
+
+```bash
+task render_report
+```
+
+This will create a `report.html` file in the `reports/` directory and automatically open it.
 
 ### :gear: Download League Settings
 

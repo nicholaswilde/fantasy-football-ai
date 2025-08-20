@@ -11,6 +11,16 @@ vars:
   PORT: 8000
     
 tasks:
+  report:
+    desc: Generate a Markdown report from the analysis
+    cmds:
+      - |
+        source venv/bin/activate && ./scripts/generate_report.py
+  render_report:
+    desc: Render the generated Markdown report to HTML and open in browser
+    cmds:
+      - |
+        source venv/bin/activate && ./scripts/render_report.py
   update:
     desc: Update Docker container
     cmds:
@@ -97,7 +107,7 @@ tasks:
       - python3 scripts/trade_suggester.py
 
   weekly_update:
-    desc: "Run the full weekly update: download stats, update team, get available players, analyze, and get suggestions."
+    desc: "Run the full weekly update: download stats, update team, get available players, analyze, get suggestions, and generate report."
     cmds:
       - task: download
       - task: my_team
@@ -105,6 +115,7 @@ tasks:
       - task: analyze
       - task: pickup
       - task: trade
+      - task: report
 
   my_team:
     desc: Get your fantasy football team and create my_team.md
