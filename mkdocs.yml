@@ -14,11 +14,14 @@ edit_uri: "edit/main/docs/"
 # Page tree
 nav:
   - Home: index.md
+  - Blog:
+    - blog/index.md
 
 extra_css:
   - stylesheets/extra.css
 
 extra:
+  blog_dir: blog/posts
   social:
     - icon: fontawesome/solid/house
       link: https://nicholaswilde.io/
@@ -69,6 +72,7 @@ theme:
 plugins:
   - search
   - tags
+  - blog
   - minify:
       minify_html: true
 

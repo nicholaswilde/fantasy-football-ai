@@ -1,3 +1,21 @@
+league_settings:
+  number_of_teams: 12
+  playoff_teams: 8
+roster_settings:
+  QB: 1
+  RB: 2
+  WR: 2
+  TE: 1
+  RB_WR: 1
+  WR_TE: 1
+  K: 1
+  DST: 1
+  DP: 2
+  BE: 7
+  IR: 1
+analysis_settings:
+  bye_week_conflict_threshold: 3
+  num_trade_targets: 10
 scoring_rules:
     passing_yards: 0.04
     passing_touchdowns: 6

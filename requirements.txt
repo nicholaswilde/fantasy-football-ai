@@ -7,3 +7,4 @@ pandas
 espn_api
 pyyaml
 markdown
+requests

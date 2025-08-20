@@ -106,6 +106,13 @@ tasks:
     cmds:
       - python3 scripts/trade_suggester.py
 
+  # A task to run the draft strategizer.
+  draft_strategy:
+    desc: Run the draft strategizer to get draft recommendations
+    cmds:
+      - | 
+        source venv/bin/activate && python3 scripts/draft_strategizer.py
+
   weekly_update:
     desc: "Run the full weekly update: download stats, update team, get available players, analyze, get suggestions, and generate report."
     cmds:
@@ -131,6 +138,18 @@ tasks:
     desc: Get your league settings
     cmds:
       - python3 scripts/get_league_settings.py
+
+  download_data:
+    desc: Download player data from Sleeper API
+    cmds:
+      - |
+        source venv/bin/activate && python3 scripts/download_data.py
+
+  draft_prep:
+    desc: Download data and create a draft strategy
+    cmds:
+      - task: download_data
+      - task: draft_strategy
 
   default:
     cmds:
