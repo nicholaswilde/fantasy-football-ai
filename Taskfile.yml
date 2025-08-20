@@ -58,15 +58,18 @@ tasks:
   gpro:
     desc: 'Run Gemini with the gemini-{{ .VER }}-pro model.'
     cmds:
-      - 'gemini -m gemini-{{ .VER }}-pro'
+        - |
+        source venv/bin/activate && gemini -m gemini-{{ .VER }}-pro
   gflash:
     desc: Run Gemini with the gemini-2.5-flash model.
     cmds:
-      - 'gemini -m gemini-{{ .VER }}-flash'
+        - |
+        source venv/bin/activate && gemini -m gemini-{{ .VER }}-flash
   glite:
     desc: Run Gemini with the gemini-2.5-flash-lite model.
     cmds:
-      - 'gemini -m gemini-{{ .VER }}-flash-lite'
+        - |
+        source venv/bin/activate && gemini -m gemini-{{ .VER }}-flash-lite
   bootstrap:
     desc: Bootstarp
     cmds:
