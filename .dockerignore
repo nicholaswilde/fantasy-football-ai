@@ -1,0 +1,20 @@
+# Ignore encrypted and unencrypted environment files
+.env.enc
+.env
+
+# Ignore the Python virtual environment
+venv/
+
+# Ignore the data directory, which will be downloaded inside the container
+data/
+
+# Ignore the reports directory
+reports/
+
+# Ignore the .git directory
+.git/
+
+# Ignore go-task-related files and temporary files
+go-task
+go.sum
+
