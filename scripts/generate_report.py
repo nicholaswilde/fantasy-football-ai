@@ -97,7 +97,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate a fantasy football analysis report.")
     parser.add_argument(
         "--output-dir",
-        default="docs/blog/posts",
+        default="docs/reports/posts",
         help="The directory to save the report in."
     )
     args = parser.parse_args()
