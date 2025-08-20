@@ -71,9 +71,13 @@ tasks:
       - |
         source venv/bin/activate && gemini -m gemini-{{ .VER }}-flash-lite
   bootstrap:
-    desc: Bootstarp
+    desc: Bootstrap the project
     cmds:
       - python3 -m venv venv
+      - task: deps
+      - task: settings
+      - task: download
+      - task: download_data
   lint:
     desc: "Lint the code with flake8"
     cmds:
@@ -89,7 +93,8 @@ tasks:
   download:
     desc: "Download NFL player stats. Usage: task download -- --years 2022 2023"
     cmds:
-      - python3 scripts/download_stats.py {{ .CLI_ARGS }}
+      - |
+        source venv/bin/activate && ./scripts/download_stats.py {{ .CLI_ARGS }}
 
   # A task to get pickup recommendations.
   pickup:
