@@ -12,7 +12,7 @@
 # Description: <A concise description of the script's purpose>
 # Author: Nicholas Wilde
 # Date: <Current Date in YYYY-MM-DD format>
-'''
+```
 
 * **PEP 8 Compliance**: All code must strictly adhere to the PEP 8 style guide. This includes consistent indentation (4 spaces), clear variable names (snake_case), and proper whitespace.
 * **Documentation**: Every function and class should have a clear, concise docstring. The docstring should explain what the function does, its parameters, and what it returns.
