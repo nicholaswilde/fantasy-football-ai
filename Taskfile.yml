@@ -16,22 +16,26 @@ tasks:
     cmds:
       - |
         source venv/bin/activate && ./scripts/generate_report.py
+
   render_report:
     desc: Render the generated Markdown report to HTML and open in browser
     cmds:
       - |
         source venv/bin/activate && ./scripts/render_report.py
+
   update:
     desc: Update Docker container
     cmds:
       - docker pull {{ .IMAGE }}
       - docker image prune -a -f
+
   init:
     desc: Initialize the project by creating environment file from templates.
     preconditions:
       - test -f .env.tmpl
     cmds:
       - cp .env.tmpl .env
+
   serve:
     desc: Serve the documentation locally using Docker.
     cmds:
