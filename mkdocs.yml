@@ -72,7 +72,8 @@ theme:
 plugins:
   - search
   - tags
-  - blog
+  - blog:
+      blog_dir: reports
   - minify:
       minify_html: true
 
