@@ -39,48 +39,57 @@ tasks:
         docker run --rm -it -p {{ .PORT }}:{{ .PORT}} -v ${PWD}:/docs
         --platform linux/amd64 {{ .IMAGE }} serve
         --dev-addr 0.0.0.0:{{ .PORT }} -f ./mkdocs.yml
+
   export:
     desc: Export the list of available tasks to task-list.txt.
     cmds:
       - task -l > task-list.txt
+
   encrypt:
     desc: Encrypt secret and environment files using sops.
     preconditions:
       - test -f .env
     cmds:
       - sops -e --input-type dotenv --output-type dotenv .env > .env.enc
+
   decrypt:
     desc: Decrypt secret and environment files using sops.
     preconditions:
       - test -f .env.enc
     cmds:
       - sops -d --input-type dotenv --output-type dotenv .env.enc > .env
+
   gpro:
     desc: 'Run Gemini with the gemini-{{ .VER }}-pro model.'
     cmds:
       - |
         source venv/bin/activate && gemini -m gemini-{{ .VER }}-pro
+
   gflash:
     desc: Run Gemini with the gemini-2.5-flash model.
     cmds:
       - |
         source venv/bin/activate && gemini -m gemini-{{ .VER }}-flash
+
   glite:
     desc: Run Gemini with the gemini-2.5-flash-lite model.
     cmds:
       - |
         source venv/bin/activate && gemini -m gemini-{{ .VER }}-flash-lite
+
   bootstrap:
     desc: Bootstrap the project
     preconditions:
       - test -f .env
-      # - python3
+      - sh: 'python3 --version'
+        msg: 'Python 3 is not installed or not in your PATH. Please install it to run this task.'
     cmds:
       - python3 -m venv venv
       - task: deps
       - task: settings
       - task: download
       - task: download_data
+
   lint:
     desc: "Lint the code with flake8"
     cmds:
