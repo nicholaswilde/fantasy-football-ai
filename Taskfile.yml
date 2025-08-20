@@ -166,7 +166,7 @@ tasks:
     desc: Download player data from Sleeper API
     cmds:
       - |
-        source venv/bin/activate && python3 scripts/download_data.py
+        {{ .SOURCE }} && python3 scripts/download_data.py
 
   draft_prep:
     desc: Download data and create a draft strategy
