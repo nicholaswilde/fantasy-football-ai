@@ -121,3 +121,22 @@ When analyzing trade candidates, the following two categories will be used:
 
 *   **Sell-High Candidates:** Players who have performed significantly better than their average in the most recent week. Their high performance might be temporary, making them good candidates to trade away while their value is at a peak.
 *   **Buy-Low Candidates:** Players who have performed significantly worse than their average in the most recent week. Their low performance might be an anomaly, making them good candidates to acquire while their value is lower than their potential.
+
+## MkDocs Material Blog Post Generation
+
+When creating a new report or blog post, you must prepend the content with the following YAML front matter. The values for `title`, `author`, and `tags` should be derived from the report's content and the prompt.
+
+### Front Matter Template:
+
+```
+---
+title: <Report Title>
+author: Nicholas Wilde
+date: <Current Date in YYYY-MM-DD format>
+tags:
+  - fantasy-football
+  - analysis
+  - draft-strategy
+  - <relevant-tag>
+---
+```
