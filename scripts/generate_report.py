@@ -4,6 +4,7 @@ import pandas as pd
 import os
 import sys
 from datetime import datetime
+import argparse
 
 # Assume the analysis.py script is in the same directory and can be imported
 from analysis import (
@@ -22,7 +23,7 @@ def normalize_player_name(name):
         return f"{parts[0][0]}.{parts[-1]}"
     return name
 
-def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str):
+def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, output_dir):
     """
     Generates a Markdown blog post from the analysis data for MkDocs Material.
 
@@ -31,9 +32,9 @@ def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
         bye_conflicts_df (pd.DataFrame): DataFrame with bye week conflicts.
         trade_recs_df (pd.DataFrame): DataFrame with trade recommendations.
         team_analysis_str (str): Markdown string with team analysis.
+        output_dir (str): The directory to save the report in.
     """
     current_date = datetime.now().strftime('%Y-%m-%d')
-    output_dir = "docs/blog/posts"
     output_file = os.path.join(output_dir, f"{current_date}-fantasy-football-analysis.md")
 
     # Create the blog directory if it doesn't exist
@@ -41,8 +42,7 @@ def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
         os.makedirs(output_dir)
 
     # Correctly formatted YAML Front Matter
-    front_matter = f"""
----
+    front_matter = f"""---
 title: 'Fantasy Football Analysis: {current_date}'
 date: {current_date}
 categories:
@@ -94,6 +94,14 @@ categories:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Generate a fantasy football analysis report.")
+    parser.add_argument(
+        "--output-dir",
+        default="docs/blog/posts",
+        help="The directory to save the report in."
+    )
+    args = parser.parse_args()
+
     # Ensure the data file exists before running
     data_file = "data/player_stats.csv"
     if not os.path.exists(data_file):
@@ -134,4 +142,4 @@ if __name__ == "__main__":
     trade_recs = get_trade_recommendations(draft_recs, team_roster=my_team_normalized)
 
     # Generate the report
-    generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis)
+    generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis, args.output_dir)

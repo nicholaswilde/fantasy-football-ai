@@ -14,7 +14,7 @@ edit_uri: "edit/main/docs/"
 # Page tree
 nav:
   - Home: index.md
-  - Blog:
+  - Reports:
     - blog/index.md
 
 extra_css:
