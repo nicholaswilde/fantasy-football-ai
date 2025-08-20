@@ -18,7 +18,7 @@
 * **Documentation**: Every function and class should have a clear, concise docstring. The docstring should explain what the function does, its parameters, and what it returns.
 * **Modularity**: Break down complex tasks into smaller, reusable functions. A function should ideally do one thing and do it well.
 * **Error Handling**: Use `try...except` blocks to handle potential errors gracefully. Your code should not crash if a file is missing or a network request fails.
-* **"Readability**: Prefer explicit, readable code over clever one-liners. The goal is for the code to be as self-documenting as possible.
+* **Readability**: Prefer explicit, readable code over clever one-liners. The goal is for the code to be as self-documenting as possible.
 * **Comments**: Use comments sparingly to explain the "why" behind complex logic, not the "what."
 * **Imports**: Group your imports in the following order:
   1. Standard library imports.
