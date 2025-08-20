@@ -15,7 +15,7 @@ edit_uri: "edit/main/docs/"
 nav:
   - Home: index.md
   - Reports:
-    - blog/index.md
+    - reports/index.md
 
 extra_css:
   - stylesheets/extra.css
