@@ -72,6 +72,9 @@ tasks:
         source venv/bin/activate && gemini -m gemini-{{ .VER }}-flash-lite
   bootstrap:
     desc: Bootstrap the project
+    preconditions:
+      - test -f .env
+      # - python3
     cmds:
       - python3 -m venv venv
       - task: deps
