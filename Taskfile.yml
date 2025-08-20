@@ -12,6 +12,15 @@ vars:
   SOURCE: 'source venv/bin/activate'
     
 tasks:
+  build:
+    desc: Build the Dockerfile
+    cmds:
+      - docker build -t fantasy-football-ai .
+  run:
+    desc: Run the Dockerfile
+    cmds:
+      - docker run -it --rm -v $(pwd):/app fantasy-football-ai default
+
   report:
     desc: Generate a Markdown report from the analysis
     cmds:
