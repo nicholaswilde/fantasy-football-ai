@@ -1,3 +1,16 @@
+#!/usr/bin/env python3
+################################################################################
+#
+# Script Name: pickup_suggester.py
+# ----------------
+# Suggests waiver wire pickups based on player performance and team needs.
+#
+# @author Nicholas Wilde, 0xb299a622
+# @date 2025-08-20
+# @version 0.1.0
+#
+################################################################################
+
 import pandas as pd
 import os
 
@@ -88,8 +101,7 @@ def identify_team_needs(my_team_roster):
 def recommend_pickups(available_players_df, player_value_df, my_team_roster):
     """Generates pickup recommendations."""
     if available_players_df.empty or player_value_df.empty:
-        print("Cannot generate recommendations: missing data.")
-        return
+        return pd.DataFrame()
 
     # Merge available players with their performance data
     merged_df = pd.merge(
@@ -104,14 +116,7 @@ def recommend_pickups(available_players_df, player_value_df, my_team_roster):
     merged_df = merged_df[~merged_df['player_display_name'].isin(my_team_players)]
 
     team_needs = identify_team_needs(my_team_roster)
-    print("\n--- Your Team Needs ---")
-    if not team_needs:
-        print("Your team seems well-rounded based on roster size. Consider upgrading low-performing players.")
-    else:
-        for pos, count in team_needs.items():
-            print(f"- {pos}: Need {count} player(s)")
-
-    print("\n--- Top Pickup Recommendations ---")
+    
     recommendations = []
 
     # Prioritize positions with needs
@@ -121,7 +126,6 @@ def recommend_pickups(available_players_df, player_value_df, my_team_roster):
             flex_candidates = merged_df[merged_df['position'].isin(['RB', 'WR', 'TE'])]
             top_players_at_pos = flex_candidates.sort_values(by='AvgPoints', ascending=False).head(count * 2)
         elif pos in ['K', 'DST']:
-            print(f"\nNote: Recommendations for {pos} are not currently supported.")
             continue
         else:
             top_players_at_pos = merged_df[
@@ -129,22 +133,18 @@ def recommend_pickups(available_players_df, player_value_df, my_team_roster):
             ].sort_values(by='AvgPoints', ascending=False).head(count * 2) # Get a few more than needed
 
         if not top_players_at_pos.empty:
-            print(f"\nTop {pos} targets:")
-            for _, row in top_players_at_pos.iterrows():
-                recommendations.append(row)
-                print(f"- {row['player_display_name']} ({row['recent_team']}) - AvgPoints: {row['AvgPoints']:.2f}")
+            recommendations.append(top_players_at_pos)
 
     # Also show top overall available players if no specific needs
     if not team_needs:
         top_overall = merged_df.sort_values(by='AvgPoints', ascending=False).head(10)
         if not top_overall.empty:
-            print("\nTop overall available players (no specific team needs identified):")
-            for _, row in top_overall.iterrows():
-                recommendations.append(row)
-                print(f"- {row['player_display_name']} ({row['recent_team']}, {row['position']}) - AvgPoints: {row['AvgPoints']:.2f}")
+            recommendations.append(top_overall)
 
     if not recommendations:
-        print("No suitable pickup recommendations at this time.")
+        return pd.DataFrame()
+    
+    return pd.concat(recommendations).drop_duplicates().reset_index(drop=True)
 
 def main():
     print("Loading data...")

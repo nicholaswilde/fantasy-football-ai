@@ -1,3 +1,16 @@
+#!/usr/bin/env python3
+################################################################################
+#
+# Script Name: get_available_players.py
+# ----------------
+# Fetches available players from an ESPN fantasy football league.
+#
+# @author Nicholas Wilde, 0xb299a622
+# @date 2025-08-20
+# @version 0.1.0
+#
+################################################################################
+
 import os
 import pandas as pd
 from datetime import datetime

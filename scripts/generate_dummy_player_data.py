@@ -1,3 +1,16 @@
+#!/usr/bin/env python3
+################################################################################
+#
+# Script Name: generate_dummy_player_data.py
+# ----------------
+# Generates dummy player data for testing and development purposes.
+#
+# @author Nicholas Wilde, 0xb299a622
+# @date 2025-08-20
+# @version 0.1.0
+#
+################################################################################
+
 import pandas as pd
 import numpy as np
 

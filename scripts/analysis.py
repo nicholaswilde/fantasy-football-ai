@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+################################################################################
+#
+# Script Name: analysis.py
+# ----------------
+# Provides core analytical functions for fantasy football data, including fantasy point calculation, VOR, consistency, and team needs analysis.
+#
+# @author Nicholas Wilde, 0xb299a622
+# @date 2025-08-20
+# @version 0.1.0
+#
+################################################################################
 
 import os
 import google.generativeai as genai
@@ -50,8 +61,8 @@ def get_team_roster(roster_file="data/my_team.md"):
     if not os.path.exists(roster_file):
         return []
     with open(roster_file, "r") as f:
-        # Assuming one player name per line, cleans up markdown list characters and whitespace
-        roster = [line.strip().lstrip('- ').strip() for line in f if line.strip()]
+        # Only include lines that start with '- ' to get player names
+        roster = [line.strip().lstrip('- ').strip() for line in f if line.strip().startswith('- ')]
     return roster
 
 
@@ -479,7 +490,14 @@ def analyze_team_needs(team_roster_df, all_players_df):
         analysis_str += f"**🤔 Area for Improvement:** Your **{pos}** group is the most immediate area to upgrade. Consider targeting players at this position.\n\n"
 
     analysis_str += "#### Positional Breakdown (VOR vs. League Average)\n\n"
-    analysis_str += comparison_df[['position', 'my_team_avg_vor', 'league_avg_vor', 'vor_difference']].to_markdown(index=False, floatfmt=".2f")
+    display_df = comparison_df[['position', 'my_team_avg_vor', 'league_avg_vor', 'vor_difference']].copy()
+    display_df.rename(columns={
+        'position': 'Position',
+        'my_team_avg_vor': 'My Team Avg VOR',
+        'league_avg_vor': 'League Avg VOR',
+        'vor_difference': 'VOR Difference'
+    }, inplace=True)
+    analysis_str += display_df.to_markdown(index=False, floatfmt=".2f")
     analysis_str += "\n"
 
     return analysis_str

@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+################################################################################
+#
+# Script Name: render_report.py
+# ----------------
+# Renders a Markdown report to an HTML file and opens it in a web browser.
+#
+# @author Nicholas Wilde, 0xb299a622
+# @date 2025-08-20
+# @version 0.1.0
+#
+################################################################################
 
 import markdown
 import webbrowser

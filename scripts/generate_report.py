@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+################################################################################
+#
+# Script Name: generate_report.py
+# ----------------
+# Generates a comprehensive fantasy football analysis report in Markdown format.
+#
+# @author Nicholas Wilde, 0xb299a622
+# @date 2025-08-20
+# @version 0.1.0
+#
+################################################################################
 
 import pandas as pd
 import os
@@ -23,7 +34,28 @@ def normalize_player_name(name):
         return f"{parts[0][0]}.{parts[-1]}"
     return name
 
-def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, output_dir):
+def get_pickup_suggestions(available_players_df):
+    """
+    Suggests top 5 waiver wire pickups based on VOR.
+    """
+    return available_players_df.sort_values(by='vor', ascending=False).head(5)
+
+def get_trade_suggestions(df):
+    """
+    Suggests sell-high and buy-low trade candidates.
+    """
+    week = df['week'].max()
+    this_week_df = df[df['week'] == week]
+    last_week_df = df[df['week'] < week]
+    player_avg_pts = last_week_df.groupby('player_display_name')['fantasy_points'].mean().reset_index()
+    player_avg_pts.rename(columns={'fantasy_points': 'avg_fantasy_points'}, inplace=True)
+    merged_df = pd.merge(this_week_df, player_avg_pts, on='player_display_name', how='left')
+    merged_df['point_difference'] = merged_df['fantasy_points'] - merged_df['avg_fantasy_points']
+    sell_high = merged_df[merged_df['point_difference'] > 10].sort_values(by='point_difference', ascending=False)
+    buy_low = merged_df[merged_df['point_difference'] < -5].sort_values(by='point_difference', ascending=True)
+    return sell_high, buy_low
+
+def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, output_dir, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df):
     """
     Generates a Markdown blog post from the analysis data for MkDocs Material.
 
@@ -33,6 +65,10 @@ def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
         trade_recs_df (pd.DataFrame): DataFrame with trade recommendations.
         team_analysis_str (str): Markdown string with team analysis.
         output_dir (str): The directory to save the report in.
+        my_team_raw (list): List of player names in my team.
+        pickup_suggestions_df (pd.DataFrame): DataFrame with pickup suggestions.
+        sell_high_df (pd.DataFrame): DataFrame with sell-high trade suggestions.
+        buy_low_df (pd.DataFrame): DataFrame with buy-low trade suggestions.
     """
     current_date = datetime.now().strftime('%Y-%m-%d')
     output_file = os.path.join(output_dir, f"{current_date}-fantasy-football-analysis.md")
@@ -48,6 +84,11 @@ date: {current_date}
 categories:
   - Fantasy Football
   - Weekly Analysis
+  - 2025 Season
+tags:
+  - fantasy-football
+  - analysis
+  - 2025-season
 ---
 
 """
@@ -59,13 +100,41 @@ categories:
 
         # Team Analysis
         f.write("## My Team Analysis\n\n")
+
+        f.write("### Current Roster\n\n")
+        
+        # Ensure only one entry per player in the roster display
+        my_roster_unique_players = my_team_df.drop_duplicates(subset=['player_name']).copy()
+
+        my_roster_display_df = my_roster_unique_players[['player_name', 'recent_team', 'position', 'vor', 'consistency_std_dev']].copy()
+        my_roster_display_df.rename(columns={
+            'player_name': 'Player',
+            'recent_team': 'Team',
+            'position': 'Position',
+            'vor': 'VOR',
+            'consistency_std_dev': 'Consistency (Std Dev)'
+        }, inplace=True)
+        f.write(my_roster_display_df.to_markdown(index=False))
+        f.write("\n\n")
+
         f.write(team_analysis_str)
         f.write("\n\n---\n\n")
+
 
         # Draft Recommendations
         f.write("## Top Players to Target\n\n")
         f.write("These players are ranked based on their **Value Over Replacement (VOR)**, a metric that measures a player's value relative to a typical starter at their position. We also look at consistency to see who you can rely on week in and week out.\n\n")
-        f.write(draft_recs_df[['player_name', 'recent_team', 'position', 'vor', 'consistency_std_dev']].to_markdown(index=False))
+        
+        draft_recs_display_df = draft_recs_df[['player_name', 'recent_team', 'position', 'vor', 'consistency_std_dev']].head(10).copy()
+        draft_recs_display_df.rename(columns={
+            'player_name': 'Player',
+            'recent_team': 'Team',
+            'position': 'Position',
+            'vor': 'VOR',
+            'consistency_std_dev': 'Consistency (Std Dev)'
+        }, inplace=True)
+        
+        f.write(draft_recs_display_df.to_markdown(index=False))
         f.write("\n\n---\n\n")
 
         # Bye Week Analysis
@@ -87,7 +156,64 @@ categories:
         # Trade Recommendations
         f.write("## Smart Trade Targets\n\n")
         f.write("Looking to make a move? These are potential trade targets based on their positional value and consistency. Acquiring one of these players could be the key to a championship run.\n\n")
-        f.write(trade_recs_df.to_markdown(index=False))
+        
+        # Select and rename columns for a more readable trade targets table
+        trade_recs_display_df = trade_recs_df[['player_display_name', 'position', 'recent_team', 'vor', 'consistency_std_dev', 'fantasy_points_ppr', 'bye_week']].copy()
+        trade_recs_display_df.rename(columns={
+            'player_display_name': 'Player',
+            'position': 'Position',
+            'recent_team': 'Team',
+            'vor': 'VOR',
+            'consistency_std_dev': 'Consistency (Std Dev)',
+            'fantasy_points_ppr': 'PPR Points',
+            'bye_week': 'Bye'
+        }, inplace=True)
+        
+        f.write(trade_recs_display_df.to_markdown(index=False))
+        f.write("\n")
+
+        f.write("\n\n---\n\n")
+
+        # Pickup Suggestions
+        f.write("## Top Waiver Wire Pickups\n\n")
+        f.write("Here are some of the top players available on the waiver wire, based on their recent performance and potential.\n\n")
+        pickup_display_df = pickup_suggestions_df[['player_name', 'position', 'recent_team', 'vor']].copy()
+        pickup_display_df.rename(columns={
+            'player_name': 'Player',
+            'position': 'Position',
+            'recent_team': 'Team',
+            'vor': 'VOR'
+        }, inplace=True)
+        f.write(pickup_display_df.to_markdown(index=False))
+        f.write("\n")
+
+        f.write("\n\n---\n\n")
+
+        # Trade Suggestions
+        f.write("## Trade Suggestions\n\n")
+        f.write("### Sell-High Candidates\n\n")
+        sell_high_display_df = sell_high_df[['player_display_name', 'position', 'recent_team', 'fantasy_points', 'avg_fantasy_points', 'point_difference']].copy()
+        sell_high_display_df.rename(columns={
+            'player_display_name': 'Player',
+            'position': 'Position',
+            'recent_team': 'Team',
+            'fantasy_points': 'Current Week Pts',
+            'avg_fantasy_points': 'Avg Pts (Prev Weeks)',
+            'point_difference': 'Point Difference'
+        }, inplace=True)
+        f.write(sell_high_display_df.to_markdown(index=False))
+        f.write("\n\n")
+        f.write("### Buy-Low Candidates\n\n")
+        buy_low_display_df = buy_low_df[['player_display_name', 'position', 'recent_team', 'fantasy_points', 'avg_fantasy_points', 'point_difference']].copy()
+        buy_low_display_df.rename(columns={
+            'player_display_name': 'Player',
+            'position': 'Position',
+            'recent_team': 'Team',
+            'fantasy_points': 'Current Week Pts',
+            'avg_fantasy_points': 'Avg Pts (Prev Weeks)',
+            'point_difference': 'Point Difference'
+        }, inplace=True)
+        f.write(buy_low_display_df.to_markdown(index=False))
         f.write("\n")
 
     print(f"Blog post successfully generated at '{output_file}'!")
@@ -141,5 +267,10 @@ if __name__ == "__main__":
 
     trade_recs = get_trade_recommendations(draft_recs, team_roster=my_team_normalized)
 
+    # Get pickup and trade suggestions
+    available_players_df = draft_recs[~draft_recs['player_name'].isin(my_team_normalized)]
+    pickup_suggestions = get_pickup_suggestions(available_players_df)
+    sell_high_suggestions, buy_low_suggestions = get_trade_suggestions(draft_recs)
+
     # Generate the report
-    generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis, args.output_dir)
+    generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis, args.output_dir, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions)

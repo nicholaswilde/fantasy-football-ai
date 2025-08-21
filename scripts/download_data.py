@@ -1,3 +1,16 @@
+#!/usr/bin/env python3
+################################################################################
+#
+# Script Name: download_data.py
+# ----------------
+# Downloads player data (projections and ADP) from the Sleeper API.
+#
+# @author Nicholas Wilde, 0xb299a622
+# @date 2025-08-20
+# @version 0.1.0
+#
+################################################################################
+
 import requests
 import csv
 

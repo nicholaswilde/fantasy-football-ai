@@ -8,10 +8,18 @@
 * **Commented Header**: Every Python script must start with a commented header in the following format. The values should be automatically populated based on the script's purpose.
 
 ```
-# Name: <script_name>.py
-# Description: <A concise description of the script's purpose>
-# Author: Nicholas Wilde
-# Date: <Current Date in YYYY-MM-DD format>
+#!/usr/bin/env python3
+################################################################################
+#
+# Script Name: <script_name>.py
+# ----------------
+# <A  description of the script's purpose>
+#
+# @author Nicholas Wilde, 0xb299a622
+# @date <Current Date in DD MM YYYY format>
+# @version <Version in semver format>
+#
+################################################################################
 ```
 
 * **PEP 8 Compliance**: All code must strictly adhere to the PEP 8 style guide. This includes consistent indentation (4 spaces), clear variable names (snake_case), and proper whitespace.

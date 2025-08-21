@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+################################################################################
+#
+# Script Name: fantasy_football_ai.py
+# ----------------
+# Main entry point for the Fantasy Football AI assistant, handling user interactions and integrating various analytical tools.
+#
+# @author Nicholas Wilde, 0xb299a622
+# @date 2025-08-20
+# @version 0.1.0
+#
+################################################################################
 
 import os
 import google.generativeai as genai

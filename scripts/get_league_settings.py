@@ -1,3 +1,16 @@
+#!/usr/bin/env python3
+################################################################################
+#
+# Script Name: get_league_settings.py
+# ----------------
+# Fetches and displays league settings from an ESPN fantasy football league.
+#
+# @author Nicholas Wilde, 0xb299a622
+# @date 2025-08-20
+# @version 0.1.0
+#
+################################################################################
+
 import os
 from dotenv import load_dotenv
 from espn_api.football import League

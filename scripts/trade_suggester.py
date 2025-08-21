@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+################################################################################
+#
+# Script Name: trade_suggester.py
+# ----------------
+# Suggests sell-high and buy-low trade candidates based on recent player performance.
+#
+# @author Nicholas Wilde, 0xb299a622
+# @date 2025-08-20
+# @version 0.1.0
+#
+################################################################################
 
 import pandas as pd
 import os
@@ -12,10 +23,8 @@ def suggest_trades(df, week):
         week (int): The most recent week to analyze.
 
     Returns:
-        pd.DataFrame: A DataFrame of trade suggestions.
+        tuple[pd.DataFrame, pd.DataFrame]: A tuple of DataFrames (sell_high, buy_low).
     """
-    print(f"Analyzing player performance for week {week}...")
-
     # Filter for the most recent week and previous weeks
     this_week_df = df[df['week'] == week]
     last_week_df = df[df['week'] < week]
@@ -34,13 +43,7 @@ def suggest_trades(df, week):
     sell_high = merged_df[merged_df['point_difference'] > 10].sort_values(by='point_difference', ascending=False)
     buy_low = merged_df[merged_df['point_difference'] < -5].sort_values(by='point_difference', ascending=True)
 
-    print("\n--- Trade Suggestions ---")
-
-    print("\nSell-High Candidates (Players who overperformed this week):")
-    print(sell_high[['player_display_name', 'position', 'recent_team', 'fantasy_points', 'avg_fantasy_points', 'point_difference']].to_markdown(index=False))
-
-    print("\nBuy-Low Candidates (Players who underperformed this week):")
-    print(buy_low[['player_display_name', 'position', 'recent_team', 'fantasy_points', 'avg_fantasy_points', 'point_difference']].to_markdown(index=False))
+    return sell_high, buy_low
 
 
 if __name__ == "__main__":

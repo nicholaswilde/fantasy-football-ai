@@ -1,189 +1,58 @@
 # :football: Fantasy Football AI :robot:
 
-> Using AI to dominate your fantasy football league. It's like having a secret weapon, but for nerds.
+Using AI to dominate your fantasy football league. It's like having a secret weapon, but for nerds.
 
-This project leverages the power of Google's Gemini AI to provide data-driven insights and analysis for your fantasy football league. It helps you make informed decisions on player stats, team analysis, and trade suggestions.
+## :memo: TL;DR
 
-## :sparkles: Features
+This project leverages Google's Gemini AI to provide data-driven insights and analysis for your fantasy football league. It helps you make informed decisions on player stats, team analysis, and trade suggestions. To get started, clone the repository,
 
-*   **Player Stat Analysis**: Downloads and processes weekly player statistics from the `nfl_data_py` library.
-*   **Customizable Scoring Rules**: Define your league's scoring rules in `config.yaml` for accurate fantasy point calculations.
-*   **Report Generation**: Generates comprehensive Markdown reports summarizing draft recommendations, bye week conflicts, and trade suggestions.
-*   **Team Analysis**: Uses the Gemini AI to analyze your team's roster and provide feedback.
-*   **Trade Suggestions**: Identifies "buy-low" and "sell-high" trade candidates based on weekly performance versus season averages.
-*   **Available Player Downloads**: Fetches a list of all available players from your ESPN league.
-*   **League Settings**: Downloads your current league settings, including scoring and roster rules.
-*   **Customizable Tasks**: Uses `Taskfile` to easily run common commands for linting, installing dependencies, downloading data, and running analysis.
+1. Copy the `.env.tmpl` file to `.env`.
 
-## :rocket: Getting Started
+```shell
+task init
+```
 
-### :hammer_and_wrench: Setup and Installation
+2. Edit `.env`. 
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/nicholaswilde/fantasy-football-ai.git
-    cd fantasy-football-ai
-    ```
+3. Install dependencies.
 
-2.  **Install `task`:**
-    Follow the instructions at [taskfile.dev/installation](https://taskfile.dev/installation) to install `task`.
+```shell
+task bootstrap
+```
 
-3.  **Create a virtual environment:**
-    ```bash
-    task bootstrap
-    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-    ```
+4. Install dependencies.
 
-4.  **Install dependencies:**
-    ```bash
-    task deps
-    ```
+```shell
+task deps
+```
 
-### :gear: Configuration
+5. Get data
 
-To use the Gemini API, you need to configure your API key. To get your fantasy football team, you need to configure your ESPN credentials. Additionally, you can customize your league's scoring rules.
-
-1.  Obtain an API key from Google AI Studio: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
-
-2.  Find your `LEAGUE_ID` from the URL of your ESPN fantasy football league.
-
-3.  Find your `ESPN_S2` and `SWID` cookies from your browser after logging into your ESPN account. See [this discussion][1].
-
-4.  Create a `.env` file from the template:
-    ```bash
-    cp .env.tmpl .env
-    ```
-
-5.  Add your API key and ESPN credentials to the `.env` file:
-
-6. Specify Gemini AI model:
-
-    ```
-    GOOGLE_API_KEY="YOUR_API_KEY"
-    LEAGUE_ID="YOUR_LEAGUE_ID"
-    ESPN_S2="YOUR_ESPN_S2"
-    SWID="YOUR_SWID"
-    GEMINI_MODEL="gemini-2.5-flash"
-    ```
-
-7.  **Customize Scoring Rules (Optional)**:
-    The project includes a `config.yaml` file in the root directory. You can modify this file to adjust the fantasy football scoring rules to match your league's settings. This allows for flexible customization without changing the Python code.
-
-    ```yaml
-    # config.yaml example
-    scoring_rules:
-        passing_yards: 0.04
-        passing_touchdowns: 6
-        # ... other scoring rules
-    ```
-
-## :computer: Usage
-
-This project uses `Taskfile.yml` to define and run tasks. You can see a list of all available tasks by running `task -l`.
-
-### :arrow_down: Download Player Stats
-
-To download the latest player stats (defaulting to the 2023 and 2024 seasons), run the following command:
-
-```bash
+```shell
 task download
+task download_data
+task my_team
 ```
 
-You can also specify the years to download by passing the `--years` argument:
+6. Generate report
 
-```bash
-task download -- --years 2022 2023
+```shell
+task generate_report
 ```
 
-This will create a `player_stats.csv` file in the `data/` directory.
+7. Serve the site
 
-### :clipboard: Download Available Players
-
-To get a list of available players for weekly pickups, run the following command:
-
-```bash
-task available_players
+```shell
+task serve
 ```
 
-This will create an `available_players.csv` file in the `data/` directory.
+8. View the report.
 
-### :bar_chart: Analyze Your Team
-
-1.  Get your team's roster and create the `my_team.md` file by running the following command:
-    ```bash
-    task my_team
-    ```
-
-2.  Run the analysis script:
-    ```bash
-    task analyze
-    ```
-
-### :page_with_curl: Generate Report
-
-To generate a comprehensive report with draft recommendations, bye week analysis, and trade suggestions, run:
-
-```bash
-task report
+```shell
+http://<ip_address>:8000/fantasy-football-ai/reports
 ```
 
-This will create a `report.md` file in the `reports/` directory.
-
-### :art: Render Report
-
-To render the generated Markdown report (`reports/report.md`) to an HTML file and open it in your default web browser, run:
-
-```bash
-task render_report
-```
-
-This will create a `report.html` file in the `reports/` directory and automatically open it.
-
-### :globe_with_meridians: Publishing Reports
-
-Reports generated by the AI can be published to the MkDocs Material site. This allows for easy sharing and viewing of the analysis.
-
-To publish a report, ensure it is located in the `docs/blog/posts/` directory with the correct YAML front matter. The MkDocs site will automatically include it as a blog post.
-
-To build and serve the documentation site locally, run:
-
-```bash
-task docs
-```
-
-To deploy the documentation site, run:
-
-```bash
-task deploy_docs
-```
-
-### :gear: Download League Settings
-
-To download your league's settings, run the following command:
-
-```bash
-task settings
-```
-
-### :mag_right: Get Pickup Recommendations
-
-To get pickup recommendations based on available players, their performance, and your team's needs, run:
-
-```bash
-task pickup
-```
-
-### :handshake: Get Trade Suggestions
-
-To get trade suggestions based on the latest player stats, run:
-
-```bash
-task trade
-```
-
-## 👋 Contributing
-
-Contributions are welcome! Please feel free to submit a pull request or open an issue.
+For detailed documentation, please visit the [project documentation](https://nicholaswilde.github.io/fantasy-football-ai/).
 
 ## :balance_scale: License
 
@@ -192,5 +61,3 @@ This project is licensed under the [Apache License 2.0](./LICENSE).
 ## :pencil: Author
 
 This project was started in 2025 by [Nicholas Wilde](https://github.com/nicholaswilde/).
-
-[1]: <https://github.com/cwendt94/espn-api/discussions/150#discussioncomment-133615>

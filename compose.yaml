@@ -1,0 +1,15 @@
+---
+
+services:
+  fantasy-football-ai:
+    image: nicholaswilde/fantasy-football-ai:latest
+    container_name: fantasy-football-ai
+    environment:
+      - PUID=1000 # Replace with your host user's UID (run 'id -u' in your terminal)
+      - PGID=1000 # Replace with your host user's GID (run 'id -g' in your terminal)
+    volumes:
+      - .:/app # Mount the current project directory to /app inside the container
+    restart: unless-stopped
+    # If you want to run a specific command when the container starts, uncomment and modify the line below.
+    # For example, to run a specific task:
+    # command: task generate-report

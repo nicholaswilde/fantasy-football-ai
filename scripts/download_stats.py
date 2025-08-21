@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+################################################################################
+#
+# Script Name: download_stats.py
+# ----------------
+# Downloads weekly NFL player statistics from nfl_data_py and saves them to a CSV file.
+#
+# @author Nicholas Wilde, 0xb299a622
+# @date 2025-08-20
+# @version 0.1.0
+#
+################################################################################
 
 import nfl_data_py as nfl
 import pandas as pd
@@ -85,5 +96,3 @@ if __name__ == "__main__":
     
     # Run the function
     download_and_save_weekly_stats(args.years)
-
-

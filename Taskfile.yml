@@ -18,6 +18,11 @@ tasks:
     cmds:
       - docker run -it --rm -v $(pwd):/app fantasy-football-ai {{.CLI_ARGS}}
 
+  shell:
+    desc: Open a shell inside the Docker container
+    cmds:
+      - docker run -it --rm -v $(pwd):/app fantasy-football-ai /bin/bash
+
   build:
     desc: Build the Dockerfile
     cmds:
@@ -32,6 +37,12 @@ tasks:
     cmds:
       - |
         {{ .SOURCE }} && ./scripts/generate_report.py
+
+  report_terminal:
+    desc: Output the analysis report to the terminal
+    cmds:
+      - |
+        {{ .SOURCE }} && ./scripts/terminal_report.py
 
   render_report:
     desc: Render the generated Markdown report to HTML and open in browser

@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+################################################################################
+#
+# Script Name: get_my_team.py
+# ----------------
+# Fetches the user's fantasy football team from ESPN and saves it to a Markdown file.
+#
+# @author Nicholas Wilde, 0xb299a622
+# @date 2025-08-20
+# @version 0.1.0
+#
+################################################################################
 
 import os
 from datetime import datetime

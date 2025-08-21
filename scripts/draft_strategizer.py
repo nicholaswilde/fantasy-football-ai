@@ -1,3 +1,16 @@
+#!/usr/bin/env python3
+################################################################################
+#
+# Script Name: draft_strategizer.py
+# ----------------
+# Provides tools for optimizing fantasy football draft strategy, including VBD calculations and mock draft simulations.
+#
+# @author Nicholas Wilde, 0xb299a622
+# @date 2025-08-20
+# @version 0.1.0
+#
+################################################################################
+
 import pandas as pd
 import yaml
 
