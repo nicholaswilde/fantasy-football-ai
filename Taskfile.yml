@@ -119,7 +119,6 @@ tasks:
       - python3 -m venv venv
       - task: deps
       - task: settings
-      - task: weekly_update
 
   lint:
     desc: "Lint the code with flake8"
