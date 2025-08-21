@@ -14,42 +14,16 @@ task init
 
 2. Edit `.env`. 
 
-3. Install dependencies.
+3. Bootstrap the project.
 
 ```shell
 task bootstrap
 ```
 
-4. Install dependencies.
+4. Perform weekly update
 
 ```shell
-task deps
-```
-
-5. Get data
-
-```shell
-task download
-task download_data
-task my_team
-```
-
-6. Generate report
-
-```shell
-task generate_report
-```
-
-7. Serve the site
-
-```shell
-task serve
-```
-
-8. View the report.
-
-```shell
-http://<ip_address>:8000/fantasy-football-ai/reports
+task weekly_update
 ```
 
 For detailed documentation, please visit the [project documentation](https://nicholaswilde.github.io/fantasy-football-ai/).
