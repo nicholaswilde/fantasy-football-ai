@@ -26,6 +26,12 @@ task bootstrap
 task weekly_update
 ```
 
+5. Download data and create a draft strategy
+
+```shell
+task draft_strategy
+```
+
 For detailed documentation, please visit the [project documentation](https://nicholaswilde.github.io/fantasy-football-ai/).
 
 ## :balance_scale: License
