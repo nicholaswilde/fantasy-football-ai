@@ -27,13 +27,13 @@ RUN groupadd -g ${PGID} abc && \
     usermod -aG users abc
 
 # Copy the requirements file into the container
-COPY requirements.txt .
+COPY ../requirements.txt .
 
 # Install the Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the project files into the container
-COPY . .
+COPY ../ .
 
 # Set ownership of /app to the new user
 RUN chown -R abc:abc /app
