@@ -117,10 +117,8 @@ tasks:
     cmds:
       - python3 -m venv venv
       - task: deps
-      - task: my_team
       - task: settings
-      - task: download
-      - task: download_data
+      - task: weekly_update
 
   lint:
     desc: "Lint the code with flake8"
