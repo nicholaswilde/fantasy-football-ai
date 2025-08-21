@@ -62,6 +62,7 @@ tasks:
       - test -f .env.tmpl
     cmds:
       - cp .env.tmpl .env
+      - "echo 'Update values in .env file.'"
 
   serve:
     desc: Serve the documentation locally using Docker.
