@@ -26,7 +26,7 @@ tasks:
   build:
     desc: Build the Dockerfile
     cmds:
-      - docker build -t fantasy-football-ai .
+      - docker build -t fantasy-football-ai ./docker/
   run:
     desc: Run the Dockerfile
     cmds:
