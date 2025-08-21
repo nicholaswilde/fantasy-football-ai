@@ -14,10 +14,15 @@
 import os
 from dotenv import load_dotenv
 from espn_api.football import League
+import yaml
+
+CONFIG_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), '..', 'config.yaml'
+)
 
 def get_league_settings():
     """
-    Fetches and prints the settings for the ESPN fantasy football league.
+    Fetches and saves the settings for the ESPN fantasy football league to config.yaml.
     """
     load_dotenv()
 
@@ -31,19 +36,36 @@ def get_league_settings():
     league = League(league_id=int(league_id), year=2024, espn_s2=espn_s2, swid=swid)
 
     settings = league.settings
-    settings = league.settings
-    print("League Name:", settings.name)
-    print("Number of Teams:", settings.team_count)
-    print("Playoff Teams:", settings.playoff_team_count)
 
-    print("\nScoring Settings:")
-    for rule in sorted(settings.scoring_format, key=lambda x: x['label']):
-        print(f"- {rule['label']}: {rule['points']}")
+    # Prepare data for YAML output
+    config_data = {
+        'league_settings': {
+            'league_name': settings.name,
+            'number_of_teams': settings.team_count,
+            'playoff_teams': settings.playoff_team_count
+        },
+        'roster_settings': {},
+        'scoring_rules': {}
+    }
 
-    print("\nRoster Settings:")
     for position, count in sorted(settings.position_slot_counts.items()):
         if count > 0:
-            print(f"- {position}: {count}")
+            # Normalize position names to match config.yaml conventions if necessary
+            # e.g., D/ST -> DST, RB/WR -> RB_WR
+            normalized_pos = position.replace('/', '_').upper()
+            config_data['roster_settings'][normalized_pos] = count
+
+    for rule in sorted(settings.scoring_format, key=lambda x: x['label']):
+        # Normalize scoring rule labels to snake_case for YAML keys
+        label = rule['label'].lower().replace(' ', '_').replace('-', '_').replace('/', '_')
+        config_data['scoring_rules'][label] = rule['points']
+
+    # Write to config.yaml
+    with open(CONFIG_FILE, 'w') as f:
+        f.write("---\n") # Ensure the first line is "---" followed by a newline
+        yaml.dump(config_data, f, default_flow_style=False, sort_keys=False)
+
+    print(f"Successfully updated {CONFIG_FILE} with league settings.")
 
 
 if __name__ == "__main__":

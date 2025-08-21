@@ -187,6 +187,12 @@ tasks:
       - |
         {{ .SOURCE }} && scripts/get_league_settings.py
 
+  compare_roster:
+    desc: Compare roster settings with actual team composition
+    cmds:
+      - |
+        {{ .SOURCE }} && ./scripts/compare_roster_positions.py
+
   download_data:
     desc: Download player data from Sleeper API
     cmds:

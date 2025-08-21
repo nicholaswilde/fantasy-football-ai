@@ -13,6 +13,18 @@
 
 import pandas as pd
 import os
+import yaml
+
+# Load configuration from config.yaml
+CONFIG_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), '..', 'config.yaml'
+)
+
+def load_config():
+    with open(CONFIG_FILE, 'r') as f:
+        return yaml.safe_load(f)
+
+CONFIG = load_config()
 
 def suggest_trades(df, week):
     """
@@ -39,9 +51,13 @@ def suggest_trades(df, week):
     # Calculate the difference between this week's points and the average
     merged_df['point_difference'] = merged_df['fantasy_points'] - merged_df['avg_fantasy_points']
 
+    # Get thresholds from config
+    sell_high_threshold = CONFIG.get('analysis_settings', {}).get('sell_high_threshold', 10)
+    buy_low_threshold = CONFIG.get('analysis_settings', {}).get('buy_low_threshold', -5)
+
     # Identify sell-high and buy-low candidates
-    sell_high = merged_df[merged_df['point_difference'] > 10].sort_values(by='point_difference', ascending=False)
-    buy_low = merged_df[merged_df['point_difference'] < -5].sort_values(by='point_difference', ascending=True)
+    sell_high = merged_df[merged_df['point_difference'] > sell_high_threshold].sort_values(by='point_difference', ascending=False)
+    buy_low = merged_df[merged_df['point_difference'] < buy_low_threshold].sort_values(by='point_difference', ascending=True)
 
     return sell_high, buy_low
 
@@ -61,4 +77,7 @@ if __name__ == "__main__":
         most_recent_week = stats_df['week'].max()
 
         # Get trade suggestions
-        suggest_trades(stats_df, most_recent_week)
+        sell_high, buy_low = suggest_trades(stats_df, most_recent_week)
+        print("Trade suggester script executed. It returns data structures for use by other scripts.")
+        print("Sell-High Candidates:", sell_high)
+        print("Buy-Low Candidates:", buy_low)

@@ -11,25 +11,38 @@
 #
 ################################################################################
 
+import os
 import pandas as pd
 import numpy as np
+import yaml
 
-def generate_dummy_player_data(num_players=300):
+# Load configuration from config.yaml
+CONFIG_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), '..', 'config.yaml'
+)
+
+def load_config():
+    with open(CONFIG_FILE, 'r') as f:
+        return yaml.safe_load(f)
+
+CONFIG = load_config()
+
+def generate_dummy_player_data():
     """
     Generates dummy player data for ADP and projections.
+    Uses configuration from config.yaml for number of players and position distribution.
     """
-    print(f"Generating dummy data for {num_players} players...")
-
-    player_names = [f'Player {i}' for i in range(1, num_players + 1)]
-    positions = ['QB', 'RB', 'WR', 'TE', 'K', 'D/ST']
-    position_distribution = {
+    num_players = CONFIG.get('dummy_data_settings', {}).get('num_players', 300)
+    position_distribution = CONFIG.get('dummy_data_settings', {}).get('position_distribution', {
         'QB': 0.1,
         'RB': 0.25,
         'WR': 0.35,
         'TE': 0.1,
         'K': 0.1,
         'D/ST': 0.1
-    }
+    })
+
+    print(f"Generating dummy data for {num_players} players...")
 
     # Assign positions based on distribution
     player_positions = np.random.choice(

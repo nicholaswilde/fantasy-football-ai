@@ -26,6 +26,7 @@ from analysis import (
     get_team_roster,
     analyze_team_needs
 )
+import draft_strategizer # Import the draft_strategizer script
 
 # Helper function to normalize player names, e.g., 'Patrick Mahomes' to 'P.Mahomes'
 def normalize_player_name(name):
@@ -55,7 +56,7 @@ def get_trade_suggestions(df):
     buy_low = merged_df[merged_df['point_difference'] < -5].sort_values(by='point_difference', ascending=True)
     return sell_high, buy_low
 
-def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, output_dir, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df):
+def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, output_dir, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order):
     """
     Generates a Markdown blog post from the analysis data for MkDocs Material.
 
@@ -174,6 +175,22 @@ tags:
 
         f.write("\n\n---\n\n")
 
+        # Simulated Draft Results
+        f.write("## Simulated Draft Results\n\n")
+        f.write("Here's a simulation of your draft, round by round, based on optimal VBD strategy and ADP.\n\n")
+        f.write("### Your Simulated Roster\n\n")
+        for pos, players in simulated_roster.items():
+            if players:
+                f.write(f"**{pos}**: {'. '.join(players)}\n")
+        f.write("\n")
+
+        f.write("### Simulated Draft Order\n\n")
+        for i, player_name in enumerate(simulated_draft_order):
+            f.write(f"{i+1}. {player_name}\n")
+        f.write("\n")
+
+        f.write("\n\n---\n\n")
+
         # Pickup Suggestions
         f.write("## Top Waiver Wire Pickups\n\n")
         f.write("Here are some of the top players available on the waiver wire, based on their recent performance and potential.\n\n")
@@ -272,5 +289,8 @@ if __name__ == "__main__":
     pickup_suggestions = get_pickup_suggestions(available_players_df)
     sell_high_suggestions, buy_low_suggestions = get_trade_suggestions(draft_recs)
 
+    # Run simulated draft
+    simulated_roster, simulated_draft_order = draft_strategizer.main()
+
     # Generate the report
-    generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis, args.output_dir, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions)
+    generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis, args.output_dir, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order)

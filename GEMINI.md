@@ -21,73 +21,8 @@
 * WR/TE: 1
 
 **Scoring Settings:**
-* 0 points allowed: 10.0
-* 1-6 points allowed: 7.5
-* 1/2 Sack: 0.5
-* 100-199 total yards allowed: 7.5
-* 100-199 yard receiving game: 3.0
-* 100-199 yard rushing game: 3.0
-* 14-17 points allowed: 2.5
-* 200+ yard receiving game: 4.0
-* 200+ yard rushing game: 4.0
-* 200-299 total yards allowed: 5.0
-* 22-27 points allowed: -2.5
-* 28-34 points allowed: -5.0
-* 2pt Passing Conversion: 2.0
-* 2pt Receiving Conversion: 2.0
-* 2pt Return: 3.0
-* 2pt Rushing Conversion: 2.0
-* 300-349 total yards allowed: 2.5
-* 300-399 yard passing game: 3.0
-* 35-45 points allowed: -7.5
-* 40+ yard TD pass bonus: 1.0
-* 40+ yard TD rec bonus: 1.0
-* 40+ yard TD rush bonus: 1.0
-* 400+ yard passing game: 4.0
-* 400-449 total yards allowed: -2.5
-* 450-499 total yards allowed: -7.5
-* 46+ points allowed: -10.0
-* 50+ yard TD pass bonus: 2.0
-* 50+ yard TD rec bonus: 2.0
-* 50+ yard TD rush bonus: 2.0
-* 500-549 total yards allowed: -15.0
-* 550+ total yards allowed: -25.0
-* 7-13 points allowed: 5.0
-* Assisted Tackles: 0.5
-* Blocked Punt or FG return for TD: 6.0
-* Blocked Punt, PAT or FG: 2.0
-* Each Fumble Forced: 1.0
-* Each Fumble Recovered: 3.0
-* Each Interception: 3.0
-* Each PAT Made: 1.0
-* Each PAT Missed: -1.0
-* Each Safety: 3.0
-* Every 10 receiving yards: 1.0
-* Every 10 rushing yards: 1.0
-* Every 25 kickoff return yards: 1.0
-* Every 25 passing yards: 1.0
-* Every 25 punt return yards: 1.0
-* Every 5 receptions: 2.5
-* FG Made (0-39 yards): 3.0
-* FG Made (40-49 yards): 4.0
-* FG Made (50-59 yards): 5.0
-* FG Made (60+ yards): 5.0
-* FG Missed (0-39 yards): -1.0
-* Fumble Recovered for TD: 6.0
-* Fumble Return TD: 6.0
-* Interception Return TD: 6.0
-* Interceptions Thrown: -3.0
-* Kickoff Return TD: 6.0
-* Less than 100 total yards allowed: 10.0
-* Passes Defensed: 1.0
-* Punt Return TD: 6.0
-* Solo Tackles: 0.75
-* Stuffs: 1.0
-* TD Pass: 6.0
-* TD Reception: 6.0
-* TD Rush: 6.0
-* Total Fumbles Lost: -2.0
-* Total Tackles: 0.1
+Refer to `config.yaml` for the latest scoring rules.
+
 * **Draft Position:** My draft pick is #7.
 
 **Workflow Instructions:**

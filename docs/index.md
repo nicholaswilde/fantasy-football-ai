@@ -2,7 +2,43 @@
 
 > Using AI to dominate your fantasy football league. It's like having a secret weapon, but for nerds.
 
-This project leverages the power of Google's Gemini AI to provide data-driven insights and analysis for your fantasy football league. It helps you make informed decisions on player stats, team analysis, and trade suggestions.
+This project leverages Google's Gemini AI to provide data-driven insights and analysis for your fantasy football league. It helps you make informed decisions on player stats, team analysis, and trade suggestions. To get started, clone the repository,
+
+## :memo: TL;DR
+
+1. Copy the `.env.tmpl` file to `.env`.
+
+    === "Task"
+
+        ```shell
+        task init
+        ```
+
+2. Edit `.env`. 
+
+3. Bootstrap the project.
+
+    === "Task"
+
+        ```shell
+        task bootstrap
+        ```
+
+4. Perform weekly update
+
+    === "Task"
+
+        ```shell
+        task weekly_update
+        ```
+
+5. Download data and create a draft strategy
+
+    === "Task"
+
+        ```shell
+        task draft_prep
+        ```
 
 ## :sparkles: Features
 

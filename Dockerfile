@@ -17,6 +17,7 @@ RUN apt update && \
     apt install -y --no-install-recommends \
         curl && \
     curl -sL https://taskfile.dev/install.sh | sh && \
+    mv ./bin/task /usr/local/bin/task && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

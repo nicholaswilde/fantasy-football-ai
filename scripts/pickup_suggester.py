@@ -13,12 +13,24 @@
 
 import pandas as pd
 import os
+import yaml
 
 # Define file paths
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AVAILABLE_PLAYERS_PATH = os.path.join(PROJECT_ROOT, 'data', 'available_players.csv')
 PLAYER_STATS_PATH = os.path.join(PROJECT_ROOT, 'data', 'player_stats.csv')
 MY_TEAM_PATH = os.path.join(PROJECT_ROOT, 'data', 'my_team.md')
+
+# Load configuration from config.yaml
+CONFIG_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), '..', 'config.yaml'
+)
+
+def load_config():
+    with open(CONFIG_FILE, 'r') as f:
+        return yaml.safe_load(f)
+
+CONFIG = load_config()
 
 def load_available_players(file_path):
     """Loads available players from the CSV file and renames columns for consistency."""
@@ -85,17 +97,51 @@ def calculate_player_value(player_stats_df):
 def identify_team_needs(my_team_roster):
     """Identifies positions where the user's team needs improvement or depth."""
     needs = {}
-    # Define standard roster sizes for a 12-team league (adjust as needed)
+    # Define standard roster sizes from config.yaml
+    roster_settings = CONFIG.get('roster_settings', {})
     standard_roster_spots = {
-        'QB': 1, 'RB': 2, 'WR': 2, 'TE': 1, 'FLEX': 1, 'K': 1, 'DST': 1
+        'QB': roster_settings.get('QB', 1),
+        'RB': roster_settings.get('RB', 2),
+        'WR': roster_settings.get('WR', 2),
+        'TE': roster_settings.get('TE', 1),
+        'RB/WR': roster_settings.get('RB_WR', 1), # Using RB_WR for flex
+        'WR/TE': roster_settings.get('WR_TE', 1), # Using WR_TE for flex
+        'K': roster_settings.get('K', 1),
+        'DST': roster_settings.get('DST', 1),
+        'DP': roster_settings.get('DP', 2),
+        'BE': roster_settings.get('BE', 7),
+        'IR': roster_settings.get('IR', 1)
     }
 
-    for pos, count in standard_roster_spots.items():
+    # Map config keys to the keys used in my_team_roster if they differ
+    # For example, config might have RB_WR but my_team_roster uses FLEX
+    # This needs careful consideration based on how my_team.md is generated
+    # For now, I'll assume direct mapping or handle common flex cases.
+    
+    # Simplified mapping for common positions, assuming my_team_roster uses standard position names
+    # and FLEX is a combination.
+    mapped_roster_settings = {
+        'QB': roster_settings.get('QB', 1),
+        'RB': roster_settings.get('RB', 2),
+        'WR': roster_settings.get('WR', 2),
+        'TE': roster_settings.get('TE', 1),
+        'K': roster_settings.get('K', 1),
+        'DST': roster_settings.get('DST', 1),
+    }
+    # Add flex spots to the total count for RB, WR, TE if they exist in config
+    mapped_roster_settings['RB'] += roster_settings.get('RB_WR', 0)
+    mapped_roster_settings['WR'] += roster_settings.get('RB_WR', 0) + roster_settings.get('WR_TE', 0)
+    mapped_roster_settings['TE'] += roster_settings.get('WR_TE', 0)
+
+    for pos, count in mapped_roster_settings.items():
         if len(my_team_roster.get(pos, [])) < count:
             needs[pos] = count - len(my_team_roster.get(pos, []))
-        # Simple check: if a starter has very low points, it's a need
-        # This would require integrating with player stats for current roster
-        # For now, just focus on roster count
+    
+    # Consider bench spots as well
+    bench_needed = roster_settings.get('BE', 7) - len(my_team_roster.get('BENCH', []))
+    if bench_needed > 0:
+        needs['BENCH'] = bench_needed
+
     return needs
 
 def recommend_pickups(available_players_df, player_value_df, my_team_roster):
@@ -166,6 +212,7 @@ def main():
     player_value = calculate_player_value(player_stats.copy()) # Pass a copy to avoid modifying original
 
     recommend_pickups(available_players, player_value, my_team)
+    print("Pickup suggester script executed. It returns data structures for use by other scripts.")
 
 if __name__ == "__main__":
     main()
