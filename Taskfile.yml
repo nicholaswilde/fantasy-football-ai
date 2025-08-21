@@ -169,7 +169,7 @@ tasks:
       - task: available_players
       - task: pickup
       - task: trade
-      - task: report
+      - task: report_terminal
 
   my_team:
     desc: Get your fantasy football team and create my_team.md
