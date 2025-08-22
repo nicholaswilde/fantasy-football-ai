@@ -39,7 +39,7 @@ def get_my_team():
     league_id = os.getenv("LEAGUE_ID")
     espn_s2 = os.getenv("ESPN_S2")
     swid = os.getenv("SWID")
-    year = CONFIG.get('league_settings', {}).get('year', datetime.now().year)
+    year = CONFIG.get('league_settings', {}).get('year', datetime.datetime.now().year)
 
     if not all([league_id, espn_s2, swid]):
         raise ValueError(
@@ -90,7 +90,7 @@ def get_my_team():
                 roster["BENCH"].append(player.name)
 
         with open("data/my_team.md", "w") as f:
-            now = datetime.now()
+            now = datetime.datetime.now()
             dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
             f.write(f"<!-- Last updated: {dt_string} -->\n")
             f.write("# My Team\n\n")
@@ -112,7 +112,7 @@ if __name__ == "__main__":
         league_id = os.getenv("LEAGUE_ID")
         espn_s2 = os.getenv("ESPN_S2")
         swid = os.getenv("SWID")
-        year = CONFIG.get('league_settings', {}).get('year', datetime.now().year)
+        year = CONFIG.get('league_settings', {}).get('year', datetime.datetime.now().year)
 
         if not all([league_id, espn_s2, swid]):
             raise ValueError(

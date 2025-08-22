@@ -145,7 +145,7 @@ def download_and_save_weekly_stats(years, output_file="data/player_stats.csv"):
         now = datetime.datetime.now()
         with open("data/last_updated.log", "w") as log_file:
             log_file.write(f"Player stats last updated: {now.strftime('%Y-%m-%d %H:%M:%S')}")
-            print("Updated data/last_updated.2log")
+            print("Updated data/last_updated.log")
 
         print(f"Download complete! Combined data for {len(years)} seasons saved to '{output_file}'.")
     except Exception as e:
