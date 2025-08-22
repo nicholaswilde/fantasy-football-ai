@@ -26,7 +26,7 @@ tasks:
   build:
     desc: Build the Dockerfile
     cmds:
-      - docker build -t fantasy-football-ai ./docker/
+      - docker build -f docker/Dockerfile -t fantasy-football-ai .
   run:
     desc: Run the Dockerfile
     cmds:
@@ -108,6 +108,12 @@ tasks:
     cmds:
       - |
         {{ .SOURCE }} && gemini -m gemini-{{ .VER }}-flash-lite
+
+  ai_chat:
+    desc: Interact with the Fantasy Football AI assistant.
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/fantasy_football_ai.py
 
   bootstrap:
     desc: Bootstrap the project
