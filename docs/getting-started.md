@@ -28,9 +28,9 @@ To use the Gemini API, you need to configure your API key.
 
 1.  Obtain an API key from Google AI Studio: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
 
-2. Find your LEAGUE_ID from the URL of your ESPN fantasy football league.
+2. Find your `LEAGUE_ID` from the URL of your ESPN fantasy football league.
 
-3. Find your ESPN_S2 and SWID cookies from your browser after logging into your ESPN account. See [this discussion](https://github.com/cwendt94/espn-api/discussions/141).
+3. Find your `ESPN_S2` and `SWID` cookies from your browser after logging into your ESPN account. See [this discussion](https://github.com/cwendt94/espn-api/discussions/150).
 
 4.  Create a `.env` file from the template:
     ```bash
