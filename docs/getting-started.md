@@ -57,7 +57,17 @@ To use the Gemini API, you need to configure your API key.
         task bootstrap
         ```
 
-2.  **Activate the virtual environment:**
+    === "Manual"
+
+        ```shell
+        python3 -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+        python3 scripts/get_league_settings.py
+        python3 scripts/identify_my_team.py
+        ```
+
+3.  **Activate the virtual environment:**
     ```bash
     source venv/bin/activate  # On Windows use `venv\Scripts\activate`
     ```
@@ -75,6 +85,13 @@ To use the Gemini API, you need to configure your API key.
         task settings
         ```
 
+    === "Manual"
+    
+        ```bash
+        python3 scripts/get_league_settings.py
+        python3
+        ```
+    
     ```yaml
     # config.yaml example
     scoring_rules:
@@ -84,7 +101,7 @@ To use the Gemini API, you need to configure your API key.
         # ... other scoring rules
     ```
 
-2.  **Configure Year Settings (Optional)**:
+3.  **Configure Year Settings (Optional)**:
     The `config.yaml` file also contains fields for `year` and `data_years` under the `league_settings` section.
 
     *   `year`: This field specifies the current year for your fantasy football league. It is used to fetch the correct league data.
