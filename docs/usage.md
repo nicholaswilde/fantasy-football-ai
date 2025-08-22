@@ -2,6 +2,12 @@
 
 This project uses `Taskfile.yml` to define and run tasks. You can see a list of all available tasks by running `task -l`.
 
+??? abstract "task-list.txt"
+
+    ```yaml
+    --8<-- "task-list.txt"
+    ```
+
 ### :arrow_down: Download Player Stats
 
 To download the latest player stats (defaulting to the 2023 and 2024 seasons), run the following command:
