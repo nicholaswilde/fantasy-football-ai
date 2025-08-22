@@ -56,7 +56,7 @@ def get_trade_suggestions(df):
     buy_low = merged_df[merged_df['point_difference'] < -5].sort_values(by='point_difference', ascending=True)
     return sell_high, buy_low
 
-def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, output_dir, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order):
+def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, output_dir, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order, positional_breakdown_df):
     """
     Generates a Markdown blog post from the analysis data for MkDocs Material.
 
@@ -119,6 +119,8 @@ tags:
         f.write("\n\n")
 
         f.write(team_analysis_str)
+        f.write("\n#### Positional Breakdown (VOR vs. League Average)\n\n")
+        f.write(positional_breakdown_df.to_markdown(index=False, floatfmt=".2f"))
         f.write("\n\n---\n\n")
 
 
@@ -146,7 +148,7 @@ tags:
 
             # Format bye week conflicts
             for _, row in bye_conflicts_df.iterrows():
-                f.write(f"**Week {int(row['bye_week'])}**: {int(row['player_count'])} top players are on bye.\n")
+                f.write(f"**Week {int(row['bye_week'])}**: {int(row['player_count'])} top players are on bye.\n\n")
 
             f.write("\n")
         else:
@@ -280,7 +282,7 @@ if __name__ == "__main__":
     my_team_raw = get_team_roster(roster_file)
     my_team_normalized = [normalize_player_name(name) for name in my_team_raw]
     my_team_df = draft_recs[draft_recs['player_name'].isin(my_team_normalized)]
-    team_analysis = analyze_team_needs(my_team_df, draft_recs)
+    team_analysis_str, positional_breakdown_df = analyze_team_needs(my_team_df, draft_recs)
 
     trade_recs = get_trade_recommendations(draft_recs, team_roster=my_team_normalized)
 
@@ -293,4 +295,4 @@ if __name__ == "__main__":
     simulated_roster, simulated_draft_order = draft_strategizer.main()
 
     # Generate the report
-    generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis, args.output_dir, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order)
+    generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, args.output_dir, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df)

@@ -32,3 +32,4 @@
   1. Standard library imports.
   2. Third-party imports.
   3. Local application/library-specific imports.
+* **Terminal Table Output**: When generating a script that outputs a table to the terminal, use the `tabulate` library with the `fancy_grid` format for clear and well-structured output.

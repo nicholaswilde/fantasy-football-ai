@@ -106,6 +106,6 @@ if __name__ == "__main__":
         })
 
         print("--- Sell-High Candidates ---")
-        print(tabulate(sell_high_display, headers='keys', tablefmt='grid', showindex=False))
+        print(tabulate(sell_high_display, headers='keys', tablefmt='fancy_grid', showindex=False))
         print("\n--- Buy-Low Candidates ---")
-        print(tabulate(buy_low_display, headers='keys', tablefmt='grid', showindex=False))
+        print(tabulate(buy_low_display, headers='keys', tablefmt='fancy_grid', showindex=False))

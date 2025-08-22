@@ -272,7 +272,8 @@ def analyze_team_needs(team_roster_df, all_players_df):
         str: A markdown-formatted string with the team analysis.
     """
     if team_roster_df.empty:
-        return "### Team Analysis\n\nCould not analyze your team because no players from your roster were found in the stats data.\n"
+        # Return an empty DataFrame for positional_breakdown_df if team_roster_df is empty
+        return "### Team Analysis\n\nCould not analyze your team because no players from your roster were found in the stats data.\n", pd.DataFrame()
 
     # Calculate the average VOR for each position in the league for top-tier players
     # Consider players with VOR > 0 to represent above-replacement level players
@@ -296,25 +297,26 @@ def analyze_team_needs(team_roster_df, all_players_df):
     strongest_pos = comparison_df.nlargest(1, 'vor_difference')
     if not strongest_pos.empty:
         pos = strongest_pos.iloc[0]['position']
-        analysis_str += f"**💪 Strongest Position:** Your **{pos}** group is your team's biggest strength.\n"
+        analysis_str += f"**💪 Strongest Position:** Your **{pos}** group is your team's biggest strength.\n\n"
 
     weakest_pos = comparison_df.nsmallest(1, 'vor_difference')
     if not weakest_pos.empty:
         pos = weakest_pos.iloc[0]['position']
         analysis_str += f"**🤔 Area for Improvement:** Your **{pos}** group is the most immediate area to upgrade. Consider targeting players at this position.\n\n"
 
-    analysis_str += "#### Positional Breakdown (VOR vs. League Average)\n\n"
-    display_df = comparison_df[['position', 'my_team_avg_vor', 'league_avg_vor', 'vor_difference']].copy()
-    display_df.rename(columns={
-        'position': 'Position',
-        'my_team_avg_vor': 'My Team Avg VOR',
-        'league_avg_vor': 'League Avg VOR',
-        'vor_difference': 'VOR Difference'
-    }, inplace=True)
-    analysis_str += display_df.to_markdown(index=False, floatfmt=".2f")
-    analysis_str += "\n"
+    # Initialize display_df with expected columns
+    display_df = pd.DataFrame(columns=['Position', 'My Team Avg VOR', 'League Avg VOR', 'VOR Difference'])
 
-    return analysis_str
+    if not comparison_df.empty:
+        display_df = comparison_df[['position', 'my_team_avg_vor', 'league_avg_vor', 'vor_difference']].copy()
+        display_df.rename(columns={
+            'position': 'Position',
+            'my_team_avg_vor': 'My Team Avg VOR',
+            'league_avg_vor': 'League Avg VOR',
+            'vor_difference': 'VOR Difference'
+        }, inplace=True)
+
+    return analysis_str, display_df
 
 def check_bye_week_conflicts(df):
     """

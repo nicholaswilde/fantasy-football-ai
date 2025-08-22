@@ -14,6 +14,7 @@
 import pandas as pd
 import os
 import yaml
+from tabulate import tabulate
 
 # Define file paths
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -211,8 +212,23 @@ def main():
     # Calculate player value (e.g., AvgPoints)
     player_value = calculate_player_value(player_stats.copy()) # Pass a copy to avoid modifying original
 
-    recommend_pickups(available_players, player_value, my_team)
-    print("Pickup suggester script executed. It returns data structures for use by other scripts.")
+    recommendations_df = recommend_pickups(available_players, player_value, my_team)
+
+    if not recommendations_df.empty:
+        print("\n--- Top Waiver Wire Pickups ---")
+        # Select and rename columns for display
+        display_df = recommendations_df[['player_display_name', 'position', 'recent_team', 'AvgPoints']].copy()
+        display_df.rename(columns={
+            'player_display_name': 'Player',
+            'position': 'Position',
+            'recent_team': 'Team',
+            'AvgPoints': 'Avg Pts/Game'
+        }, inplace=True)
+        print(tabulate(display_df, headers='keys', tablefmt='fancy_grid'))
+        print("\nPickup suggester script executed successfully.")
+    else:
+        print("\nNo waiver wire pickup suggestions at this time.")
+    return recommendations_df
 
 if __name__ == "__main__":
     main()

@@ -61,9 +61,9 @@ def format_dataframe_for_terminal(df, column_names):
     """
     Formats a pandas DataFrame for better terminal output.
     """
-    return tabulate(df[column_names], headers=column_names, tablefmt="psql", floatfmt=".2f", showindex=False)
+    return tabulate(df[column_names], headers=column_names, tablefmt="fancy_grid", floatfmt=".2f", showindex=False)
 
-def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order):
+def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order, positional_breakdown_df):
 
     """
     Generates a Markdown report to the terminal from the analysis data.
@@ -98,6 +98,9 @@ def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
     print("\n")
 
     print(team_analysis_str)
+
+    print("#### Positional Breakdown (VOR vs. League Average)\n")
+    print(format_dataframe_for_terminal(positional_breakdown_df, ['Position', 'My Team Avg VOR', 'League Avg VOR', 'VOR Difference']))
     print("---")
 
 
@@ -257,7 +260,7 @@ if __name__ == "__main__":
     my_team_raw = get_team_roster(roster_file)
     my_team_normalized = [normalize_player_name(name) for name in my_team_raw]
     my_team_df = draft_recs[draft_recs['player_name'].isin(my_team_normalized)]
-    team_analysis = analyze_team_needs(my_team_df, draft_recs)
+    team_analysis_str, positional_breakdown_df = analyze_team_needs(my_team_df, draft_recs)
 
     trade_recs = get_trade_recommendations(draft_recs, team_roster=my_team_normalized)
 
@@ -270,4 +273,4 @@ if __name__ == "__main__":
     simulated_roster, simulated_draft_order = draft_strategizer.main()
 
     # Generate the report
-    generate_terminal_report(draft_recs, bye_conflicts, trade_recs, team_analysis, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order)
+    generate_terminal_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df)
