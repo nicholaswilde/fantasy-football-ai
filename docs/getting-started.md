@@ -11,33 +11,6 @@
 2.  **Install `task`:**
     Follow the instructions at [taskfile.dev/installation](https://taskfile.dev/installation) to install `task`.
 
-3.  Copy the settings.
-
-    === "Task"
-
-        ```
-        task init
-        ```
-    
-    === "Manual"
-    
-        ```
-        cp .env.tmpl .env
-        ```
-
-5.  **Bootstrap the project:**
-    This command will create a virtual environment, install all the necessary dependencies, and guide you through selecting your team.
-
-    === "Task"
-    
-        ```bash
-        task bootstrap
-        ```
-
-6.  **Activate the virtual environment:**
-    ```bash
-    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-    ```
 
 ### :gear: Configuration
 
@@ -57,6 +30,12 @@ To use the Gemini API, you need to configure your API key.
         task init
         ```
 
+    === "Manual"
+
+        ```bash
+        cp .env.tmpl .env
+        ```
+
 6.  Add your API key and ESPN credentials to the `.env` file:
 
     ??? abstract ".env"
@@ -65,7 +44,25 @@ To use the Gemini API, you need to configure your API key.
         --8<-- ".env.tmpl"
         ```
 
-7.  **Customize Scoring Rules (Optional)**:
+## :memo: Usage
+
+1.  **Bootstrap the project:**
+    This command will create a virtual environment, install all the necessary dependencies, and guide you through selecting your team.
+
+    === "Task"
+    
+        ```bash
+        task bootstrap
+        ```
+
+2.  **Activate the virtual environment:**
+    ```bash
+    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+    ```
+
+## :gear: Options
+
+1.  **Customize Scoring Rules (Optional)**:
     The project includes a `config.yaml` file in the root directory. You can modify this file to adjust the fantasy football scoring rules to match your league's settings. This allows for flexible customization without changing the Python code.
 
     Alternatively, you can run the following command to automatically fetch the scoring rules from your league and update `config.yaml`:
@@ -85,7 +82,7 @@ To use the Gemini API, you need to configure your API key.
         # ... other scoring rules
     ```
 
-9.  **Configure Year Settings (Optional)**:
+2.  **Configure Year Settings (Optional)**:
     The `config.yaml` file also contains fields for `year` and `data_years` under the `league_settings` section.
 
     *   `year`: This field specifies the current year for your fantasy football league. It is used to fetch the correct league data.
@@ -99,3 +96,4 @@ To use the Gemini API, you need to configure your API key.
         year: 2024
         data_years: [2023, 2024]
     ```
+    
