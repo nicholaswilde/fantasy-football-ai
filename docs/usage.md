@@ -28,17 +28,22 @@ task available_players
 
 This will create an `available_players.csv` file in the `data/` directory.
 
+### :bust_in_silhouette: Identify Your Team
+
+To select your team from a list of all teams in the league, run the following command:
+
+```bash
+task identify_team
+```
+
+This will save your team's ID to the `config.yaml` file, so the other scripts know which team is yours.
+
 ### :bar_chart: Analyze Your Team
 
-1.  Get your team's roster and create the `my_team.md` file by running the following command:
-    ```bash
-    task my_team
-    ```
-
-2.  Run the analysis script:
-    ```bash
-    task analyze
-    ```
+To get your team's roster and create the `my_team.md` file, run the following command:
+```bash
+task my_team
+```
 
 ### :page_with_curl: Generate Report
 

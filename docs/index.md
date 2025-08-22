@@ -2,48 +2,32 @@
 
 > Using AI to dominate your fantasy football league. It's like having a secret weapon, but for nerds.
 
-This project leverages Google's Gemini AI to provide data-driven insights and analysis for your fantasy football league. It helps you make informed decisions on player stats, team analysis, and trade suggestions. To get started, clone the repository,
+This project leverages Google's Gemini AI to provide data-driven insights and analysis for your fantasy football league. It helps you make informed decisions on player stats, team analysis, and trade suggestions.
 
 ## :memo: TL;DR
 
-1. Copy the `.env.tmpl` file to `.env`.
+1.  **Initial Setup**
+    ```shell
+    task init
+    # Edit .env with your credentials
+    task bootstrap
+    ```
 
-    === "Task"
+2.  **Weekly Update**
+    ```shell
+    task weekly_update
+    ```
 
-        ```shell
-        task init
-        ```
-
-2. Edit `.env`. 
-
-3. Bootstrap the project.
-
-    === "Task"
-
-        ```shell
-        task bootstrap
-        ```
-
-4. Perform weekly update
-
-    === "Task"
-
-        ```shell
-        task weekly_update
-        ```
-
-5. Download data and create a draft strategy
-
-    === "Task"
-
-        ```shell
-        task draft_prep
-        ```
+3.  **Draft Preparation**
+    ```shell
+    task draft_prep
+    ```
 
 ## :sparkles: Features
 
 *   **Player Stat Analysis**: Downloads and processes weekly player statistics from the `nfl_data_py` library.
 *   **Customizable Scoring Rules**: Define your league's scoring rules in `config.yaml` for accurate fantasy point calculations.
+*   **Team Identification**: Easily identify and save your team from a list of all teams in the league.
 *   **Report Generation**: Generates comprehensive Markdown reports summarizing draft recommendations, bye week conflicts, and trade suggestions.
 *   **Team Analysis**: Uses the Gemini AI to analyze your team's roster and provide feedback.
 *   **Trade Suggestions**: Identifies "buy-low" and "sell-high" trade candidates based on weekly performance versus season averages.

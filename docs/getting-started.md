@@ -11,15 +11,15 @@
 2.  **Install `task`:**
     Follow the instructions at [taskfile.dev/installation](https://taskfile.dev/installation) to install `task`.
 
-3.  **Create a virtual environment:**
+3.  **Bootstrap the project:**
+    This command will create a virtual environment, install all the necessary dependencies, and guide you through selecting your team.
     ```bash
     task bootstrap
-    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
     ```
 
-4.  **Install dependencies:**
+4.  **Activate the virtual environment:**
     ```bash
-    task deps
+    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
     ```
 
 ### :gear: Configuration
@@ -30,11 +30,11 @@ To use the Gemini API, you need to configure your API key.
 
 2. Find your LEAGUE_ID from the URL of your ESPN fantasy football league.
 
-3. Find your ESPN_S2 and SWID cookies from your browser after logging into your ESPN account. See [this discussion][].
+3. Find your ESPN_S2 and SWID cookies from your browser after logging into your ESPN account. See [this discussion](https://github.com/cwendt94/espn-api/discussions/141).
 
 4.  Create a `.env` file from the template:
     ```bash
-    cp .env.tmpl .env
+    task init
     ```
 
 5.  Add your API key and ESPN credentials to the `.env` file:
@@ -51,7 +51,8 @@ To use the Gemini API, you need to configure your API key.
     ```yaml
     # config.yaml example
     scoring_rules:
-        passing_yards: 0.04
-        passing_touchdowns: 6
+        every_25_passing_yards: 1.0
+        td_pass: 6.0
+        interceptions_thrown: -3.0
         # ... other scoring rules
     ```
