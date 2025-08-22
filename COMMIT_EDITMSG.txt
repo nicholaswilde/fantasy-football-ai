@@ -1,8 +1,0 @@
-feat(ai-chat): Implement interactive AI chat and fix quit functionality
-
-This commit introduces an interactive chat interface for the Fantasy Football AI assistant.
-Key changes include:
-- Refactored `scripts/fantasy_football_ai.py` to allow continuous user input.
-- Implemented robust handling for the 'quit' command to ensure clean exit.
-- Added a new `ai_chat` task to `Taskfile.yml` for easy execution of the chat interface.
-- Updated Dockerfile for improved build process.
