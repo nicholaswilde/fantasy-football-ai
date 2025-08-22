@@ -71,7 +71,7 @@ if __name__ == "__main__":
         print(f"Error: Data file not found at '{data_file}'. Please run 'download_stats.py' first.")
     else:
         # Read the stats file
-        stats_df = pd.read_csv(data_file)
+        stats_df = pd.read_csv(data_file, low_memory=False)
 
         # Find the most recent week
         most_recent_week = stats_df['week'].max()
