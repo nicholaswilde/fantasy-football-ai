@@ -1,0 +1,31 @@
+task: Available tasks for this project:
+* available_players:       Get available players from your league and create available_players.csv
+* bootstrap:               Bootstrap the project
+* build:                   Build the Dockerfile
+* compare_roster:          Compare roster settings with actual team composition
+* decrypt:                 Decrypt secret and environment files using sops.
+* deps:                    Install Python dependencies
+* docker:                  Run a task inside the Docker container
+* download:                Download NFL player stats. Usage: task download -- --years 2022 2023
+* download_data:           Download player data from Sleeper API
+* draft_prep:              Download data and create a draft strategy
+* draft_strategy:          Run the draft strategizer to get draft recommendations
+* encrypt:                 Encrypt secret and environment files using sops.
+* export:                  Export the list of available tasks to task-list.txt.
+* gflash:                  Run Gemini with the gemini-2.5-flash model.
+* glite:                   Run Gemini with the gemini-2.5-flash-lite model.
+* gpro:                    Run Gemini with the gemini-2.5-pro model.
+* init:                    Initialize the project by creating environment file from templates.
+* lint:                    Lint the code with flake8
+* my_team:                 Get your fantasy football team and create my_team.md
+* pickup:                  Get pickup recommendations based on available players and team needs
+* render_report:           Render the generated Markdown report to HTML and open in browser
+* report:                  Generate a Markdown report from the analysis
+* report_terminal:         Output the analysis report to the terminal
+* run:                     Run the Dockerfile
+* serve:                   Serve the documentation locally using Docker.
+* settings:                Get your league settings
+* shell:                   Open a shell inside the Docker container
+* trade:                   Get trade suggestions based on player stats
+* update:                  Update Docker container
+* weekly_update:           Run the full weekly update: download stats, update team, get available players, analyze, get suggestions, and generate report.
