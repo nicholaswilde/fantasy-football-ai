@@ -11,6 +11,8 @@
 2.  **Install `task`:**
     Follow the instructions at [taskfile.dev/installation](https://taskfile.dev/installation) to install `task`.
 
+3. **Install `python3 & pip`:**
+    Follow the instructions at [python.org](https://www.python.org/downloads/) to install `python3` and `pip`.
 
 ### :gear: Configuration
 
