@@ -1,6 +1,6 @@
 # :football: Fantasy Football AI :robot:
 [![task](https://img.shields.io/badge/Task-Enabled-brightgreen?style=for-the-badge&logo=task&logoColor=white)](https://taskfile.dev/#/)
-
+[![docs](https://img.shields.io/github/actions/workflow/status/nicholaswilde/fantasy-football-ai/docs.yaml?label=docs&style=for-the-badge&branch=main)](https://github.com/nicholaswilde/fantast-football-ai/actions/workflows/docs.yaml)
 Using AI to dominate your fantasy football league. It's like having a secret weapon, but for nerds.
 
 This project leverages Google's Gemini AI to provide data-driven insights and analysis for your fantasy football league. It helps you make informed decisions on player stats, team analysis, and trade suggestions. 
