@@ -11,6 +11,7 @@ This project leverages Google's Gemini AI to provide data-driven insights and an
     task init
     # Edit .env with your credentials
     task bootstrap
+    # Identity which team is yours
     ```
 
 2.  **Weekly Update**
