@@ -1,14 +1,15 @@
-league_settings:
+---\nleague_settings:
   league_name: San Cola Cup Covid Years
   number_of_teams: 12
   playoff_teams: 8
   year: 2024
-  data_years: [2023, 2024]
-my_team_id: 8
+  data_years:
+  - 2023
+  - 2024
 roster_settings:
   BE: 7
-  DP: 2
   D_ST: 1
+  DP: 2
   IR: 1
   K: 1
   QB: 1
@@ -19,12 +20,12 @@ roster_settings:
   WR_TE: 1
 scoring_rules:
   0_points_allowed: 10.0
+  1_6_points_allowed: 7.5
+  1_2_sack: 0.5
   100_199_total_yards_allowed: 7.5
   100_199_yard_receiving_game: 3.0
   100_199_yard_rushing_game: 3.0
   14_17_points_allowed: 2.5
-  1_2_sack: 0.5
-  1_6_points_allowed: 7.5
   200+_yard_receiving_game: 4.0
   200+_yard_rushing_game: 4.0
   200_299_total_yards_allowed: 5.0
@@ -51,8 +52,8 @@ scoring_rules:
   550+_total_yards_allowed: -25.0
   7_13_points_allowed: 5.0
   assisted_tackles: 0.5
-  blocked_punt,_pat_or_fg: 2.0
   blocked_punt_or_fg_return_for_td: 6.0
+  blocked_punt,_pat_or_fg: 2.0
   each_fumble_forced: 1.0
   each_fumble_recovered: 3.0
   each_interception: 3.0
@@ -85,3 +86,4 @@ scoring_rules:
   td_rush: 6.0
   total_fumbles_lost: -2.0
   total_tackles: 0.1
+my_team_id: 8
