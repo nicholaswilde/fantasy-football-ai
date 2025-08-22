@@ -1,4 +1,5 @@
 # :football: Fantasy Football AI :robot:
+[![task](https://img.shields.io/badge/Task-Enabled-brightgreen?style=for-the-badge&logo=task&logoColor=white)](https://taskfile.dev/#/)
 
 Using AI to dominate your fantasy football league. It's like having a secret weapon, but for nerds.
 
