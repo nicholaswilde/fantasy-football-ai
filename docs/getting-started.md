@@ -89,7 +89,6 @@ To use the Gemini API, you need to configure your API key.
     
         ```bash
         python3 scripts/get_league_settings.py
-        python3
         ```
     
     ```yaml
