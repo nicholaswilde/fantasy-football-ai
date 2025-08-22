@@ -35,7 +35,7 @@ CONFIG = load_config()
 def load_available_players(file_path):
     """Loads available players from the CSV file and renames columns for consistency."""
     try:
-        df = pd.read_csv(file_path)
+        df = pd.read_csv(file_path, low_memory=False)
         # Rename columns to match player_stats_df for merging
         df = df.rename(columns={'name': 'player_display_name', 'pro_team': 'recent_team'})
         return df
@@ -46,7 +46,7 @@ def load_available_players(file_path):
 def load_player_stats(file_path):
     """Loads player season stats from the CSV file."""
     try:
-        return pd.read_csv(file_path)
+        return pd.read_csv(file_path, low_memory=False)
     except FileNotFoundError:
         print(f"Error: Player stats file not found at {file_path}")
         return pd.DataFrame()

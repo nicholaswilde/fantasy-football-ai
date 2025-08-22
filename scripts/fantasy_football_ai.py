@@ -34,8 +34,10 @@ def ask_gemini(question):
     """
     Sends a question to the Gemini model and returns the response.
     """
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     response = model.generate_content(question)
+    if not response.text:
+        print("DEBUG: Gemini API returned an empty response for the text content.")
     return response.text
 
 
@@ -48,17 +50,17 @@ if __name__ == "__main__":
             "and more."
         )
 
-        # Example question
-        example_question = (
-            "Who are the top 5 running backs for the upcoming fantasy "
-            "football season?"
-        )
-        print(f"\nAsking Gemini: '{example_question}'")
-
-        # Get the answer from Gemini
-        answer = ask_gemini(example_question)
-        print("\nGemini's Answer:")
-        print(answer)
+        answer = None # Initialize answer to None
+        while True:
+            user_question = input("Ask Gemini a question (or 'quit' to exit): ").strip()
+            if user_question.lower() == 'quit':
+                break
+            else:
+                print(f"\nAsking Gemini: '{user_question}'")
+                answer = ask_gemini(user_question)
+                print("\nGemini's Answer:")
+                print(answer)
+        
 
     except ValueError as e:
         print(f"Error: {e}")

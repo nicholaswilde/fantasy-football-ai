@@ -1,36 +1,33 @@
 # :football: Fantasy Football AI :robot:
+[![task](https://img.shields.io/badge/Task-Enabled-brightgreen?style=for-the-badge&logo=task&logoColor=white)](https://taskfile.dev/#/)
+[![docs](https://img.shields.io/github/actions/workflow/status/nicholaswilde/fantasy-football-ai/docs.yaml?label=docs&style=for-the-badge&branch=main)](https://github.com/nicholaswilde/fantast-football-ai/actions/workflows/docs.yaml)
 
 Using AI to dominate your fantasy football league. It's like having a secret weapon, but for nerds.
 
-## :memo: TL;DR
+This project leverages Google's Gemini AI to provide data-driven insights and analysis for your fantasy football league. It helps you make informed decisions on player stats, team analysis, and trade suggestions. 
 
-This project leverages Google's Gemini AI to provide data-driven insights and analysis for your fantasy football league. It helps you make informed decisions on player stats, team analysis, and trade suggestions. To get started, clone the repository,
+> [!WARNING]
+> This project is currently in a development stage. Features and configurations are subject to change, and breaking changes may be introduced at any time.
 
-1. Copy the `.env.tmpl` file to `.env`.
+## :rocket: TL;DR
 
-```shell
-task init
-```
+1.  **Initial Setup**
+    ```shell
+    task init
+    # Edit .env with your credentials
+    task bootstrap
+    # Identity which team is yours
+    ```
 
-2. Edit `.env`. 
+2.  **Weekly Update**
+    ```shell
+    task weekly_update
+    ```
 
-3. Bootstrap the project.
-
-```shell
-task bootstrap
-```
-
-4. Perform weekly update
-
-```shell
-task weekly_update
-```
-
-5. Download data and create a draft strategy
-
-```shell
-task draft_prep
-```
+3.  **Draft Preparation**
+    ```shell
+    task draft_prep
+    ```
 
 For detailed documentation, please visit the [project documentation](https://nicholaswilde.github.io/fantasy-football-ai/).
 

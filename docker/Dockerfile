@@ -33,6 +33,10 @@ COPY ../requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the project files into the container
+# Create the virtual environment directory
+RUN python3 -m venv venv
+
+# Copy the rest of the project files into the container
 COPY ../ .
 
 # Set ownership of /app to the new user
@@ -40,9 +44,6 @@ RUN chown -R abc:abc /app
 
 # Switch to the new user
 USER abc
-
-# Create the virtual environment directory
-RUN python3 -m venv venv
 
 # Set the entrypoint to the Taskfile, so you can run tasks directly
 ENTRYPOINT ["task"]

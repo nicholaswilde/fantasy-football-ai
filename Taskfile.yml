@@ -26,7 +26,7 @@ tasks:
   build:
     desc: Build the Dockerfile
     cmds:
-      - docker build -f -t fantasy-football-ai ./docker/.
+      - docker build -f docker/Dockerfile -t fantasy-football-ai .
   run:
     desc: Run the Dockerfile
     cmds:
@@ -36,19 +36,19 @@ tasks:
     desc: Generate a Markdown report from the analysis
     cmds:
       - |
-        {{ .SOURCE }} && ./scripts/generate_report.py
+        {{ .SOURCE }} && python3 scripts/generate_report.py
 
   report_terminal:
     desc: Output the analysis report to the terminal
     cmds:
       - |
-        {{ .SOURCE }} && ./scripts/terminal_report.py
+        {{ .SOURCE }} && python3 scripts/terminal_report.py
 
   render_report:
     desc: Render the generated Markdown report to HTML and open in browser
     cmds:
       - |
-        {{ .SOURCE }} && ./scripts/render_report.py
+        {{ .SOURCE }} && python3 scripts/render_report.py
 
   update:
     desc: Update Docker container
@@ -109,6 +109,12 @@ tasks:
       - |
         {{ .SOURCE }} && gemini -m gemini-{{ .VER }}-flash-lite
 
+  ai_chat:
+    desc: Interact with the Fantasy Football AI assistant.
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/fantasy_football_ai.py
+
   bootstrap:
     desc: Bootstrap the project
     preconditions:
@@ -119,6 +125,7 @@ tasks:
       - python3 -m venv venv
       - task: deps
       - task: settings
+      - task: identify_team
 
   lint:
     desc: "Lint the code with flake8"
@@ -133,24 +140,24 @@ tasks:
 
   # A task to download the latest player stats.
   download:
-    desc: "Download NFL player stats. Usage: task download -- --years 2022 2023"
+    desc: "Download NFL player stats. Defaults to years specified in config.yaml. Usage: task download -- --years 2022 2023"
     cmds:
       - |
-        {{ .SOURCE }} && ./scripts/download_stats.py {{ .CLI_ARGS }}
+        {{ .SOURCE }} && python3 scripts/download_stats.py {{ .CLI_ARGS }}
 
   # A task to get pickup recommendations.
   pickup:
     desc: Get pickup recommendations based on available players and team needs
     cmds:
       - |
-        {{ .SOURCE }} && ./scripts/pickup_suggester.py
+        {{ .SOURCE }} && python3 scripts/pickup_suggester.py
 
   # A task to get trade suggestions.
   trade:
     desc: Get trade suggestions based on player stats
     cmds:
       - |
-        {{ .SOURCE }} && ./scripts/trade_suggester.py
+        {{ .SOURCE }} && python3 scripts/trade_suggester.py
 
   # A task to run the draft strategizer.
   draft_strategy:
@@ -169,29 +176,35 @@ tasks:
       - task: trade
       - task: report_terminal
 
+  identify_team:
+    desc: Identify your team and save it to config.yaml
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/identify_my_team.py
+
   my_team:
     desc: Get your fantasy football team and create my_team.md
     cmds:
       - |
-        {{ .SOURCE }} && ./scripts/get_my_team.py
+        {{ .SOURCE }} && python3 scripts/get_my_team.py
 
   available_players:
     desc: Get available players from your league and create available_players.csv
     cmds:
       - |
-        source venv/bin/activate && ./scripts/get_available_players.py
+        {{ .SOURCE }} && python3 scripts/get_available_players.py
       
   settings:
     desc: Get your league settings
     cmds:
       - |
-        {{ .SOURCE }} && scripts/get_league_settings.py
+        {{ .SOURCE }} && python3 scripts/get_league_settings.py
 
   compare_roster:
     desc: Compare roster settings with actual team composition
     cmds:
       - |
-        {{ .SOURCE }} && ./scripts/compare_roster_positions.py
+        {{ .SOURCE }} && python3 scripts/compare_roster_positions.py
 
   download_data:
     desc: Download player data from Sleeper API

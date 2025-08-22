@@ -1,6 +1,12 @@
-## :computer: Usage
+# :computer: Usage
 
 This project uses `Taskfile.yml` to define and run tasks. You can see a list of all available tasks by running `task -l`.
+
+??? abstract "task-list.txt"
+
+    ```yaml
+    --8<-- "task-list.txt"
+    ```
 
 ### :arrow_down: Download Player Stats
 
@@ -28,17 +34,22 @@ task available_players
 
 This will create an `available_players.csv` file in the `data/` directory.
 
+### :bust_in_silhouette: Identify Your Team
+
+To select your team from a list of all teams in the league, run the following command:
+
+```bash
+task identify_team
+```
+
+You will be prompted to enter the number corresponding to your team from the list. This will save your team's ID to the `my_team_id` field in the `config.yaml` file, so the other scripts know which team is yours.
+
 ### :bar_chart: Analyze Your Team
 
-1.  Get your team's roster and create the `my_team.md` file by running the following command:
-    ```bash
-    task my_team
-    ```
-
-2.  Run the analysis script:
-    ```bash
-    task analyze
-    ```
+To get your team's roster and create the `my_team.md` file, run the following command:
+```bash
+task my_team
+```
 
 ### :page_with_curl: Generate Report
 
@@ -82,11 +93,7 @@ To build and serve the documentation site locally, run:
 task docs
 ```
 
-To deploy the documentation site, run:
 
-```bash
-task deploy_docs
-```
 
 ### :gear: Download League Settings
 

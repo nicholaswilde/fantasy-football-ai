@@ -240,7 +240,7 @@ if __name__ == "__main__":
 
 
     # Load and process data
-    stats_df = pd.read_csv(data_file)
+    stats_df = pd.read_csv(data_file, low_memory=False)
     stats_with_points = calculate_fantasy_points(stats_df)
 
     # Add a placeholder bye_week column for demonstration purposes
