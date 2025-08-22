@@ -42,7 +42,7 @@ def identify_my_team():
     espn_s2 = os.getenv("ESPN_S2")
     swid = os.getenv("SWID")
     config = load_config()
-    year = config.get('league_settings', {}).get('year', datetime.datetime.now().year)
+    year = config.get('league_settings', {}).get('year', datetime.now().year)
 
     if not all([league_id, espn_s2, swid]):
         raise ValueError(

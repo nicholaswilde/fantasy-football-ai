@@ -43,11 +43,6 @@ This project leverages Google's Gemini AI to provide data-driven insights and an
 *   **League Settings**: Downloads your current league settings, including scoring and roster rules.
 *   **Customizable Tasks**: Uses `Taskfile` to easily run common commands for linting, installing dependencies, downloading data, and running analysis.
 
-## 👋 Contributing
-
-Contributions are welcome! Please feel free to submit a pull request or open an issue.
-
-
 ## :scales: License
 
 [Apache License 2.0](https://raw.githubusercontent.com/nicholaswilde/fantasy-football-ai/refs/heads/main/LICENSE)

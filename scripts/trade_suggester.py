@@ -14,6 +14,7 @@
 import pandas as pd
 import os
 import yaml
+from tabulate import tabulate
 
 # Load configuration from config.yaml
 CONFIG_FILE = os.path.join(
@@ -78,6 +79,33 @@ if __name__ == "__main__":
 
         # Get trade suggestions
         sell_high, buy_low = suggest_trades(stats_df, most_recent_week)
-        print("Trade suggester script executed. It returns data structures for use by other scripts.")
-        print("Sell-High Candidates:", sell_high)
-        print("Buy-Low Candidates:", buy_low)
+
+        # Define the columns to display
+        columns_to_display = [
+            'player_display_name', 'position', 'recent_team',
+            'fantasy_points', 'avg_fantasy_points', 'point_difference'
+        ]
+
+        # Rename columns for better readability
+        sell_high_display = sell_high[columns_to_display].rename(columns={
+            'player_display_name': 'Player',
+            'position': 'Pos',
+            'recent_team': 'Team',
+            'fantasy_points': 'Week Pts',
+            'avg_fantasy_points': 'Avg Pts',
+            'point_difference': 'Diff'
+        })
+
+        buy_low_display = buy_low[columns_to_display].rename(columns={
+            'player_display_name': 'Player',
+            'position': 'Pos',
+            'recent_team': 'Team',
+            'fantasy_points': 'Week Pts',
+            'avg_fantasy_points': 'Avg Pts',
+            'point_difference': 'Diff'
+        })
+
+        print("--- Sell-High Candidates ---")
+        print(tabulate(sell_high_display, headers='keys', tablefmt='grid', showindex=False))
+        print("\n--- Buy-Low Candidates ---")
+        print(tabulate(buy_low_display, headers='keys', tablefmt='grid', showindex=False))
