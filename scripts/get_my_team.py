@@ -6,8 +6,8 @@
 # Fetches the user's fantasy football team from ESPN and saves it to a Markdown file.
 #
 # @author Nicholas Wilde, 0xb299a622
-# @date 2025-08-20
-# @version 0.1.0
+# @date 21 08 2025
+# @version 0.4.0
 #
 ################################################################################
 
@@ -39,6 +39,7 @@ def get_my_team():
     league_id = os.getenv("LEAGUE_ID")
     espn_s2 = os.getenv("ESPN_S2")
     swid = os.getenv("SWID")
+    year = CONFIG.get('league_settings', {}).get('year', datetime.now().year)
 
     if not all([league_id, espn_s2, swid]):
         raise ValueError(
@@ -47,16 +48,21 @@ def get_my_team():
         )
 
     try:
-        league = League(league_id=int(league_id), year=2024, espn_s2=espn_s2, swid=swid)
+        league = League(league_id=int(league_id), year=year, espn_s2=espn_s2, swid=swid)
 
-        # Find the user's team
-        # We are assuming the user is the one who owns the team
-        # There is no easy way to get the team of the current user
-        # So we will have to iterate over all teams and find the one that has the user's name
-        # For now, we will just get the first team in the league
-        # TODO: Find a better way to get the user's team
+        # Get team from config
+        my_team_id = CONFIG.get('my_team_id')
+        if not my_team_id:
+            raise ValueError("my_team_id not found in config.yaml. Please run identify_my_team.py first.")
 
-        team = league.teams[0]
+        team = None
+        for t in league.teams:
+            if t.team_id == my_team_id:
+                team = t
+                break
+        
+        if team is None:
+            raise ValueError(f"Could not find team with ID {my_team_id}")
 
         roster = {
             pos: [] for pos, count in CONFIG.get('roster_settings', {}).items() if count > 0
@@ -69,6 +75,9 @@ def get_my_team():
             # Normalize position names from espn_api to match config.yaml if necessary
             # For example, 'D/ST' in config might be 'DST' in espn_api
             player_pos = player.position.replace('/', '').upper() # Simple normalization
+
+            if player_pos == 'DST' or player_pos == 'K': # Check for D/ST or K
+                pass
 
             if player_pos in roster:
                 roster[player_pos].append(player.name)
@@ -103,6 +112,7 @@ if __name__ == "__main__":
         league_id = os.getenv("LEAGUE_ID")
         espn_s2 = os.getenv("ESPN_S2")
         swid = os.getenv("SWID")
+        year = CONFIG.get('league_settings', {}).get('year', datetime.now().year)
 
         if not all([league_id, espn_s2, swid]):
             raise ValueError(
@@ -110,9 +120,21 @@ if __name__ == "__main__":
                 "ESPN_S2, and SWID in your .env file."
             )
 
-        league = League(league_id=int(league_id), year=2024, espn_s2=espn_s2, swid=swid)
+        league = League(league_id=int(league_id), year=year, espn_s2=espn_s2, swid=swid)
 
-        team = league.teams[0] # Assuming the first team is the user's team
+        # Get team from config
+        my_team_id = CONFIG.get('my_team_id')
+        if not my_team_id:
+            raise ValueError("my_team_id not found in config.yaml. Please run identify_my_team.py first.")
+
+        team = None
+        for t in league.teams:
+            if t.team_id == my_team_id:
+                team = t
+                break
+        
+        if team is None:
+            raise ValueError(f"Could not find team with ID {my_team_id}")
 
         roster_data = []
         for player in team.roster:
