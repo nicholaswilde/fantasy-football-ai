@@ -7,6 +7,10 @@
 
 This project leverages Google's Gemini AI to provide data-driven insights and analysis for your fantasy football league. It helps you make informed decisions on player stats, team analysis, and trade suggestions.
 
+!!! warning "Development Version"
+
+    This project is currently in a development stage. Features and configurations are subject to change, and breaking changes may be introduced at any time.
+
 ## :memo: TL;DR
 
 1.  **Initial Setup**
