@@ -1,4 +1,4 @@
-## :computer: Usage
+# :computer: Usage
 
 This project uses `Taskfile.yml` to define and run tasks. You can see a list of all available tasks by running `task -l`.
 
@@ -36,7 +36,7 @@ To select your team from a list of all teams in the league, run the following co
 task identify_team
 ```
 
-This will save your team's ID to the `config.yaml` file, so the other scripts know which team is yours.
+You will be prompted to enter the number corresponding to your team from the list. This will save your team's ID to the `my_team_id` field in the `config.yaml` file, so the other scripts know which team is yours.
 
 ### :bar_chart: Analyze Your Team
 
@@ -87,11 +87,7 @@ To build and serve the documentation site locally, run:
 task docs
 ```
 
-To deploy the documentation site, run:
 
-```bash
-task deploy_docs
-```
 
 ### :gear: Download League Settings
 

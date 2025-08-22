@@ -48,6 +48,11 @@ To use the Gemini API, you need to configure your API key.
 6.  **Customize Scoring Rules (Optional)**:
     The project includes a `config.yaml` file in the root directory. You can modify this file to adjust the fantasy football scoring rules to match your league's settings. This allows for flexible customization without changing the Python code.
 
+    Alternatively, you can run the following command to automatically fetch the scoring rules from your league and update `config.yaml`:
+    ```bash
+    task settings
+    ```
+
     ```yaml
     # config.yaml example
     scoring_rules:
@@ -55,4 +60,19 @@ To use the Gemini API, you need to configure your API key.
         td_pass: 6.0
         interceptions_thrown: -3.0
         # ... other scoring rules
+    ```
+
+7.  **Configure Year Settings (Optional)**:
+    The `config.yaml` file also contains fields for `year` and `data_years` under the `league_settings` section.
+
+    *   `year`: This field specifies the current year for your fantasy football league. It is used to fetch the correct league data.
+    *   `data_years`: This is a list of years for which to download player stats. By default, it's set to the current and previous year.
+
+    You can manually edit these fields in `config.yaml` to match your needs.
+
+    ```yaml
+    # config.yaml example
+    league_settings:
+        year: 2024
+        data_years: [2023, 2024]
     ```
