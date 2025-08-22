@@ -57,6 +57,11 @@ To use the Gemini API, you need to configure your API key.
         task bootstrap
         ```
 
+        2. **Activate the virtual environment:**
+        ```bash
+        source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+        ```
+    
     === "Manual"
 
         ```shell
@@ -66,11 +71,6 @@ To use the Gemini API, you need to configure your API key.
         python3 scripts/get_league_settings.py
         python3 scripts/identify_my_team.py
         ```
-
-3.  **Activate the virtual environment:**
-    ```bash
-    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-    ```
 
 ## :gear: Options
 
