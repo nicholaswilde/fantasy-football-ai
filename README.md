@@ -9,7 +9,7 @@ This project leverages Google's Gemini AI to provide data-driven insights and an
 > [!WARNING]
 > This project is currently in a development stage. Features and configurations are subject to change, and breaking changes may be introduced at any time.
 
-## :memo: TL;DR
+## :rocket: TL;DR
 
 1.  **Initial Setup**
     ```shell
