@@ -11,7 +11,21 @@
 2.  **Install `task`:**
     Follow the instructions at [taskfile.dev/installation](https://taskfile.dev/installation) to install `task`.
 
-3.  **Bootstrap the project:**
+3.  Copy the settings.
+
+    === "Task"
+
+        ```
+        task init
+        ```
+    
+    === "Manual"
+    
+        ```
+        cp .env.tmpl .env
+        ```
+
+5.  **Bootstrap the project:**
     This command will create a virtual environment, install all the necessary dependencies, and guide you through selecting your team.
 
     === "Task"
@@ -20,7 +34,7 @@
         task bootstrap
         ```
 
-5.  **Activate the virtual environment:**
+6.  **Activate the virtual environment:**
     ```bash
     source venv/bin/activate  # On Windows use `venv\Scripts\activate`
     ```
