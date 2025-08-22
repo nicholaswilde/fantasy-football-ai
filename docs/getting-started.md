@@ -13,11 +13,14 @@
 
 3.  **Bootstrap the project:**
     This command will create a virtual environment, install all the necessary dependencies, and guide you through selecting your team.
-    ```bash
-    task bootstrap
-    ```
 
-4.  **Activate the virtual environment:**
+    === "Task"
+    
+        ```bash
+        task bootstrap
+        ```
+
+5.  **Activate the virtual environment:**
     ```bash
     source venv/bin/activate  # On Windows use `venv\Scripts\activate`
     ```
@@ -33,11 +36,14 @@ To use the Gemini API, you need to configure your API key.
 3. Find your `ESPN_S2` and `SWID` cookies from your browser after logging into your ESPN account. See [this discussion](https://github.com/cwendt94/espn-api/discussions/150).
 
 4.  Create a `.env` file from the template:
-    ```bash
-    task init
-    ```
 
-5.  Add your API key and ESPN credentials to the `.env` file:
+    === "Task"
+    
+        ```bash
+        task init
+        ```
+
+6.  Add your API key and ESPN credentials to the `.env` file:
 
     ??? abstract ".env"
 
@@ -45,13 +51,16 @@ To use the Gemini API, you need to configure your API key.
         --8<-- ".env.tmpl"
         ```
 
-6.  **Customize Scoring Rules (Optional)**:
+7.  **Customize Scoring Rules (Optional)**:
     The project includes a `config.yaml` file in the root directory. You can modify this file to adjust the fantasy football scoring rules to match your league's settings. This allows for flexible customization without changing the Python code.
 
     Alternatively, you can run the following command to automatically fetch the scoring rules from your league and update `config.yaml`:
-    ```bash
-    task settings
-    ```
+
+    === "Task"
+    
+        ```bash
+        task settings
+        ```
 
     ```yaml
     # config.yaml example
@@ -62,7 +71,7 @@ To use the Gemini API, you need to configure your API key.
         # ... other scoring rules
     ```
 
-7.  **Configure Year Settings (Optional)**:
+9.  **Configure Year Settings (Optional)**:
     The `config.yaml` file also contains fields for `year` and `data_years` under the `league_settings` section.
 
     *   `year`: This field specifies the current year for your fantasy football league. It is used to fetch the correct league data.
