@@ -6,33 +6,22 @@ This project leverages Google's Gemini AI to provide data-driven insights and an
 
 ## :memo: TL;DR
 
-To get started, clone the repository,
+1.  **Initial Setup**
+    ```shell
+    task init
+    # Edit .env with your credentials
+    task bootstrap
+    ```
 
-1. Copy the `.env.tmpl` file to `.env`.
+2.  **Weekly Update**
+    ```shell
+    task weekly_update
+    ```
 
-```shell
-task init
-```
-
-2. Edit `.env`. 
-
-3. Bootstrap the project.
-
-```shell
-task bootstrap
-```
-
-4. Perform weekly update
-
-```shell
-task weekly_update
-```
-
-5. Download data and create a draft strategy
-
-```shell
-task draft_prep
-```
+3.  **Draft Preparation**
+    ```shell
+    task draft_prep
+    ```
 
 For detailed documentation, please visit the [project documentation](https://nicholaswilde.github.io/fantasy-football-ai/).
 
