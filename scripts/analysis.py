@@ -6,8 +6,8 @@
 # Provides core analytical functions for fantasy football data, including fantasy point calculation, VOR, consistency, and team needs analysis.
 #
 # @author Nicholas Wilde, 0xb299a622
-# @date 2025-08-20
-# @version 0.1.0
+# @date 21 08 2025
+# @version 0.2.3
 #
 ################################################################################
 
@@ -67,326 +67,140 @@ def get_team_roster(roster_file="data/my_team.md"):
 
 
 def calculate_fantasy_points(df):
-
     """
-    Calculates fantasy points for each player based on the SCORING_RULES.
-    Assumes the DataFrame contains columns matching common football statistics.
+    Calculates fantasy points for each player based on the SCORING_RULES in config.yaml.
     """
     df['fantasy_points'] = 0.0
 
     # Offensive stats
-    df['fantasy_points'] += (
-            df['passing_yards'] * SCORING_RULES.get('passing_yards', 0)
-        )
-    if 'passing_touchdowns' in df.columns:
-        df['fantasy_points'] += (
-            df['passing_touchdowns'] * SCORING_RULES.get(
-                'passing_touchdowns', 0
-            )
-        )
-    if 'interceptions_thrown' in df.columns:
-        df['fantasy_points'] += (
-            df['interceptions_thrown'] * SCORING_RULES.get(
-                'interceptions_thrown', 0
-            )
-        )
-    if 'rushing_yards' in df.columns:
-        df['fantasy_points'] += (
-            df['rushing_yards'] * SCORING_RULES.get('rushing_yards', 0)
-        )
-    if 'rushing_touchdowns' in df.columns:
-        df['fantasy_points'] += (
-            df['rushing_touchdowns'] * SCORING_RULES.get(
-                'rushing_touchdowns', 0
-            )
-        )
-    if 'receiving_yards' in df.columns:
-        df['fantasy_points'] += (
-            df['receiving_yards'] * SCORING_RULES.get('receiving_yards', 0)
-        )
-    if 'receiving_touchdowns' in df.columns:
-        df['fantasy_points'] += (
-            df['receiving_touchdowns'] * SCORING_RULES.get(
-                'receiving_touchdowns', 0
-            )
-        )
-    if 'receptions' in df.columns:
-        df['fantasy_points'] += (
-            df['receptions'] * SCORING_RULES.get('receptions', 0)
-        )
-    if '2pt_conversion_pass' in df.columns:
-        df['fantasy_points'] += (
-            df['2pt_conversion_pass'] * SCORING_RULES.get(
-                '2pt_conversion_pass', 0
-            )
-        )
-    if '2pt_conversion_rush' in df.columns:
-        df['fantasy_points'] += (
-            df['2pt_conversion_rush'] * SCORING_RULES.get(
-                '2pt_conversion_rush', 0
-            )
-        )
-    if '2pt_conversion_rec' in df.columns:
-        df['fantasy_points'] += (
-            df['2pt_conversion_rec'] * SCORING_RULES.get(
-                '2pt_conversion_rec', 0
-            )
-        )
-    if 'fumbles_lost' in df.columns:
-        df['fantasy_points'] += (
-            df['fumbles_lost'] * SCORING_RULES.get('fumbles_lost', 0)
-        )
-
-    # Kicking stats
-    if 'field_goals_made_0_39' in df.columns:
-        df['fantasy_points'] += (
-            df['field_goals_made_0_39'] * SCORING_RULES.get(
-                'field_goals_made_0_39', 0
-            )
-        )
-    if 'field_goals_made_40_49' in df.columns:
-        df['fantasy_points'] += (
-            df['field_goals_made_40_49'] * SCORING_RULES.get(
-                'field_goals_made_40_49', 0
-            )
-        )
-    if 'field_goals_made_50_59' in df.columns:
-        df['fantasy_points'] += (
-            df['field_goals_made_50_59'] * SCORING_RULES.get(
-                'field_goals_made_50_59', 0
-            )
-        )
-    if 'field_goals_made_60_plus' in df.columns:
-        df['fantasy_points'] += (
-            df['field_goals_made_60_plus'] * SCORING_RULES.get(
-                'field_goals_made_60_plus', 0
-            )
-        )
-    if 'field_goals_missed_0_39' in df.columns:
-        df['fantasy_points'] += (
-            df['field_goals_missed_0_39'] * SCORING_RULES.get(
-                'field_goals_missed_0_39', 0
-            )
-        )
-    if 'extra_points_made' in df.columns:
-        df['fantasy_points'] += (
-            df['extra_points_made'] * SCORING_RULES.get(
-                'extra_points_made', 0
-            )
-        )
-    if 'extra_points_missed' in df.columns:
-        df['fantasy_points'] += (
-            df['extra_points_missed'] * SCORING_RULES.get(
-                'extra_points_missed', 0
-            )
-        )
-
-    # Defensive/ST stats
-    if 'sacks' in df.columns:
-        df['fantasy_points'] += df['sacks'] * SCORING_RULES.get('sacks', 0)
+    if 'passing_yards' in df.columns:
+        df['fantasy_points'] += (df['passing_yards'] / 25) * SCORING_RULES.get('every_25_passing_yards', 0)
+    if 'passing_tds' in df.columns:
+        df['fantasy_points'] += df['passing_tds'] * SCORING_RULES.get('td_pass', 0)
     if 'interceptions' in df.columns:
-        df['fantasy_points'] += (
-            df['interceptions'] * SCORING_RULES.get('interceptions', 0)
-        )
-    if 'fumbles_recovered' in df.columns:
-        df['fantasy_points'] += (
-            df['fumbles_recovered'] * SCORING_RULES.get(
-                'fumbles_recovered', 0
-            )
-        )
-    if 'fumbles_forced' in df.columns:
-        df['fantasy_points'] += (
-            df['fumbles_forced'] * SCORING_RULES.get('fumbles_forced', 0)
-        )
-    if 'safeties' in df.columns:
-        df['fantasy_points'] += (
-            df['safeties'] * SCORING_RULES.get('safeties', 0)
-        )
-    if 'blocked_kicks' in df.columns:
-        df['fantasy_points'] += (
-            df['blocked_kicks'] * SCORING_RULES.get('blocked_kicks', 0)
-        )
-    if 'defensive_touchdowns' in df.columns:
-        df['fantasy_points'] += (
-            df['defensive_touchdowns'] * SCORING_RULES.get(
-                'defensive_touchdowns', 0
-            )
-        )
-    if 'solo_tackles' in df.columns:
-        df['fantasy_points'] += (
-            df['solo_tackles'] * SCORING_RULES.get('solo_tackles', 0)
-        )
-    if 'assisted_tackles' in df.columns:
-        df['fantasy_points'] += (
-            df['assisted_tackles'] * SCORING_RULES.get(
-                'assisted_tackles', 0
-            )
-        )
-    if 'passes_defensed' in df.columns:
-        df['fantasy_points'] += (
-            df['passes_defensed'] * SCORING_RULES.get(
-                'passes_defensed', 0
-            )
-        )
-    if 'stuffs' in df.columns:
-        df['fantasy_points'] += df['stuffs'] * SCORING_RULES.get('stuffs', 0)
-    if 'kickoff_return_touchdowns' in df.columns:
-        df['fantasy_points'] += (
-            df['kickoff_return_touchdowns'] * SCORING_RULES.get(
-                'kickoff_return_touchdowns', 0
-            )
-        )
-    if 'punt_return_touchdowns' in df.columns:
-        df['fantasy_points'] += (
-            df['punt_return_touchdowns'] * SCORING_RULES.get(
-                'punt_return_touchdowns', 0
-            )
-        )
+        df['fantasy_points'] += df['interceptions'] * SCORING_RULES.get('interceptions_thrown', 0)
+    if 'passing_2pt_conversions' in df.columns:
+        df['fantasy_points'] += df['passing_2pt_conversions'] * SCORING_RULES.get('2pt_passing_conversion', 0)
 
-    # Bonus stats (assuming these are separate columns or can be derived)
-    if '40_plus_yard_td_pass_bonus' in df.columns:
-        df['fantasy_points'] += (
-            df['40_plus_yard_td_pass_bonus'] * SCORING_RULES.get(
-                '40_plus_yard_td_pass_bonus', 0
-            )
-        )
-    if '50_plus_yard_td_pass_bonus' in df.columns:
-        df['fantasy_points'] += (
-            df['50_plus_yard_td_pass_bonus'] * SCORING_RULES.get(
-                '50_plus_yard_td_pass_bonus', 0
-            )
-        )
-    if '40_plus_yard_td_rec_bonus' in df.columns:
-        df['fantasy_points'] += (
-            df['40_plus_yard_td_rec_bonus'] * SCORING_RULES.get(
-                '40_plus_yard_td_rec_bonus', 0
-            )
-        )
-    if '50_plus_yard_td_rec_bonus' in df.columns:
-        df['fantasy_points'] += (
-            df['50_plus_yard_td_rec_bonus'] * SCORING_RULES.get(
-                '50_plus_yard_td_rec_bonus', 0
-            )
-        )
-    if '40_plus_yard_td_rush_bonus' in df.columns:
-        df['fantasy_points'] += (
-            df['40_plus_yard_td_rush_bonus'] * SCORING_RULES.get(
-                '40_plus_yard_td_rush_bonus', 0
-            )
-        )
-    if '50_plus_yard_td_rush_bonus' in df.columns:
-        df['fantasy_points'] += (
-            df['50_plus_yard_td_rush_bonus'] * SCORING_RULES.get(
-                '50_plus_yard_td_rush_bonus', 0
-            )
-        )
+    # Rushing
+    if 'rushing_yards' in df.columns:
+        df['fantasy_points'] += (df['rushing_yards'] / 10) * SCORING_RULES.get('every_10_rushing_yards', 0)
+    if 'rushing_tds' in df.columns:
+        df['fantasy_points'] += df['rushing_tds'] * SCORING_RULES.get('td_rush', 0)
+    if 'rushing_2pt_conversions' in df.columns:
+        df['fantasy_points'] += df['rushing_2pt_conversions'] * SCORING_RULES.get('2pt_rushing_conversion', 0)
 
-    # Yardage game bonuses
-    if '100_199_yard_receiving_game' in df.columns:
-        df['fantasy_points'] += (
-            df['100_199_yard_receiving_game'] * SCORING_RULES.get(
-                '100_199_yard_receiving_game', 0
-            )
-        )
-    if '200_plus_yard_receiving_game' in df.columns:
-        df['fantasy_points'] += (
-            df['200_plus_yard_receiving_game'] * SCORING_RULES.get(
-                '200_plus_yard_receiving_game', 0
-            )
-        )
-    if '100_199_yard_rushing_game' in df.columns:
-        df['fantasy_points'] += (
-            df['100_199_yard_rushing_game'] * SCORING_RULES.get(
-                '100_199_yard_rushing_game', 0
-            )
-        )
-    if '200_plus_yard_rushing_game' in df.columns:
-        df['fantasy_points'] += (
-            df['200_plus_yard_rushing_game'] * SCORING_RULES.get(
-                '200_plus_yard_rushing_game', 0
-            )
-        )
-    if '300_399_yard_passing_game' in df.columns:
-        df['fantasy_points'] += (
-            df['300_399_yard_passing_game'] * SCORING_RULES.get(
-                '300_399_yard_passing_game', 0
-            )
-        )
-    if '400_plus_yard_passing_game' in df.columns:
-        df['fantasy_points'] += (
-            df['400_plus_yard_passing_game'] * SCORING_RULES.get(
-                '400_plus_yard_passing_game', 0
-            )
-        )
+    # Receiving
+    if 'receiving_yards' in df.columns:
+        df['fantasy_points'] += (df['receiving_yards'] / 10) * SCORING_RULES.get('every_10_receiving_yards', 0)
+    if 'receiving_tds' in df.columns:
+        df['fantasy_points'] += df['receiving_tds'] * SCORING_RULES.get('td_reception', 0)
+    if 'receptions' in df.columns:
+        df['fantasy_points'] += (df['receptions'] / 5) * SCORING_RULES.get('every_5_receptions', 0)
+    if 'receiving_2pt_conversions' in df.columns:
+        df['fantasy_points'] += df['receiving_2pt_conversions'] * SCORING_RULES.get('2pt_receiving_conversion', 0)
 
-    # Return yards
-    if 'kickoff_return_yards' in df.columns:
-        df['fantasy_points'] += (
-            df['kickoff_return_yards'] * SCORING_RULES.get(
-                'every_25_kickoff_return_yards', 0
-            )
-        )
-    if 'punt_return_yards' in df.columns:
-        df['fantasy_points'] += (
-            df['punt_return_yards'] * SCORING_RULES.get(
-                'every_25_punt_return_yards', 0
-            )
-        )
+    # Fumbles
+    fumbles_lost = 0
+    if 'rushing_fumbles_lost' in df.columns:
+        fumbles_lost += df['rushing_fumbles_lost']
+    if 'receiving_fumbles_lost' in df.columns:
+        fumbles_lost += df['receiving_fumbles_lost']
+    df['fantasy_points'] += fumbles_lost * SCORING_RULES.get('total_fumbles_lost', 0)
 
-    # Points allowed (D/ST) - This needs careful handling as it's usually a range
-    # For simplicity, assuming a 'points_allowed' column and applying the most
-    # relevant rule
-    def apply_points_allowed_scoring(row):
-        points = 0
-        if 'points_allowed' in row:
-            pa = row['points_allowed']
-            if pa == 0:
-                points += SCORING_RULES.get('points_allowed_0', 0)
-            elif 1 <= pa <= 6:
-                points += SCORING_RULES.get('points_allowed_1_6', 0)
-            elif 7 <= pa <= 13:
-                points += SCORING_RULES.get('points_allowed_7_13', 0)
-            elif 14 <= pa <= 17:
-                points += SCORING_RULES.get('points_allowed_14_17', 0)
-            elif 22 <= pa <= 27:
-                points += SCORING_RULES.get('points_allowed_22_27', 0)
-            elif 28 <= pa <= 34:
-                points += SCORING_RULES.get('points_allowed_28_34', 0)
-            elif 35 <= pa <= 45:
-                points += SCORING_RULES.get('points_allowed_35_45', 0)
-            elif pa >= 46:
-                points += SCORING_RULES.get('points_allowed_46_plus', 0)
-        return points
+    # Special Teams (from nfl_data_py)
+    if 'special_teams_tds' in df.columns:
+        df['fantasy_points'] += df['special_teams_tds'] * SCORING_RULES.get('kickoff_return_td', 0)
 
-    if 'points_allowed' in df.columns:
-        df['fantasy_points'] += df.apply(apply_points_allowed_scoring, axis=1)
+    # Kicking Stats (from espn_api)
+    if 'position' in df.columns and 'K' in df['position'].unique():
+        k_df = df[df['position'] == 'K']
+        if 'madeFieldGoalsFrom50Plus' in k_df.columns:
+            df.loc[k_df.index, 'fantasy_points'] += k_df['madeFieldGoalsFrom50Plus'] * SCORING_RULES.get('fg_made_(60+_yards)', 0) # Assuming 50+ is 60+
+            df.loc[k_df.index, 'fantasy_points'] += k_df['madeFieldGoalsFrom50Plus'] * SCORING_RULES.get('fg_made_(50_59_yards)', 0) # Assuming 50+ is 50-59
+        if 'madeFieldGoalsFrom40To49' in k_df.columns:
+            df.loc[k_df.index, 'fantasy_points'] += k_df['madeFieldGoalsFrom40To49'] * SCORING_RULES.get('fg_made_(40_49_yards)', 0)
+        if 'madeFieldGoalsFromUnder40' in k_df.columns:
+            df.loc[k_df.index, 'fantasy_points'] += k_df['madeFieldGoalsFromUnder40'] * SCORING_RULES.get('fg_made_(0_39_yards)', 0)
+        if 'missedFieldGoals' in k_df.columns:
+            df.loc[k_df.index, 'fantasy_points'] += k_df['missedFieldGoals'] * SCORING_RULES.get('fg_missed_(0_39_yards)', 0) # Assuming all missed FGs are 0-39
+        if 'madeExtraPoints' in k_df.columns:
+            df.loc[k_df.index, 'fantasy_points'] += k_df['madeExtraPoints'] * SCORING_RULES.get('each_pat_made', 0)
+        if 'missedExtraPoints' in k_df.columns:
+            df.loc[k_df.index, 'fantasy_points'] += k_df['missedExtraPoints'] * SCORING_RULES.get('each_pat_missed', 0)
 
-    # Total yards allowed (D/ST) - Similar to points allowed
-    def apply_yards_allowed_scoring(row):
-        points = 0
-        if 'total_yards_allowed' in row:
-            tya = row['total_yards_allowed']
-            if tya < 100:
-                points += SCORING_RULES.get('total_yards_allowed_less_100', 0)
-            elif 100 <= tya <= 199:
-                points += SCORING_RULES.get('total_yards_allowed_100_199', 0)
-            elif 200 <= tya <= 299:
-                points += SCORING_RULES.get('total_yards_allowed_200_299', 0)
-            elif 300 <= tya <= 349:
-                points += SCORING_RULES.get('total_yards_allowed_300_349', 0)
-            elif 400 <= tya <= 449:
-                points += SCORING_RULES.get('total_yards_allowed_400_449', 0)
-            elif 450 <= tya <= 499:
-                points += SCORING_RULES.get('total_yards_allowed_450_499', 0)
-            elif 500 <= tya <= 549:
-                points += SCORING_RULES.get('total_yards_allowed_500_549', 0)
-            elif tya >= 550:
-                points += SCORING_RULES.get('total_yards_allowed_550_plus', 0)
-        return points
+    # D/ST Stats (from espn_api)
+    if 'position' in df.columns and 'DST' in df['position'].unique():
+        dst_df = df[df['position'] == 'DST']
+        if 'defensiveSacks' in dst_df.columns:
+            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensiveSacks'] * SCORING_RULES.get('1_2_sack', 0) # Assuming 1 sack is 1 point
+        if 'defensiveInterceptions' in dst_df.columns:
+            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensiveInterceptions'] * SCORING_RULES.get('each_interception', 0)
+        if 'defensiveFumbles' in dst_df.columns:
+            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensiveFumbles'] * SCORING_RULES.get('each_fumble_recovered', 0)
+        if 'defensiveBlockedKicks' in dst_df.columns:
+            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensiveBlockedKicks'] * SCORING_RULES.get('blocked_punt,_pat_or_fg', 0)
+        if 'defensiveTouchdowns' in dst_df.columns:
+            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensiveTouchdowns'] * SCORING_RULES.get('defensive_touchdowns', 0) # Assuming a generic defensive TD rule
+        if 'defensiveForcedFumbles' in dst_df.columns:
+            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensiveForcedFumbles'] * SCORING_RULES.get('each_fumble_forced', 0)
+        if 'defensiveAssistedTackles' in dst_df.columns:
+            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensiveAssistedTackles'] * SCORING_RULES.get('assisted_tackles', 0)
+        if 'defensiveSoloTackles' in dst_df.columns:
+            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensiveSoloTackles'] * SCORING_RULES.get('solo_tackles', 0)
+        if 'defensivePassesDefensed' in dst_df.columns:
+            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensivePassesDefensed'] * SCORING_RULES.get('passes_defensed', 0)
+        if 'defensivePointsAllowed' in dst_df.columns:
+            # Apply points allowed scoring based on ranges
+            def apply_points_allowed_scoring_dst(row):
+                points = 0
+                pa = row['defensivePointsAllowed']
+                if pa == 0:
+                    points += SCORING_RULES.get('0_points_allowed', 0)
+                elif 1 <= pa <= 6:
+                    points += SCORING_RULES.get('1_6_points_allowed', 0)
+                elif 7 <= pa <= 13:
+                    points += SCORING_RULES.get('7_13_points_allowed', 0)
+                elif 14 <= pa <= 17:
+                    points += SCORING_RULES.get('14_17_points_allowed', 0)
+                elif 18 <= pa <= 21: # This range is not in config.yaml, but present in ESPN data
+                    pass # No points for this range
+                elif 22 <= pa <= 27:
+                    points += SCORING_RULES.get('22_27_points_allowed', 0)
+                elif 28 <= pa <= 34:
+                    points += SCORING_RULES.get('28_34_points_allowed', 0)
+                elif 35 <= pa <= 45:
+                    points += SCORING_RULES.get('35_45_points_allowed', 0)
+                elif pa >= 46:
+                    points += SCORING_RULES.get('46+_points_allowed', 0)
+                return points
+            df.loc[dst_df.index, 'fantasy_points'] += dst_df.apply(apply_points_allowed_scoring_dst, axis=1)
 
-    if 'total_yards_allowed' in df.columns:
-        df['fantasy_points'] += df.apply(apply_yards_allowed_scoring, axis=1)
-
+        if 'defensiveYardsAllowed' in dst_df.columns:
+            # Apply yards allowed scoring based on ranges
+            def apply_yards_allowed_scoring_dst(row):
+                points = 0
+                tya = row['defensiveYardsAllowed']
+                if tya < 100:
+                    points += SCORING_RULES.get('less_than_100_total_yards_allowed', 0)
+                elif 100 <= tya <= 199:
+                    points += SCORING_RULES.get('100_199_total_yards_allowed', 0)
+                elif 200 <= tya <= 299:
+                    points += SCORING_RULES.get('200_299_total_yards_allowed', 0)
+                elif 300 <= tya <= 349:
+                    points += SCORING_RULES.get('300_349_total_yards_allowed', 0)
+                elif 350 <= tya <= 399: # This range is not in config.yaml, but present in ESPN data
+                    pass # No points for this range
+                elif 400 <= tya <= 449:
+                    points += SCORING_RULES.get('400_449_total_yards_allowed', 0)
+                elif 450 <= tya <= 499:
+                    points += SCORING_RULES.get('450_499_total_yards_allowed', 0)
+                elif 500 <= tya <= 549:
+                    points += SCORING_RULES.get('500_549_total_yards_allowed', 0)
+                elif tya >= 550:
+                    points += SCORING_RULES.get('550+_total_yards_allowed', 0)
+                return points
+            df.loc[dst_df.index, 'fantasy_points'] += dst_df.apply(apply_yards_allowed_scoring_dst, axis=1)
 
     return df
 
@@ -419,8 +233,8 @@ def get_advanced_draft_recommendations(df):
                 replacement_level_count = num_teams * roster_settings.get('TE', 1)
             elif position == 'K':
                 replacement_level_count = num_teams * roster_settings.get('K', 1)
-            elif position == 'D/ST':
-                replacement_level_count = num_teams * roster_settings.get('DST', 1)
+            elif position == 'DST':
+                replacement_level_count = num_teams * roster_settings.get('D_ST', 1)
             else:
                 replacement_level_count = num_teams # Default for other positions
 
