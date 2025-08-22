@@ -6,8 +6,8 @@
 # Downloads weekly NFL player statistics from nfl_data_py and saves them to a CSV file.
 #
 # @author Nicholas Wilde, 0xb299a622
-# @date 2025-08-20
-# @version 0.1.0
+# @date 21 08 2025
+# @version 0.3.0
 #
 ################################################################################
 
@@ -16,6 +16,58 @@ import pandas as pd
 import os
 import datetime
 import argparse
+import yaml
+from espn_api.football import League
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Load configuration from config.yaml
+CONFIG_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), '..', 'config.yaml'
+)
+
+def load_config():
+    with open(CONFIG_FILE, 'r') as f:
+        return yaml.safe_load(f)
+
+CONFIG = load_config()
+
+def get_espn_player_stats(league, years):
+    """
+    Fetches K and D/ST stats from ESPN API for the given years.
+    """
+    espn_stats = []
+    for year in years:
+        # Re-initialize league for each year if necessary, or ensure it handles multiple years
+        # For now, assuming league object can fetch data for different years if passed
+        # or that we are only interested in the current year's stats.
+        # The espn_api League object is initialized with a single year.
+        # So, we need to re-initialize it for each year.
+        league_id = os.getenv("LEAGUE_ID")
+        espn_s2 = os.getenv("ESPN_S2")
+        swid = os.getenv("SWID")
+        current_league = League(league_id=int(league_id), year=year, espn_s2=espn_s2, swid=swid)
+
+        for team in current_league.teams:
+            for player in team.roster:
+                player_pos = player.position.replace('/', '').upper()
+                if player_pos == 'K' or player_pos == 'DST':
+                    if hasattr(player, 'stats') and player.stats:
+                        # Assuming stats[0] contains season totals
+                        stats_breakdown = player.stats.get(0, {}).get('breakdown', {})
+                        player_data = {
+                            'player_display_name': player.name,
+                            'position': player.position,
+                            'proTeam': player.proTeam,
+                            'season': year,
+                        }
+                        # Add all stats from breakdown
+                        for stat_name, stat_value in stats_breakdown.items():
+                            player_data[stat_name] = stat_value
+                        espn_stats.append(player_data)
+    return pd.DataFrame(espn_stats)
 
 def download_and_save_weekly_stats(years, output_file="data/player_stats.csv"):
     """
@@ -36,40 +88,58 @@ def download_and_save_weekly_stats(years, output_file="data/player_stats.csv"):
         print(f"Created directory: {output_dir}")
 
     try:
-        # The import_weekly_data function gets the weekly player data.
-        # This function returns a pandas DataFrame, which is a great format for data analysis.
-        df = nfl.import_weekly_data(years)
+        # Get offensive player stats from nfl_data_py
+        df_nfl = nfl.import_weekly_data(years)
 
         # Get player IDs and names
         player_ids_df = nfl.import_ids()
 
         # Ensure player_id and espn_id are of the same type (string) for merging
-        df['player_id'] = df['player_id'].astype(str)
+        df_nfl['player_id'] = df_nfl['player_id'].astype(str)
         player_ids_df['espn_id'] = player_ids_df['espn_id'].astype(str)
 
         # Merge player names into the weekly stats DataFrame
-        # We'll merge on 'player_id' from weekly data and 'espn_id' from player IDs.
-        # The player name column is 'name' in player_ids_df.
-        df = pd.merge(df, player_ids_df[['espn_id', 'name']], left_on='player_id', right_on='espn_id', how='left')
+        df_nfl = pd.merge(df_nfl, player_ids_df[['espn_id', 'name']], left_on='player_id', right_on='espn_id', how='left')
 
         # Drop the 'espn_id' column as it's redundant after merging
-        df.drop(columns=['espn_id'], inplace=True)
+        df_nfl.drop(columns=['espn_id'], inplace=True)
 
         # The 'player_display_name' column from import_weekly_data already contains the full name.
         # We will drop the 'name' column from the merge, as 'player_display_name' is preferred.
-        # If 'name' exists (from the merge), drop it.
-        if 'name' in df.columns:
-            df.drop(columns=['name'], inplace=True)
+        if 'name' in df_nfl.columns:
+            df_nfl.drop(columns=['name'], inplace=True)
 
         # Reorder columns to place 'player_display_name' at the beginning for easier viewing
-        cols = df.columns.tolist()
+        cols = df_nfl.columns.tolist()
         if 'player_display_name' in cols:
             cols.remove('player_display_name')
-        df = df[['player_display_name'] + cols]
+        df_nfl = df_nfl[['player_display_name'] + cols]
+
+        # Get K and D/ST stats from ESPN API
+        league_id = os.getenv("LEAGUE_ID")
+        espn_s2 = os.getenv("ESPN_S2")
+        swid = os.getenv("SWID")
+        if not all([league_id, espn_s2, swid]):
+            raise ValueError(
+                "Missing required environment variables for ESPN API. Please set LEAGUE_ID, "
+                "ESPN_S2, and SWID in your .env file."
+            )
+        # Initialize league object once, it will be re-initialized per year in get_espn_player_stats
+        # Pass a dummy year for initial league object, as it will be overridden in the function
+        dummy_year = years[0] if years else datetime.datetime.now().year
+        league = League(league_id=int(league_id), year=dummy_year, espn_s2=espn_s2, swid=swid)
+        df_espn = get_espn_player_stats(league, years)
+
+        # Merge nfl_data_py and espn_api data
+        # Prioritize ESPN data for K and D/ST by dropping them from nfl_data_py data first
+        df_nfl_filtered = df_nfl[~df_nfl['position'].isin(['K', 'DST'])].copy()
+        
+        # Concatenate the two dataframes
+        df_combined = pd.concat([df_nfl_filtered, df_espn], ignore_index=True, sort=False)
 
         # Save the DataFrame to a CSV file.
         # `index=False` prevents pandas from writing the DataFrame index to the CSV.
-        df.to_csv(output_file, index=False)
+        df_combined.to_csv(output_file, index=False)
         
         # Update the last_updated.log file
         now = datetime.datetime.now()
@@ -77,7 +147,7 @@ def download_and_save_weekly_stats(years, output_file="data/player_stats.csv"):
             log_file.write(f"Player stats last updated: {now.strftime('%Y-%m-%d %H:%M:%S')}")
             print("Updated data/last_updated.log")
 
-        print(f"Download complete! Weekly data for {len(years)} seasons saved to '{output_file}'.")
+        print(f"Download complete! Combined data for {len(years)} seasons saved to '{output_file}'.")
     except Exception as e:
         print(f"An error occurred: {e}")
         print("Please ensure the 'nfl_data_py' library is installed and you have an active internet connection.")
@@ -85,12 +155,13 @@ def download_and_save_weekly_stats(years, output_file="data/player_stats.csv"):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download weekly player stats for specified years.")
+    default_years = CONFIG.get('league_settings', {}).get('data_years', [datetime.datetime.now().year - 1, datetime.datetime.now().year])
     parser.add_argument(
         "--years",
         type=int,
         nargs='+',
-        default=[2023, 2024],
-        help="A list of years to download data for (e.g., --years 2023 2024)."
+        default=default_years,
+        help="A list of years to download data for (e.g., --years 2023 2024). If not specified, defaults to the years defined in config.yaml."
     )
     args = parser.parse_args()
     
