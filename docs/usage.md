@@ -12,15 +12,19 @@ This project uses `Taskfile.yml` to define and run tasks. You can see a list of 
 
 To download the latest player stats (defaulting to the 2023 and 2024 seasons), run the following command:
 
-```bash
-task download
-```
+=== "Task"
+
+    ```bash
+    task download
+    ```
 
 You can also specify the years to download by passing the `--years` argument:
 
-```bash
-task download -- --years 2022 2023
-```
+=== "Task"
+
+    ```bash
+    task download -- --years 2022 2023
+    ```
 
 This will create a `player_stats.csv` file in the `data/` directory.
 
@@ -28,9 +32,11 @@ This will create a `player_stats.csv` file in the `data/` directory.
 
 To get a list of available players for weekly pickups, run the following command:
 
-```bash
-task available_players
-```
+=== "Task"
+
+    ```bash
+    task available_players
+    ```
 
 This will create an `available_players.csv` file in the `data/` directory.
 
@@ -38,26 +44,33 @@ This will create an `available_players.csv` file in the `data/` directory.
 
 To select your team from a list of all teams in the league, run the following command:
 
-```bash
-task identify_team
-```
+=== "Task"
+
+    ```bash
+    task identify_team
+    ```
 
 You will be prompted to enter the number corresponding to your team from the list. This will save your team's ID to the `my_team_id` field in the `config.yaml` file, so the other scripts know which team is yours.
 
 ### :bar_chart: Analyze Your Team
 
 To get your team's roster and create the `my_team.md` file, run the following command:
-```bash
-task my_team
-```
+
+=== "Task"
+
+    ```bash
+    task my_team
+    ```
 
 ### :page_with_curl: Generate Report
 
 To generate a comprehensive report with draft recommendations, bye week analysis, and trade suggestions, run:
 
-```bash
-task report
-```
+=== "Task"
+
+    ```bash
+    task report
+    ```
 
 This will create a Markdown report file in the `docs/reports/posts/` directory, suitable for publishing with MkDocs.
 
@@ -65,9 +78,11 @@ This will create a Markdown report file in the `docs/reports/posts/` directory, 
 
 To view the generated report directly in your terminal, run:
 
-```bash
-task report_terminal
-```
+=== "Task"
+
+    ```bash
+    task report_terminal
+    ```
 
 This will output the same comprehensive analysis to your command line, formatted for readability.
 
@@ -75,9 +90,11 @@ This will output the same comprehensive analysis to your command line, formatted
 
 To render the generated Markdown report (`reports/report.md`) to an HTML file and open it in your default web browser, run:
 
-```bash
-task render_report
-```
+=== "Task"
+
+    ```bash
+    task render_report
+    ```
 
 This will create a `report.html` file in the `reports/` directory and automatically open it.
 
@@ -89,30 +106,38 @@ To publish a report, ensure it is located in the `docs/blog/posts/` directory wi
 
 To build and serve the documentation site locally using Docker, run:
 
-```bash
-task serve
-```
+=== "Task"
+
+    ```bash
+    task serve
+    ```
 
 ### :gear: Download League Settings
 
 To download your league's settings, run the following command:
 
-```bash
-task settings
-```
+=== "Task"
+
+    ```bash
+    task settings
+    ```
 
 ### :mag_right: Get Pickup Recommendations
 
 To get pickup recommendations based on available players, their performance, and your team's needs, run:
 
-```bash
-task pickup
-```
+=== "Task"
+
+    ```bash
+    task pickup
+    ```
 
 ### :handshake: Get Trade Suggestions
 
 To get trade suggestions based on the latest player stats, run:
 
-```bash
-task trade
-```
+=== "Task"
+
+    ```bash
+    task trade
+    ```
