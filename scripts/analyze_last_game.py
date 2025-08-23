@@ -63,6 +63,7 @@ def analyze_last_game():
     """Analyzes the user's last game performance and suggests improvements."""
     config = load_config()
     league_year = config.get('league_settings', {}).get('year')
+    league_name = config.get('league_settings', {}).get('league_name', 'Your League') # Get league name
     if not league_year:
         print("Error: 'year' not found in config.yaml under 'league_settings'.")
         return
@@ -107,7 +108,7 @@ def analyze_last_game():
 
     # Prepare data for LLM analysis
     llm_prompt = f"""
-    Analyze my fantasy football team's performance for Week {int(last_week)} of the {league_year} season.
+    Analyze my fantasy football team's performance for Week {int(last_week)} of the {league_year} season in the {league_name} league.
 
     My team's roster:
     {', '.join(my_team_players_raw)}

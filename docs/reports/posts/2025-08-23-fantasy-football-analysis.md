@@ -86,70 +86,86 @@ This analysis compares your team's Value Over Replacement (VOR) at each position
 
 ## Last Game Analysis
 
-It appears there might be a slight misunderstanding regarding the timing of Week 22 in the NFL and fantasy football season.
+It appears there might be a misunderstanding regarding the timing of Week 22 in the context of the NFL season.
 
-**Important Context:** Week 22 of the NFL season is well past the regular season, which typically concludes around Week 18, and also beyond the playoffs, including the Super Bowl. Fantasy football leagues generally conclude their championships by Week 17 or Week 18 at the latest. Therefore, no NFL games are being played in Week 22, and consequently, no fantasy points would be scored by any player.
+The NFL regular season typically concludes around Week 18, with the playoffs and Super Bowl finishing in late January or early February of the following calendar year. **Week 22 of the 2024 fantasy football season would correspond to late February or early March 2025 in the real world.** At this point, the NFL season is completely over, and all players are in their offseason.
 
-Let's break down your team's "performance" based on this crucial context:
+This is why your team scored 0.00 points and no individual player stats were found – no NFL games are being played.
+
+Let's address your points based on this understanding:
 
 ---
 
 ### 1. Evaluation of Your Team's Performance in Week 22
 
-Your team scored **0.00 points** in Week 22, and this is entirely expected.
+**Did I do well or poorly, and why?**
 
-*   **Did you do well or poorly?** Neither. Every single fantasy football team in existence, regardless of its roster, would have scored 0.00 points in Week 22 because the NFL season has concluded. There were no games played, and thus no opportunities for players to accrue stats.
-*   **Why?** The fantasy football season, along with the actual NFL season for 2024, is over. All player activity has ceased until training camps begin in the summer of 2025.
+You scored **0.00 points**, which is, by definition, the lowest possible score and therefore **extremely poorly** in terms of actual points.
+
+**However, this is not a reflection of your team's quality or your management.** The reason for the 0.00 points is that the NFL season is over. No players are playing games, and thus no players are accumulating fantasy points. Every team in your league would have scored 0.00 points this week.
 
 ---
 
-### 2. Specific Suggestions for Improvement (Focusing on the Off-Season)
+### 2. Specific Suggestions for Improvement (Waiver Wire, Trade Targets, Lineup Adjustments)
 
-Since the season is over, active in-season adjustments are no longer possible. However, this is the perfect time to start thinking about the **2025 fantasy football season**.
+Given that the season is over, immediate waiver wire pickups, trade targets, or lineup adjustments are **irrelevant for current scoring**. These actions are for *next season*.
 
-*   **Waiver Wire Pickups:** The waiver wire is currently inactive. Instead, use this off-season to research potential breakout candidates for next year, players who ended the season strong, or rookies from the upcoming NFL Draft. Keep an eye on depth charts and coaching changes.
-*   **Trade Targets:** Trading is also inactive. Instead, evaluate your current roster for potential keeper candidates (if your league has keepers) or players who might have high trade value going into next season based on their 2024 performance or off-season news.
-*   **Lineup Adjustments:** There are no active lineups to adjust. However, you can review your entire 2024 season roster. Identify positions where your team lacked depth or consistent production. This will help you formulate a draft strategy for 2025.
+However, this is an excellent time for **offseason planning:**
+
+*   **Waiver Wire:** Start looking at undrafted free agents, potential breakout candidates for next season, or players who finished strong but might be overlooked. Monitor NFL free agency and draft results closely to see which players land in favorable situations.
+*   **Trade Targets:** Evaluate your roster's strengths and weaknesses.
+    *   **Strengths:** You have a solid core of receivers (Lamb, Nacua, Metcalf) and a decent QB (Love showed promise). McBride is a good young TE.
+    *   **Weaknesses (potentially):** RB depth could be a concern long-term with Swift, Robinson, Warren, Chandler, and Corum – assess who might break out or who to target for more consistent production. You have a lot of good, but not necessarily elite, options.
+    *   Consider trading high-value players for future draft capital or to address a specific positional need if you foresee an overabundance in one area.
+*   **Lineup Adjustments:** You can't make any for Week 22. For *next season*, your current roster suggests you have good depth at WR. Ensure you're playing the best matchups and keeping an eye on injuries.
 
 ---
 
 ### 3. Identify Any Underperforming Players on My Team
 
-Based **solely on Week 22**, every player on your team technically "underperformed" by scoring 0 points. However, this is not an accurate reflection of their season-long performance.
+**No player on your team is "underperforming" in Week 22.** As explained, the NFL season is over, so no one is expected to score points.
 
-To identify actual underperforming players, you would need to review their full 2024 season statistics compared to their draft capital or expectations. For example:
+From a season-long perspective (assuming the 2024 season you just finished), you would need their actual season stats to determine underperformers. However, looking at your roster:
 
-*   **CeeDee Lamb & Puka Nacua:** Likely performed very well for their positions over the full season.
-*   **Jordan Love:** Had a strong finish to the season, likely a good value.
-*   **D'Andre Swift, Brian Robinson Jr., Jaylen Warren, Ty Chandler:** Review their overall output, consistency, and any injury impacts.
-*   **Blake Corum:** As a rookie, his performance would depend on opportunities which may have been limited in his first year.
-*   **Trey McBride:** Likely a strong TE performer.
-*   **DK Metcalf, Drake London, Jaxon Smith-Njigba, Jakobi Meyers:** Review their overall target share, red zone usage, and efficiency.
-*   **Cairo Santos:** Kickers are always volatile, but review his overall success rate.
-*   **Defensive Players (Zaire Franklin, Maxx Crosby, Aidan Hutchinson, Brian Branch, Chiefs D):** Evaluate their consistency in IDP or team defense scoring.
+*   **Cairo Santos:** Kickers are often inconsistent, and while he might have had good weeks, he's unlikely to be an "elite" asset.
+*   **Brian Robinson Jr., Jaylen Warren, Ty Chandler, Blake Corum:** These RBs likely had varying degrees of success. Some might have been "underperforming" their draft capital or expectations, while others might have exceeded them.
+*   **Drake London, Jaxon Smith-Njigba, Jakobi Meyers:** These receivers often battle for targets and consistency. If their target share was low or their production was inconsistent, they might be considered underperformers relative to their potential.
 
-Use the off-season to dig into these full-season stats to truly understand who met, exceeded, or fell short of expectations.
+But again, for **Week 22**, no one underperformed.
 
 ---
 
-### 4. Suggest Potential Strategies for the Upcoming Weeks (Focusing on the Off-Season)
+### 4. Suggest Potential Strategies for the Upcoming Weeks (i.e., the Offseason leading into the 2025 Season)
 
-Since there are no "upcoming weeks" in the current fantasy season, your strategy should shift entirely to **off-season preparation for 2025**:
+Since "upcoming weeks" means the offseason leading into the 2025 season, here are crucial strategies:
 
-1.  **League Rules Review:** If your league has special rules (keepers, dynasty, salary cap), understand how they will impact your off-season strategy.
-2.  **Roster Audit:** Go through every player on your roster and categorize them:
-    *   **Keepers:** Who are your top candidates if your league allows keepers?
-    *   **Potential Drops:** Who underperformed significantly or is unlikely to be relevant next year?
-    *   **Watch List:** Who showed flashes but needs more opportunity or a new situation?
-3.  **Monitor Off-Season News:**
-    *   **NFL Free Agency:** Player movement can drastically change their fantasy value.
-    *   **NFL Draft:** Identify incoming rookies who could have an immediate impact.
-    *   **Coaching Changes:** New schemes can benefit or hurt certain players.
-    *   **Injuries:** Track recovery timelines for players currently injured.
-4.  **Early Research:** Start compiling your own rankings and sleepers for the 2025 draft.
-5.  **Dynasty League Focus (if applicable):** If you're in a dynasty league, this is the prime time for trades and rookie draft preparation. Identify players whose value is low now but could rise, or those whose value might be inflated.
+1.  **Roster Review & Keeper Decisions (if applicable):**
+    *   Go through every player on your roster. Which players are keepers? Which players are on expiring contracts? Which players are good enough to roster through the offseason?
+    *   Identify players who have breakout potential for 2025 (e.g., Blake Corum might have a bigger role, Jaxon Smith-Njigba could take a step forward).
+    *   Assess the age and injury history of your players.
 
-Enjoy the off-season, and good luck preparing for a strong 2025 fantasy football campaign!
+2.  **Monitor NFL Offseason News Religiously:**
+    *   **Free Agency:** Which players sign with new teams? This can drastically change their fantasy value (e.g., a productive RB going to a crowded backfield, or a WR landing as a clear #1).
+    *   **NFL Draft:** Pay close attention to rookie RBs, WRs, and QBs, and where they are drafted. Landing spot and draft capital are huge indicators of potential immediate impact. Blake Corum's situation (if you drafted him as a rookie in 2024) will be interesting to watch for 2025.
+    *   **Coaching Changes:** New offensive coordinators can completely change a team's scheme and player usage.
+    *   **Injuries:** Keep track of players recovering from significant injuries.
+
+3.  **Study Your League Settings:**
+    *   Review scoring rules (PPR, Half-PPR, Standard) and make sure you understand them for next season's draft and roster construction.
+    *   Are there changes to roster size, IR spots, or playoff format?
+    *   What is your league's draft order for 2025?
+
+4.  **Engage with the League (Strategically):**
+    *   Gauge your leaguemates' interest in trading future draft picks or players.
+    *   Discuss potential rules changes or improvements for the league.
+    *   Stay active in the league chat to keep your mind in fantasy mode.
+
+5.  **Research & Prospecting:**
+    *   Start compiling rankings for the 2025 season as new information comes out.
+    *   Read up on dynasty and redraft strategies.
+    *   Look at breakout and bust candidates for the upcoming year.
+
+Essentially, your current task is to shift from in-season management to full offseason preparation mode, leveraging the next several months to build an even stronger team for the 2025 San Cola Cup Covid Years league.
 
 ---
 

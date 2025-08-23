@@ -3,11 +3,12 @@
 #
 # Script Name: analysis.py
 # ----------------
-# Provides core analytical functions for fantasy football data, including fantasy point calculation, VOR, consistency, and team needs analysis.
+# Provides core analytical functions for fantasy football data, including fantasy
+# point calculation, VOR, consistency, team needs analysis, and LLM-based insights.
 #
 # @author Nicholas Wilde, 0xb299a622
-# @date 21 08 2025
-# @version 0.4.0
+# @date 23 08 2025
+# @version 0.5.2
 #
 ################################################################################
 
@@ -83,14 +84,114 @@ def ask_llm(question):
         raise ValueError(f"Unsupported LLM provider: {LLM_PROVIDER}")
 
 
-def get_team_roster(roster_file="data/my_team.md"):
+def get_team_roster(roster_file=None):
     """Reads the team roster from a Markdown file and returns a list of player names."""
+    if roster_file is None:
+        roster_file = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'my_team.md'
+        )
     if not os.path.exists(roster_file):
         return []
     with open(roster_file, "r") as f:
         # Only include lines that start with '- ' to get player names
         roster = [line.strip().lstrip('- ').strip() for line in f if line.strip().startswith('- ')]
     return roster
+
+
+def get_llm_analysis(user_query):
+    """
+    Generates fantasy football analysis by providing rich context to an LLM.
+    """
+    # 1. Load all necessary data
+    config = load_config()
+    scoring_rules = config.get('scoring_rules', {})
+    roster_settings = config.get('roster_settings', {})
+
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data')
+
+    try:
+        player_stats_df = pd.read_csv(os.path.join(data_dir, 'player_stats.csv'))
+    except FileNotFoundError:
+        return "Error: player_stats.csv not found."
+
+    try:
+        player_adp_df = pd.read_csv(os.path.join(data_dir, 'player_adp.csv'))
+    except FileNotFoundError:
+        player_adp_df = pd.DataFrame()
+
+    try:
+        player_projections_df = pd.read_csv(os.path.join(data_dir, 'player_projections.csv'))
+    except FileNotFoundError:
+        player_projections_df = pd.DataFrame()
+
+    try:
+        available_players_df = pd.read_csv(os.path.join(data_dir, 'available_players.csv'))
+    except FileNotFoundError:
+        available_players_df = pd.DataFrame()
+
+    my_team_roster = get_team_roster()
+
+    # 2. Process and format the data for the prompt
+    scoring_rules_str = yaml.dump(scoring_rules, default_flow_style=False)
+    roster_settings_str = yaml.dump(roster_settings, default_flow_style=False)
+
+    # Get top available players
+    if not available_players_df.empty:
+        top_available_players = available_players_df['player_name'].head(15).tolist()
+        top_available_players_str = "\n".join(top_available_players)
+    else:
+        top_available_players = []
+        top_available_players_str = "Not available."
+
+    # Filter player_stats_df to include only relevant players
+    relevant_players = my_team_roster + top_available_players
+    if relevant_players:
+        relevant_stats_df = player_stats_df[player_stats_df['player_name'].isin(relevant_players)].copy()
+    else:
+        relevant_stats_df = player_stats_df.copy()
+
+    # Merge stats with ADP and projections
+    if not player_adp_df.empty:
+        relevant_stats_df = pd.merge(relevant_stats_df, player_adp_df, on='player_name', how='left')
+    if not player_projections_df.empty:
+        relevant_stats_df = pd.merge(relevant_stats_df, player_projections_df, on='player_name', how='left')
+
+    # 3. Construct the prompt
+    my_team_roster_str = "- " + "\n- ".join(my_team_roster)
+    prompt = f"""
+You are a fantasy football expert. Analyze the following situation based on the provided league context.
+
+**League Context:**
+
+**1. Scoring Rules:**
+```yaml
+{scoring_rules_str}
+```
+
+**2. Roster Settings:**
+```yaml
+{roster_settings_str}
+```
+
+**3. My Team Roster:**
+{my_team_roster_str}
+
+**4. Top Available Players (Waiver Wire):**
+{top_available_players_str}
+
+**5. Player Data (Stats, ADP, Projections):**
+Here is a summary of relevant player data:
+{relevant_stats_df.to_string()}
+
+**User's Question:**
+{user_query}
+
+Provide a detailed analysis and actionable recommendations.
+"""
+
+    # 4. Ask the LLM
+    configure_llm_api()
+    return ask_llm(prompt)
 
 
 def calculate_fantasy_points(df):
@@ -300,7 +401,10 @@ def analyze_team_needs(team_roster_df, all_players_df):
     """
     if team_roster_df.empty:
         # Return an empty DataFrame for positional_breakdown_df if team_roster_df is empty
-        return "### Team Analysis\n\nCould not analyze your team because no players from your roster were found in the stats data.\n", pd.DataFrame()
+        return ("""### Team Analysis
+
+Could not analyze your team because no players from your roster were found in the stats data.
+""", pd.DataFrame())
 
     # Calculate the average VOR for each position in the league for top-tier players
     # Consider players with VOR > 0 to represent above-replacement level players
@@ -318,8 +422,9 @@ def analyze_team_needs(team_roster_df, all_players_df):
     comparison_df = comparison_df.sort_values(by='vor_difference', ascending=True)
 
     # Build the recommendation string
-    analysis_str = "### Team Strengths and Weaknesses\n\n"
-    analysis_str += "This analysis compares your team's Value Over Replacement (VOR) at each position against the league average for top-tier players. A positive difference means your players at that position are, on average, more valuable than the league's top players.\n\n"
+    analysis_str = """### Team Strengths and Weaknesses
+
+This analysis compares your team's Value Over Replacement (VOR) at each position against the league average for top-tier players. A positive difference means your players at that position are, on average, more valuable than the league's top players.\n\n"""
 
     strongest_pos = comparison_df.nlargest(1, 'vor_difference')
     if not strongest_pos.empty:
