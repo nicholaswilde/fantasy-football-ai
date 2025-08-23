@@ -208,7 +208,9 @@ tags:
         f.write("### Your Simulated Roster\n\n")
         for pos, players in simulated_roster.items():
             if players:
-                f.write(f"**{pos}**: {'. '.join(players)}\n")
+                f.write(f"**{pos}**:\n")
+                for player in players:
+                    f.write(f"- {player}\n")
         f.write("\n")
 
         f.write("### Simulated Draft Order\n\n")

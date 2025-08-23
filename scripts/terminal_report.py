@@ -28,6 +28,8 @@ from analysis import (
     analyze_team_needs
 )
 import draft_strategizer # Import the draft_strategizer script
+from analyze_last_game import analyze_last_game
+from analyze_next_game import analyze_next_game
 
 # Helper function to normalize player names, e.g., 'Patrick Mahomes' to 'P.Mahomes'
 def normalize_player_name(name):
@@ -63,7 +65,7 @@ def format_dataframe_for_terminal(df, column_names):
     """
     return tabulate(df[column_names], headers=column_names, tablefmt="fancy_grid", floatfmt=".2f", showindex=False)
 
-def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order, positional_breakdown_df):
+def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order, positional_breakdown_df, last_game_analysis_str, next_game_analysis_str):
 
     """
     Generates a Markdown report to the terminal from the analysis data.
@@ -102,6 +104,16 @@ def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
     print("#### Positional Breakdown (VOR vs. League Average)\n")
     print(format_dataframe_for_terminal(positional_breakdown_df, ['Position', 'My Team Avg VOR', 'League Avg VOR', 'VOR Difference']))
     print("---")
+
+    # Last Game Analysis
+    print("## Last Game Analysis\n")
+    print(last_game_analysis_str)
+    print("\n---")
+
+    # Next Game Analysis
+    print("## Next Game Analysis\n")
+    print(next_game_analysis_str)
+    print("\n---")
 
 
     # Draft Recommendations
@@ -163,7 +175,9 @@ def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
     print("### Your Simulated Roster\n")
     for pos, players in simulated_roster.items():
         if players:
-            print(f"**{pos}**: {', '.join(players)}")
+            print(f"**{pos}**:")
+            for player in players:
+                print(f"- {player}")
     print("\n")
 
     print("### Simulated Draft Order\n")
@@ -272,5 +286,11 @@ if __name__ == "__main__":
     # Run simulated draft
     simulated_roster, simulated_draft_order = draft_strategizer.main()
 
+    # Analyze last game
+    last_game_analysis_str = analyze_last_game()
+
+    # Analyze next game
+    next_game_analysis_str = analyze_next_game()
+
     # Generate the report
-    generate_terminal_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df)
+    generate_terminal_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, last_game_analysis_str, next_game_analysis_str)
