@@ -84,6 +84,51 @@ This analysis compares your team's Value Over Replacement (VOR) at each position
 
 ---
 
+## Last Game Analysis
+
+It appears there's a critical piece of information to address right away: **Week 22 of the NFL season is well past the typical fantasy football season.** Most fantasy leagues conclude their playoffs and regular season around Week 17 or 18, with the Super Bowl usually marking the end of the real NFL season in Week 20 or 21 (early February).
+
+Therefore, your team scoring 0.00 points and having "No individual player stats found" for Week 22 is entirely expected, as there were no NFL games being played by these players during a fantasy-relevant period.
+
+Given this context, let's address your request:
+
+---
+
+### Fantasy Football Analysis for Week 22 (2024 Season)
+
+**1. An evaluation of my team's performance in Week 22. Did I do well or poorly, and why?**
+
+*   **Performance:** Your team performed as poorly as possible, scoring **0.00 points**.
+*   **Why:** This isn't a reflection of your team's talent or your management skills. The reason for the 0.00 points is that the fantasy football season was over, and no NFL games were being played. All the players on your roster were inactive for the week, as the 2024 NFL season would have concluded long before Week 22.
+
+**2. Specific suggestions for improvement, considering potential waiver wire pickups, trade targets, or lineup adjustments.**
+
+*   **Current Situation:** At this point in the year (Week 22), there are no actionable waiver wire pickups, trade targets, or lineup adjustments that can be made for the current season. The fantasy football season has concluded.
+*   **Future Focus (Offseason/Next Season):** Instead of focusing on *this* week, your efforts should now shift towards the offseason and preparing for the 2025 fantasy football season.
+    *   **Review Your 2024 Season:** If you have access to your league's past weekly scores and standings, review how your team performed throughout the *actual* fantasy season. Identify strengths and weaknesses.
+    *   **Keeper/Dynasty Considerations:** If your league has keeper rules or is a dynasty league, begin evaluating which players on your current roster you might want to retain for 2025 based on their age, potential, and contract situation (if applicable).
+    *   **Monitor NFL Offseason:** Keep an eye on NFL free agency, the NFL Draft, and coaching changes, as these will significantly impact player values for 2025.
+
+**3. Identify any underperforming players on my team.**
+
+*   **Underperformance in Week 22:** Every player on your team technically "underperformed" by scoring 0.00 points. However, this is not due to their individual play but simply because they were not playing in any games. It would be unfair to label them as underperforming based on Week 22.
+*   **True Underperformance (During the Season):** To identify truly underperforming players, you would need to review their fantasy production during the weeks the NFL season was actually running (typically Weeks 1-17/18). For example, if a player like Drake London or Jaxon Smith-Njigba consistently failed to meet expectations compared to their draft capital during the actual season, they would be considered underperformers.
+
+**4. Suggest potential strategies for the upcoming weeks.**
+
+*   **No "Upcoming Weeks" for the 2024 Season:** There are no "upcoming weeks" for the 2024 fantasy football season. The season is over.
+*   **Strategies for the 2025 Offseason and Draft:**
+    *   **Research & Prospecting:** Start researching the incoming rookie class for the 2025 NFL Draft, as well as players who might change teams in free agency.
+    *   **Mock Drafts (Later in Offseason):** As the NFL Draft approaches and free agency settles, practice mock drafts to get a feel for player values and draft strategy for 2025.
+    *   **League Rules Review:** Re-familiarize yourself with your league's rules, scoring settings, and any potential changes for the 2025 season.
+    *   **Team Self-Scout:** Analyze your team's needs based on the 2024 season. Did you lack depth at a certain position? Were your waiver wire acquisitions successful? Use this to refine your draft and in-season management strategies for 2025.
+
+---
+
+In summary, your Week 22 performance of 0.00 points is entirely expected and has no bearing on your team's actual quality or your skills as a fantasy manager. It's time to put the 2024 season behind you and begin looking forward to building a championship roster for 2025!
+
+---
+
 ## Top Players to Target
 
 These players are ranked based on their **Value Over Replacement (VOR)**, a metric that measures a player's value relative to a typical starter at their position. We also look at consistency to see who you can rely on week in and week out.

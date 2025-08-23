@@ -206,6 +206,12 @@ tasks:
       - |
         {{ .SOURCE }} && python3 scripts/compare_roster_positions.py
 
+  analyze_game:
+    desc: Analyze your last fantasy football game and get improvement suggestions
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/analyze_last_game.py
+
   download_data:
     desc: Download player data from Sleeper API
     cmds:

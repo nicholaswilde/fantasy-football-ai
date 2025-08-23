@@ -28,6 +28,7 @@ from analysis import (
 )
 import draft_strategizer # Import the draft_strategizer script
 from compare_roster_positions import compare_roster_positions
+from analyze_last_game import analyze_last_game
 
 # Helper function to normalize player names, e.g., 'Patrick Mahomes' to 'P.Mahomes'
 def normalize_player_name(name):
@@ -57,7 +58,7 @@ def get_trade_suggestions(df):
     buy_low = merged_df[merged_df['point_difference'] < -5].sort_values(by='point_difference', ascending=True)
     return sell_high, buy_low
 
-def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, output_dir, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table):
+def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, output_dir, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str):
     """
     Generates a Markdown blog post from the analysis data for MkDocs Material.
 
@@ -73,6 +74,7 @@ def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
         buy_low_df (pd.DataFrame): DataFrame with buy-low trade suggestions.
         roster_comparison_table (str): Formatted table comparing roster to settings.
         roster_mismatch_table (str): Formatted table showing roster mismatches.
+        last_game_analysis_str (str): AI analysis of the last game.
     """
     current_date = datetime.now().strftime('%Y-%m-%d')
     output_file = os.path.join(output_dir, f"{current_date}-fantasy-football-analysis.md")
@@ -132,6 +134,11 @@ tags:
         f.write(team_analysis_str)
         f.write("\n#### Positional Breakdown (VOR vs. League Average)\n\n")
         f.write(positional_breakdown_df.to_markdown(index=False, floatfmt=".2f"))
+        f.write("\n\n---\n\n")
+
+        # Last Game Analysis
+        f.write("## Last Game Analysis\n\n")
+        f.write(last_game_analysis_str)
         f.write("\n\n---\n\n")
 
 
@@ -308,5 +315,8 @@ if __name__ == "__main__":
     # Roster comparison
     roster_comparison_table, roster_mismatch_table = compare_roster_positions("config.yaml", roster_file)
 
+    # Analyze last game
+    last_game_analysis_str = analyze_last_game()
+
     # Generate the report
-    generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, args.output_dir, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table)
+    generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, args.output_dir, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str)

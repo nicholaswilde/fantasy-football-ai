@@ -62,6 +62,18 @@ To get your team's roster and create the `my_team.md` file, run the following co
     task my_team
     ```
 
+### :video_game: Analyze Last Game
+
+To analyze your team's performance in the last game and get suggestions for improvement, run:
+
+=== "Task"
+
+    ```bash
+    task analyze_game
+    ```
+
+This will provide an AI-generated analysis of your team's performance and actionable advice.
+
 ### :page_with_curl: Generate Report
 
 To generate a comprehensive report with draft recommendations, bye week analysis, and trade suggestions, run:

@@ -20,6 +20,12 @@ To use the Gemini API, you need to configure your API key.
 
 1.  Obtain an API key from Google AI Studio: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
 
+    To ensure the Google CLI utilizes the `AGENTS.md` files for context, add the following to your `~/.gemini/settings.json` file:
+
+    ```json
+    { "contextFileName": "AGENTS.md" }
+    ```
+
 To use the OpenAI API, you need to configure your API key.
 
 1.  Obtain an API key from OpenAI: [https://platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys)
