@@ -64,42 +64,20 @@ def get_my_team():
         if team is None:
             raise ValueError(f"Could not find team with ID {my_team_id}")
 
-        roster = {
-            pos: [] for pos, count in CONFIG.get('roster_settings', {}).items() if count > 0
-        }
-        # Add FLEX and BENCH if they are not explicitly in roster_settings but are common
-        if "FLEX" not in roster: roster["FLEX"] = []
-        if "BENCH" not in roster: roster["BENCH"] = []
-
+        roster_data = []
         for player in team.roster:
-            # Normalize position names from espn_api to match config.yaml if necessary
-            # For example, 'D/ST' in config might be 'DST' in espn_api
-            player_pos = player.position.replace('/', '').upper() # Simple normalization
+            roster_data.append([player.name, player.position, player.proTeam])
 
-            if player_pos == 'DST' or player_pos == 'K': # Check for D/ST or K
-                pass
-
-            if player_pos in roster:
-                roster[player_pos].append(player.name)
-            else:
-                # If the position is not explicitly in our roster settings,
-                # or if it's a special case like 'FLEX' that needs to be handled,
-                # we'll put it in the BENCH for now.
-                # A more sophisticated mapping might be needed for FLEX positions
-                # if espn_api provides specific flex indicators.
-                roster["BENCH"].append(player.name)
+        headers = ["Player Name", "Position", "NFL Team"]
+        markdown_table = tabulate(roster_data, headers=headers, tablefmt="pipe")
 
         with open("data/my_team.md", "w") as f:
             now = datetime.now()
             dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
             f.write(f"<!-- Last updated: {dt_string} -->\n")
             f.write("# My Team\n\n")
-            for position, players in roster.items():
-                if players: # Only write sections that have players
-                    f.write(f"## {position} ({len(players)})\n")
-                    for player in players:
-                        f.write(f"- {player}\n")
-                    f.write("\n")
+            f.write(markdown_table)
+            f.write("\n")
 
         print("Successfully created data/my_team.md")
 
@@ -142,7 +120,7 @@ if __name__ == "__main__":
 
         headers = ["Player Name", "Position", "NFL Team"]
         print("### My Current Team Roster\n")
-        print(tabulate(roster_data, headers=headers, tablefmt="grid"))
+        print(tabulate(roster_data, headers=headers, tablefmt="fancy_grid"))
         print("\n")
 
         # Call the function to generate the markdown file

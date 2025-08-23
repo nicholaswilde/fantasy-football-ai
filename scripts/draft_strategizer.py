@@ -153,91 +153,177 @@ def calculate_vbd(player_data, roster_settings, scoring_settings):
     return player_data
 
 
-def suggest_draft_picks(player_data, league_settings):
-    """
-    Suggests optimal draft picks based on VBD, ADP, and roster needs.
-    This simulation aims for a more realistic draft strategy by prioritizing roster spots.
-    """
-    my_team = {pos: [] for pos in CONFIG.get('roster_settings', {})}
-    available_players = player_data.copy()
-    draft_order = [] # To simulate picks
+from tabulate import tabulate
 
-    # Define the order of roster spots to fill
-    # Prioritize starting positions, then flex, then bench
-    roster_fill_order = [
-        'QB', 'RB', 'RB', 'WR', 'WR', 'TE', # Primary starters
-        'RB/WR', 'WR/TE', # Flex spots
-        'K', 'D/ST', # K and D/ST often drafted later
-        'DP', 'DP', # DP spots
-        'BE', 'BE', 'BE', 'BE', 'BE', 'BE', 'BE' # Bench spots
+def get_team_needs(my_team, roster_settings):
+    """
+    Determines the current positional needs of the user's team.
+    """
+    needs = {}
+    for pos, count in roster_settings.items():
+        if pos in my_team and len(my_team[pos]) < count:
+            needs[pos] = count - len(my_team[pos])
+    return needs
+
+def get_best_available_player(available_players, my_team, roster_settings):
+    """
+    Suggests the best available player based on VBD and current team needs.
+    """
+    current_needs = get_team_needs(my_team, roster_settings)
+
+    # Prioritize filling starting spots first, then flex, then bench
+    # This order should align with how a real draft progresses
+    priority_order = [
+        'QB', 'RB', 'WR', 'TE', 
+        'RB/WR', 'WR/TE', 
+        'K', 'D/ST', 
+        'DP', 
+        'BE'
     ]
 
-    # Filter out positions that are not in roster_settings (e.g., if DP is 0)
-    roster_fill_order = [pos for pos in roster_fill_order if CONFIG.get('roster_settings', {}).get(pos, 0) > 0]
-
-    # Ensure we don't try to fill more spots than available in roster_settings
-    actual_roster_fill_order = []
-    temp_roster_counts = {pos: 0 for pos in CONFIG.get('roster_settings', {})}
-    for pos in roster_fill_order:
-        if temp_roster_counts.get(pos, 0) < CONFIG.get('roster_settings', {}).get(pos, 0):
-            actual_roster_fill_order.append(pos)
-            temp_roster_counts[pos] += 1
-
-    num_rounds = len(actual_roster_fill_order) # Each team fills all spots
-
-    for round_num in range(1, num_rounds + 1):
-        # Determine pick number for this round (snake draft)
-        if round_num % 2 != 0: # Odd rounds (forward)
-            my_pick_in_round = CONFIG.get('draft_position', 7)
-        else: # Even rounds (backward)
-            my_pick_in_round = (CONFIG.get('league_settings', {}).get('number_of_teams', 12) - CONFIG.get('draft_position', 7) + 1)
-
-        # Simulate other teams' picks (remove players by ADP up to my pick)
-        num_picks_before_me = (my_pick_in_round - 1) + (CONFIG.get('league_settings', {}).get('number_of_teams', 12) * (round_num - 1))
-        if num_picks_before_me > 0:
-            drafted_by_others = available_players.sort_values(by='adp').head(num_picks_before_me)
-            available_players = available_players[~available_players['full_name'].isin(drafted_by_others['full_name'])]
-
-        picked_player = None
-        target_pos_type = actual_roster_fill_order[round_num - 1] # Get the position to fill for this round
-
-        # Find the best available player for the target position
-        eligible_players = pd.DataFrame()
-        if target_pos_type in ['QB', 'RB', 'WR', 'TE', 'K', 'D/ST', 'DP']:
-            eligible_players = available_players[available_players['position'] == target_pos_type].sort_values(by='vbd', ascending=False)
-        elif target_pos_type == 'RB/WR':
-            eligible_players = available_players[available_players['position'].isin(['RB', 'WR'])].sort_values(by='vbd', ascending=False)
-        elif target_pos_type == 'WR/TE':
-            eligible_players = available_players[available_players['position'].isin(['WR', 'TE'])].sort_values(by='vbd', ascending=False)
-        elif target_pos_type == 'BE':
-            eligible_players = available_players.sort_values(by='vbd', ascending=False) # For bench, any position
-
-        if not eligible_players.empty:
-            picked_player = eligible_players.iloc[0]
-
-        if picked_player is not None:
-            # Add player to the team
-            my_team[target_pos_type].append(picked_player['full_name'])
-
-            available_players = available_players[available_players['full_name'] != picked_player['full_name']]
-            draft_order.append(picked_player['full_name'])
-        else:
-            # If a critical spot cannot be filled, we might need to adjust strategy or stop
-            break 
-
-    return my_team, draft_order
-
-
-def main():
+    for pos_type in priority_order:
+        if pos_type in current_needs and current_needs[pos_type] > 0:
+            eligible_players = pd.DataFrame()
+            if pos_type in ['QB', 'RB', 'WR', 'TE', 'K', 'D/ST', 'DP']:
+                eligible_players = available_players[available_players['position'] == pos_type]
+            elif pos_type == 'RB/WR':
+                eligible_players = available_players[available_players['position'].isin(['RB', 'WR'])]
+            elif pos_type == 'WR/TE':
+                eligible_players = available_players[available_players['position'].isin(['WR', 'TE'])]
+            elif pos_type == 'BE':
+                # For bench, consider all remaining positions by VBD
+                eligible_players = available_players
+            
+            if not eligible_players.empty:
+                # Sort by VBD to get the best player for the current need
+                eligible_players = eligible_players.sort_values(by='vbd', ascending=False)
+                return eligible_players.iloc[0]
     
+    # Fallback: if no specific needs, just pick the highest VBD player
+    if not available_players.empty:
+        return available_players.sort_values(by='vbd', ascending=False).iloc[0]
+    
+    return None
+
+def display_my_team(my_team):
+    """
+    Displays the current roster of the user's team.
+    """
+    print("\n--- Your Current Roster ---")
+    for pos, players in my_team.items():
+        if players:
+            print(f"{pos}: {', '.join(players)}")
+        else:
+            print(f"{pos}: (Empty)")
+    print("---------------------------")
+
+def live_draft_assistant():
+    print("\n--- Starting Live Draft Assistant ---")
+    print("Loading player data and calculating VBD scores...")
     player_data = load_player_data(PLAYER_ADP_PATH, PLAYER_PROJECTIONS_PATH)
     player_data = calculate_vbd(player_data, CONFIG.get('roster_settings', {}), CONFIG.get('scoring_rules', {}))
-    my_team, draft_order = suggest_draft_picks(player_data, CONFIG)
-    return my_team, draft_order
+
+    available_players = player_data.copy()
+    my_team = {pos: [] for pos in CONFIG.get('roster_settings', {})}
     
+    # Initialize roster counts for flex positions
+    roster_settings = CONFIG.get('roster_settings', {})
+    # Map flex positions to their base positions for easier tracking
+    flex_map = {
+        'RB/WR': ['RB', 'WR'],
+        'WR/TE': ['WR', 'TE']
+    }
+
+    # Calculate total number of picks in the draft
+    total_roster_spots = sum(roster_settings.values())
+    total_teams = CONFIG.get('league_settings', {}).get('number_of_teams', 12)
+    total_picks = total_roster_spots * total_teams
+
+    current_pick_number = 1
+    my_draft_position = CONFIG.get('draft_position', 7)
+
+    while current_pick_number <= total_picks and not available_players.empty:
+        current_round = (current_pick_number - 1) // total_teams + 1
+        pick_in_round = (current_pick_number - 1) % total_teams + 1
+
+        is_my_pick = False
+        if current_round % 2 != 0: # Odd rounds (forward)
+            if pick_in_round == my_draft_position:
+                is_my_pick = True
+        else: # Even rounds (backward)
+            if pick_in_round == (total_teams - my_draft_position + 1):
+                is_my_pick = True
+
+        if is_my_pick:
+            print(f"\n--- Round {current_round}, Pick {current_pick_number} (YOUR PICK!) ---")
+            suggestion = get_best_available_player(available_players, my_team, roster_settings)
+            if suggestion is not None:
+                print(f"Recommendation: {suggestion['full_name']} ({suggestion['position']}) - VBD: {suggestion['vbd']:.2f}")
+                print("Top 5 available players by VBD:")
+                print(tabulate(available_players.head(5)[['full_name', 'position', 'vbd']], headers='keys', tablefmt='fancy_grid'))
+            else:
+                print("No recommendations available. All players drafted or an error occurred.")
+            
+            player_name = input("Enter your pick (full name, or 'exit' to quit): ").strip()
+            if player_name.lower() == 'exit' or player_name.lower() == 'quit':
+                break
+            
+            picked_player_df = available_players[available_players['full_name'].str.lower() == player_name.lower()]
+            if picked_player_df.empty:
+                print(f"Player '{player_name}' not found or already drafted. Please try again.")
+                continue
+            picked_player = picked_player_df.iloc[0]
+
+            # Add player to my team
+            pos_added = False
+            # Try to fill exact position first
+            if picked_player['position'] in my_team and len(my_team[picked_player['position']]) < roster_settings.get(picked_player['position'], 0):
+                my_team[picked_player['position']].append(picked_player['full_name'])
+                pos_added = True
+            else:
+                # Try to fill flex spots
+                for flex_pos, base_positions in flex_map.items():
+                    if picked_player['position'] in base_positions and len(my_team[flex_pos]) < roster_settings.get(flex_pos, 0):
+                        my_team[flex_pos].append(picked_player['full_name'])
+                        pos_added = True
+                        break
+            
+            # If not added to a specific position or flex, add to bench
+            if not pos_added and len(my_team['BE']) < roster_settings.get('BE', 0):
+                my_team['BE'].append(picked_player['full_name'])
+                pos_added = True
+            
+            if pos_added:
+                available_players = available_players[available_players['full_name'] != picked_player['full_name']] # Remove from available
+                print(f"You drafted {picked_player['full_name']} ({picked_player['position']}).")
+                display_my_team(my_team)
+            else:
+                print(f"Could not add {picked_player['full_name']} to your roster. Check roster settings or team capacity.")
+                # Don't increment pick number if player wasn't successfully added
+                continue
+
+        else:
+            print(f"\n--- Round {current_round}, Pick {current_pick_number} (Other Team's Pick) ---")
+            player_name = input("Enter player drafted by other team (full name, or 'exit' to quit): ").strip()
+            if player_name.lower() == 'exit' or player_name.lower() == 'quit':
+                break
+            
+            picked_player_df = available_players[available_players['full_name'].str.lower() == player_name.lower()]
+            if picked_player_df.empty:
+                print(f"Player '{player_name}' not found or already drafted. Please try again.")
+                continue
+            picked_player = picked_player_df.iloc[0]
+            available_players = available_players[available_players['full_name'] != picked_player['full_name']] # Remove from available
+            print(f"{picked_player['full_name']} ({picked_player['position']}) was drafted.")
+
+        current_pick_number += 1
+
+    print("\n--- Draft Assistant Session Ended ---")
+    display_my_team(my_team)
+    print("Final available players count:", len(available_players))
+
+def main():
+    live_draft_assistant()
 
 if __name__ == "__main__":
-    my_team, draft_order = main()
-    print("Draft strategizer script executed. It returns data structures for use by other scripts.")
-    print("Simulated Roster:", my_team)
-    print("Simulated Draft Order:", draft_order)
+    main()

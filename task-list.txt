@@ -1,37 +1,38 @@
 task: Available tasks for this project:
-* ai_chat:                 Interact with the Fantasy Football AI assistant.
-* analyze_game:            Analyze your last fantasy football game and get improvement suggestions
-* analyze_next_game:       Analyze your next fantasy football game and get suggestions to win
-* available_players:       Get available players from your league and create available_players.csv
-* bootstrap:               Bootstrap the project
-* build:                   Build the Dockerfile
-* compare_players:         Compare fantasy football players side-by-side
-* compare_roster:          Compare roster settings with actual team composition
-* decrypt:                 Decrypt secret and environment files using sops.
-* deps:                    Install Python dependencies
-* docker:                  Run a task inside the Docker container
-* download:                Download NFL player stats. Defaults to years specified in config.yaml. Usage: task download -- --years 2022 2023
-* download_data:           Download player data from Sleeper API
-* draft_prep:              Download data and create a draft strategy
-* draft_strategy:          Run the draft strategizer to get draft recommendations
-* encrypt:                 Encrypt secret and environment files using sops.
-* export:                  Export the list of available tasks to task-list.txt.
-* gflash:                  Run Gemini with the gemini-2.5-flash model.
-* glite:                   Run Gemini with the gemini-2.5-flash-lite model.
-* gpro:                    Run Gemini with the gemini-2.5-pro model.
-* identify_team:           Identify your team and save it to config.yaml
-* init:                    Initialize the project by creating environment file from templates.
-* lint:                    Lint the code with flake8
-* my_team:                 Get your fantasy football team and create my_team.md
-* pickup:                  Get pickup recommendations based on available players and team needs
-* render_report:           Render the generated Markdown report to HTML and open in browser
-* report:                  Generate a Markdown report from the analysis
-* report_terminal:         Output the analysis report to the terminal
-* run:                     Run the Dockerfile
-* serve:                   Serve the documentation locally using Docker.
-* settings:                Get your league settings
-* shell:                   Open a shell inside the Docker container
-* test:                    Run unit tests
-* trade:                   Get trade suggestions based on player stats
-* update:                  Update Docker container
-* weekly_update:           Run the full weekly update: download stats, update team, get available players, analyze, get suggestions, and generate report.
+* analyze_last_game:              Analyze your last fantasy football game and get improvement suggestions
+* analyze_next_game:              Analyze your next fantasy football game and get suggestions to win
+* bootstrap:                      Bootstrap the project
+* build:                          Build the Dockerfile
+* compare_fantasy_players:        Compare fantasy football players side-by-side
+* compare_roster_positions:       Compare roster settings with actual team composition
+* decrypt:                        Decrypt secret and environment files using sops.
+* deps:                           Install Python dependencies
+* docker:                         Run a task inside the Docker container
+* download_adp:                   Download Average Draft Position (ADP) data
+* download_player_data:           Download player data from Sleeper API
+* download_weekly_stats:          Download NFL player stats. Defaults to years specified in config.yaml. Usage: task download_weekly_stats -- --years 2022 2023
+* draft_prep:                     Download data and create a draft strategy
+* encrypt:                        Encrypt secret and environment files using sops.
+* export:                         Export the list of available tasks to task-list.txt.
+* generate_report:                Generate a Markdown report from the analysis
+* generate_terminal_report:       Output the analysis report to the terminal
+* get_available_players:          Get available players from your league and create available_players.csv
+* get_league_settings:            Get your league settings
+* get_my_team_roster:             Get your fantasy football team and create my_team.md
+* gflash:                         Run Gemini with the gemini-2.5-flash model.
+* glite:                          Run Gemini with the gemini-2.5-flash-lite model.
+* gpro:                           Run Gemini with the gemini-2.5-pro model.
+* identify_my_team:               Identify your team and save it to config.yaml
+* init:                           Initialize the project by creating environment file from templates.
+* lint:                           Lint the code with flake8
+* live_draft_assistant:           Run the interactive live draft assistant
+* render_html_report:             Render the generated Markdown report to HTML and open in browser
+* run:                            Run the Dockerfile
+* run_ai_assistant:               Interact with the Fantasy Football AI assistant.
+* serve:                          Serve the documentation locally using Docker.
+* shell:                          Open a shell inside the Docker container
+* suggest_pickups:                Get pickup recommendations based on available players and team needs
+* suggest_trades:                 Get trade suggestions based on player stats
+* test:                           Run unit tests
+* update:                         Update Docker container
+* weekly_update:                  Run the full weekly update: download stats, update team, get available players, analyze, get suggestions, and generate report.

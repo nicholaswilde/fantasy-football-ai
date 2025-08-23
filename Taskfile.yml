@@ -12,213 +12,7 @@ vars:
   SOURCE: 'source venv/bin/activate'
     
 tasks:
-  # Use this to run any task inside the Docker container.
-  docker:
-    desc: Run a task inside the Docker container
-    cmds:
-      - docker run -it --rm -v $(pwd):/app fantasy-football-ai {{.CLI_ARGS}}
-
-  shell:
-    desc: Open a shell inside the Docker container
-    cmds:
-      - docker run -it --rm -v $(pwd):/app fantasy-football-ai /bin/bash
-
-  build:
-    desc: Build the Dockerfile
-    cmds:
-      - docker build -f docker/Dockerfile -t fantasy-football-ai .
-  run:
-    desc: Run the Dockerfile
-    cmds:
-      - docker run -it --rm -v $(pwd):/app fantasy-football-ai default
-
-  report:
-    desc: Generate a Markdown report from the analysis
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/generate_report.py
-
-  report_terminal:
-    desc: Output the analysis report to the terminal
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/terminal_report.py
-
-  render_report:
-    desc: Render the generated Markdown report to HTML and open in browser
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/render_report.py
-
-  update:
-    desc: Update Docker container
-    cmds:
-      - docker pull {{ .IMAGE }}
-      - docker image prune -a -f
-
-  init:
-    desc: Initialize the project by creating environment file from templates.
-    preconditions:
-      - test -f .env.tmpl
-    cmds:
-      - cp .env.tmpl .env
-      - "echo 'Update values in .env file.'"
-
-  serve:
-    desc: Serve the documentation locally using Docker.
-    cmds:
-      - >-
-        docker run --rm -it -p {{ .PORT }}:{{ .PORT}} -v ${PWD}:/docs
-        --platform linux/amd64 {{ .IMAGE }} serve
-        --dev-addr 0.0.0.0:{{ .PORT }} -f ./mkdocs.yml
-
-  export:
-    desc: Export the list of available tasks to task-list.txt.
-    cmds:
-      - task -l > task-list.txt
-
-  encrypt:
-    desc: Encrypt secret and environment files using sops.
-    preconditions:
-      - test -f .env
-    cmds:
-      - sops -e --input-type dotenv --output-type dotenv .env > .env.enc
-
-  decrypt:
-    desc: Decrypt secret and environment files using sops.
-    preconditions:
-      - test -f .env.enc
-    cmds:
-      - sops -d --input-type dotenv --output-type dotenv .env.enc > .env
-
-  gpro:
-    desc: 'Run Gemini with the gemini-{{ .VER }}-pro model.'
-    cmds:
-      - |
-        {{ .SOURCE }} && gemini -m gemini-{{ .VER }}-pro
-
-  gflash:
-    desc: Run Gemini with the gemini-2.5-flash model.
-    cmds:
-      - |
-        {{ .SOURCE }} && gemini -m gemini-{{ .VER }}-flash
-
-  glite:
-    desc: Run Gemini with the gemini-2.5-flash-lite model.
-    cmds:
-      - |
-        {{ .SOURCE }} && gemini -m gemini-{{ .VER }}-flash-lite
-
-  ai_chat:
-    desc: Interact with the Fantasy Football AI assistant.
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/fantasy_football_ai.py
-
-  bootstrap:
-    desc: Bootstrap the project
-    preconditions:
-      - test -f .env
-      - sh: 'python3 --version'
-        msg: 'Python 3 is not installed or not in your PATH. Please install it to run this task.'
-    cmds:
-      - python3 -m venv venv
-      - task: deps
-      - task: settings
-      - task: identify_team
-
-  lint:
-    desc: "Lint the code with flake8"
-    cmds:
-      - flake8 .
-
-  test:
-    desc: Run unit tests
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 -m unittest discover tests
-  # A task to install all the necessary Python dependencies from requirements.txt.
-  deps:
-    desc: Install Python dependencies
-    cmds:
-      - |
-        {{ .SOURCE }} && pip install -r requirements.txt
-
-  # A task to download the latest player stats.
-  download:
-    desc: "Download NFL player stats. Defaults to years specified in config.yaml. Usage: task download -- --years 2022 2023"
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/download_stats.py {{ .CLI_ARGS }}
-
-  # A task to get pickup recommendations.
-  pickup:
-    desc: Get pickup recommendations based on available players and team needs
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/pickup_suggester.py
-
-  # A task to get trade suggestions.
-  trade:
-    desc: Get trade suggestions based on player stats
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/trade_suggester.py
-
-  # A task to run the draft strategizer.
-  draft_strategy:
-    desc: Run the draft strategizer to get draft recommendations
-    cmds:
-      - | 
-        {{ .SOURCE }} && python3 scripts/draft_strategizer.py
-
-  weekly_update:
-    desc: "Run the full weekly update: download stats, update team, get available players, analyze, get suggestions, and generate report."
-    cmds:
-      - task: download
-      - task: my_team
-      - task: available_players
-      - task: pickup
-      - task: trade
-      - task: report_terminal
-
-  identify_team:
-    desc: Identify your team and save it to config.yaml
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/identify_my_team.py
-
-  my_team:
-    desc: Get your fantasy football team and create my_team.md
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/get_my_team.py
-
-  available_players:
-    desc: Get available players from your league and create available_players.csv
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/get_available_players.py
-      
-  settings:
-    desc: Get your league settings
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/get_league_settings.py
-
-  compare_roster:
-    desc: Compare roster settings with actual team composition
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/compare_roster_positions.py
-
-  compare_players:
-    desc: Compare fantasy football players side-by-side
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/player_comparer.py
-
-  analyze_game:
+  analyze_last_game:
     desc: Analyze your last fantasy football game and get improvement suggestions
     cmds:
       - |
@@ -230,18 +24,226 @@ tasks:
       - |
         {{ .SOURCE }} && python3 scripts/analyze_next_game.py
 
-  download_data:
+  bootstrap:
+    desc: Bootstrap the project
+    preconditions:
+      - test -f .env
+      - sh: 'python3 --version'
+        msg: 'Python 3 is not installed or not in your PATH. Please install it to run this task.'
+    cmds:
+      - python3 -m venv venv
+      - task: deps
+      - task: get_league_settings
+      - task: identify_my_team
+
+  build:
+    desc: Build the Dockerfile
+    cmds:
+      - docker build -f docker/Dockerfile -t fantasy-football-ai .
+
+  compare_fantasy_players:
+    desc: Compare fantasy football players side-by-side
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/player_comparer.py
+
+  compare_roster_positions:
+    desc: Compare roster settings with actual team composition
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/compare_roster_positions.py
+
+  decrypt:
+    desc: Decrypt secret and environment files using sops.
+    preconditions:
+      - test -f .env.enc
+    cmds:
+      - sops -d --input-type dotenv --output-type dotenv .env.enc > .env
+
+  default:
+    cmds:
+      - task -l
+
+  deps:
+    desc: Install Python dependencies
+    cmds:
+      - |
+        {{ .SOURCE }} && pip install -r requirements.txt
+
+  docker:
+    desc: Run a task inside the Docker container
+    cmds:
+      - docker run -it --rm -v $(pwd):/app fantasy-football-ai {{.CLI_ARGS}}
+
+  draft_prep:
+    desc: Download data and create a draft strategy
+    cmds:
+      - task: download_player_data
+      - task: live_draft_assistant
+
+  download_adp:
+    desc: Download Average Draft Position (ADP) data
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/download_adp.py
+
+  download_player_data:
     desc: Download player data from Sleeper API
     cmds:
       - |
         {{ .SOURCE }} && python3 scripts/download_data.py
 
-  draft_prep:
-    desc: Download data and create a draft strategy
+  download_weekly_stats:
+    desc: "Download NFL player stats. Defaults to years specified in config.yaml. Usage: task download_weekly_stats -- --years 2022 2023"
     cmds:
-      - task: download_data
-      - task: draft_strategy
+      - |
+        {{ .SOURCE }} && python3 scripts/download_stats.py {{ .CLI_ARGS }}
 
-  default:
+  encrypt:
+    desc: Encrypt secret and environment files using sops.
+    preconditions:
+      - test -f .env
     cmds:
-      - task -l
+      - sops -e --input-type dotenv --output-type dotenv .env > .env.enc
+
+  export:
+    desc: Export the list of available tasks to task-list.txt.
+    cmds:
+      - task -l > task-list.txt
+
+  gflash:
+    desc: Run Gemini with the gemini-2.5-flash model.
+    cmds:
+      - |
+        {{ .SOURCE }} && gemini -m gemini-{{ .VER }}-flash
+
+  generate_report:
+    desc: Generate a Markdown report from the analysis
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/generate_report.py
+
+  generate_terminal_report:
+    desc: Output the analysis report to the terminal
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/terminal_report.py
+
+  glite:
+    desc: Run Gemini with the gemini-2.5-flash-lite model.
+    cmds:
+      - |
+        {{ .SOURCE }} && gemini -m gemini-{{ .VER }}-flash-lite
+
+  gpro:
+    desc: 'Run Gemini with the gemini-{{ .VER }}-pro model.'
+    cmds:
+      - |
+        {{ .SOURCE }} && gemini -m gemini-{{ .VER }}-pro
+
+  get_available_players:
+    desc: Get available players from your league and create available_players.csv
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/get_available_players.py
+      
+  get_league_settings:
+    desc: Get your league settings
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/get_league_settings.py
+
+  get_my_team_roster:
+    desc: Get your fantasy football team and create my_team.md
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/get_my_team.py
+
+  identify_my_team:
+    desc: Identify your team and save it to config.yaml
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/identify_my_team.py
+
+  init:
+    desc: Initialize the project by creating environment file from templates.
+    preconditions:
+      - test -f .env.tmpl
+    cmds:
+      - cp .env.tmpl .env
+      - "echo 'Update values in .env file.'"
+
+  lint:
+    desc: "Lint the code with flake8"
+    cmds:
+      - flake8 .
+
+  live_draft_assistant:
+    desc: Run the interactive live draft assistant
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/draft_strategizer.py
+
+  render_html_report:
+    desc: Render the generated Markdown report to HTML and open in browser
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/render_report.py
+
+  run:
+    desc: Run the Dockerfile
+    cmds:
+      - docker run -it --rm -v $(pwd):/app fantasy-football-ai default
+
+  run_ai_assistant:
+    desc: Interact with the Fantasy Football AI assistant.
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/fantasy_football_ai.py
+
+  serve:
+    desc: Serve the documentation locally using Docker.
+    cmds:
+      - >-
+        docker run --rm -it -p {{ .PORT }}:{{ .PORT}} -v ${PWD}:/docs
+        --platform linux/amd64 {{ .IMAGE }} serve
+        --dev-addr 0.0.0.0:{{ .PORT }} -f ./mkdocs.yml
+
+  shell:
+    desc: Open a shell inside the Docker container
+    cmds:
+      - docker run -it --rm -v $(pwd):/app fantasy-football-ai /bin/bash
+
+  suggest_pickups:
+    desc: Get pickup recommendations based on available players and team needs
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/pickup_suggester.py
+
+  suggest_trades:
+    desc: Get trade suggestions based on player stats
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/trade_suggester.py
+
+  test:
+    desc: Run unit tests
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 -m unittest discover tests
+
+  update:
+    desc: Update Docker container
+    cmds:
+      - docker pull {{ .IMAGE }}
+      - docker image prune -a -f
+
+  weekly_update:
+    desc: "Run the full weekly update: download stats, update team, get available players, analyze, get suggestions, and generate report."
+    cmds:
+      - task: download_weekly_stats
+      - task: get_my_team_roster
+      - task: get_available_players
+      - task: suggest_pickups
+      - task: suggest_trades
+      - task: generate_terminal_report

@@ -27,7 +27,7 @@ from analysis import (
     get_team_roster,
     analyze_team_needs
 )
-import draft_strategizer # Import the draft_strategizer script
+
 from analyze_last_game import analyze_last_game
 from analyze_next_game import analyze_next_game
 
@@ -65,7 +65,7 @@ def format_dataframe_for_terminal(df, column_names):
     """
     return tabulate(df[column_names], headers=column_names, tablefmt="fancy_grid", floatfmt=".2f", showindex=False)
 
-def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order, positional_breakdown_df, last_game_analysis_str, next_game_analysis_str):
+def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df, positional_breakdown_df, last_game_analysis_str, next_game_analysis_str):
 
     """
     Generates a Markdown report to the terminal from the analysis data.
@@ -169,23 +169,7 @@ def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
 
     print("---")
 
-    # Simulated Draft Results
-    print("## Simulated Draft Results\n")
-    print("Here's a simulation of your draft, round by round, based on optimal VBD strategy and ADP. \n")
-    print("### Your Simulated Roster\n")
-    for pos, players in simulated_roster.items():
-        if players:
-            print(f"**{pos}**:")
-            for player in players:
-                print(f"- {player}")
-    print("\n")
-
-    print("### Simulated Draft Order\n")
-    for i, player_name in enumerate(simulated_draft_order):
-        print(f"{i+1}. {player_name}")
-    print("\n")
-
-    print("---")
+    
 
     # Pickup Suggestions
     print("## Top Waiver Wire Pickups\n\n")
@@ -284,7 +268,7 @@ if __name__ == "__main__":
     sell_high_suggestions, buy_low_suggestions = get_trade_suggestions(draft_recs)
 
     # Run simulated draft
-    simulated_roster, simulated_draft_order = draft_strategizer.main()
+    # simulated_roster, simulated_draft_order = draft_strategizer.main() # Removed as per user request
 
     # Analyze last game
     last_game_analysis_str = analyze_last_game()
@@ -293,4 +277,4 @@ if __name__ == "__main__":
     next_game_analysis_str = analyze_next_game()
 
     # Generate the report
-    generate_terminal_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, last_game_analysis_str, next_game_analysis_str)
+    generate_terminal_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, positional_breakdown_df, last_game_analysis_str, next_game_analysis_str)

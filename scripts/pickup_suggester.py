@@ -193,6 +193,100 @@ def recommend_pickups(available_players_df, player_value_df, my_team_roster):
     
     return pd.concat(recommendations).drop_duplicates().reset_index(drop=True)
 
+def find_waiver_gems(player_stats_df, my_team_roster):
+    """
+    Identifies waiver wire 'gems' based on recent usage trends and underperforming fantasy points.
+    """
+    if player_stats_df.empty:
+        return pd.DataFrame()
+
+    # Filter out players already on my team
+    my_team_players = [player for sublist in my_team_roster.values() for player in sublist]
+    available_stats_df = player_stats_df[~player_stats_df['player_display_name'].isin(my_team_players)].copy()
+
+    if available_stats_df.empty:
+        return pd.DataFrame()
+
+    # Ensure 'week' is numeric and get the current (max) week
+    available_stats_df['week'] = pd.to_numeric(available_stats_df['week'], errors='coerce')
+    current_week = available_stats_df['week'].max()
+    
+    if pd.isna(current_week):
+        print("Warning: Could not determine current week from player stats.")
+        return pd.DataFrame()
+
+    # Calculate season averages for all players
+    season_avg_df = available_stats_df.groupby(['player_display_name', 'position', 'recent_team']).agg(
+        season_ppr_avg=('fantasy_points_ppr', 'mean'),
+        season_games_played=('week', 'nunique')
+    ).reset_index()
+    
+    # Filter for players with at least 3 games played in the season to have a meaningful average
+    season_avg_df = season_avg_df[season_avg_df['season_games_played'] >= 3]
+
+    # Calculate recent (last 3 weeks) averages
+    recent_weeks = [current_week, current_week - 1, current_week - 2]
+    recent_stats_df = available_stats_df[available_stats_df['week'].isin(recent_weeks)].copy()
+
+    if recent_stats_df.empty:
+        return pd.DataFrame()
+
+    recent_avg_df = recent_stats_df.groupby(['player_display_name', 'position', 'recent_team']).agg(
+        recent_ppr_avg=('fantasy_points_ppr', 'mean'),
+        recent_targets_avg=('targets', 'mean'),
+        recent_carries_avg=('carries', 'mean'),
+        recent_target_share_avg=('target_share', 'mean'),
+        recent_air_yards_share_avg=('air_yards_share', 'mean'),
+        recent_games_played=('week', 'nunique')
+    ).reset_index()
+
+    # Merge season and recent averages
+    merged_gems_df = pd.merge(
+        recent_avg_df,
+        season_avg_df,
+        on=['player_display_name', 'position', 'recent_team'],
+        how='inner'
+    )
+
+    # Filter for players who played in at least 2 of the last 3 weeks
+    merged_gems_df = merged_gems_df[merged_gems_df['recent_games_played'] >= 2]
+
+    # Apply gem logic
+    # High Usage:
+    # WR/TE: >= 7 targets/game OR >= 20% target share OR >= 25% air yards share in last 3 weeks
+    # RB: >= 15 carries/game in last 3 weeks
+    # Underperforming: recent_ppr_avg < season_ppr_avg
+
+    # Define thresholds
+    WR_TE_TARGETS_THRESHOLD = 7
+    WR_TE_TARGET_SHARE_THRESHOLD = 0.20
+    WR_TE_AIR_YARDS_SHARE_THRESHOLD = 0.25
+    RB_CARRIES_THRESHOLD = 15
+
+    # Apply conditions
+    is_wr_te = merged_gems_df['position'].isin(['WR', 'TE'])
+    is_rb = merged_gems_df['position'] == 'RB'
+
+    high_usage_wr_te = (
+        (merged_gems_df['recent_targets_avg'] >= WR_TE_TARGETS_THRESHOLD) |
+        (merged_gems_df['recent_target_share_avg'] >= WR_TE_TARGET_SHARE_THRESHOLD) |
+        (merged_gems_df['recent_air_yards_share_avg'] >= WR_TE_AIR_YARDS_SHARE_THRESHOLD)
+    )
+    high_usage_rb = (merged_gems_df['recent_carries_avg'] >= RB_CARRIES_THRESHOLD)
+
+    underperforming = (merged_gems_df['recent_ppr_avg'] < merged_gems_df['season_ppr_avg'])
+
+    # Combine all conditions
+    waiver_gems = merged_gems_df[
+        ((is_wr_te & high_usage_wr_te) | (is_rb & high_usage_rb)) |
+        underperforming
+    ].sort_values(by='recent_ppr_avg', ascending=False) # Sort by recent PPR for display
+
+    return waiver_gems[['player_display_name', 'position', 'recent_team',
+                        'recent_ppr_avg', 'season_ppr_avg',
+                        'recent_targets_avg', 'recent_carries_avg',
+                        'recent_target_share_avg', 'recent_air_yards_share_avg']]
+
 def main():
     print("Loading data...")
     available_players = load_available_players(AVAILABLE_PLAYERS_PATH)
@@ -209,9 +303,10 @@ def main():
         print(f"Error: Player stats file must contain {required_cols} columns.")
         return
 
-    # Calculate player value (e.g., AvgPoints)
+    # Calculate player value (e.g., AvgPoints) for general recommendations
     player_value = calculate_player_value(player_stats.copy()) # Pass a copy to avoid modifying original
 
+    # --- General Waiver Wire Pickups ---
     recommendations_df = recommend_pickups(available_players, player_value, my_team)
 
     if not recommendations_df.empty:
@@ -225,10 +320,38 @@ def main():
             'AvgPoints': 'Avg Pts/Game'
         }, inplace=True)
         print(tabulate(display_df, headers='keys', tablefmt='fancy_grid'))
-        print("\nPickup suggester script executed successfully.")
     else:
-        print("\nNo waiver wire pickup suggestions at this time.")
-    return recommendations_df
+        print("\nNo general waiver wire pickup suggestions at this time.")
+
+    # --- Waiver Wire Gems ---
+    print("\n--- Waiver Wire Gems (High Usage, Underperforming) ---")
+    waiver_gems_df = find_waiver_gems(player_stats.copy(), my_team) # Pass a copy
+
+    if not waiver_gems_df.empty:
+        display_gems_df = waiver_gems_df.copy()
+        display_gems_df.rename(columns={
+            'player_display_name': 'Player',
+            'position': 'Position',
+            'recent_team': 'Team',
+            'recent_ppr_avg': 'Recent PPR Avg',
+            'season_ppr_avg': 'Season PPR Avg',
+            'recent_targets_avg': 'Recent Targets Avg',
+            'recent_carries_avg': 'Recent Carries Avg',
+            'recent_target_share_avg': 'Recent Target Share Avg',
+            'recent_air_yards_share_avg': 'Recent Air Yards Share Avg'
+        }, inplace=True)
+        # Format percentages
+        display_gems_df['Recent Target Share Avg'] = display_gems_df['Recent Target Share Avg'].apply(lambda x: f"{x:.1%}")
+        display_gems_df['Recent Air Yards Share Avg'] = display_gems_df['Recent Air Yards Share Avg'].apply(lambda x: f"{x:.1%}")
+        
+        print(tabulate(display_gems_df, headers='keys', tablefmt='fancy_grid'))
+        print("\nWaiver wire gem finder executed successfully.")
+    else:
+        print("\nNo waiver wire gems identified at this time.")
+    
+    print("\nPickup suggester script executed successfully.")
+    return recommendations_df # Still return the original recommendations_df for consistency if needed by caller
 
 if __name__ == "__main__":
     main()
+

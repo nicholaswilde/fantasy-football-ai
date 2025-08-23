@@ -26,16 +26,21 @@ def load_config():
         return yaml.safe_load(f)
 
 def get_my_team_roster(file_path):
-    """Reads the my_team.md file and extracts player names."""
-    with open(file_path, 'r') as f:
-        content = f.read()
+    """Reads the my_team.md file (Markdown table format) and extracts player names."""
     players = []
-    import re
-    player_pattern = re.compile(r"^- \s*([A-Za-z0-9'.\s-]+)")
-    for line in content.split('\n'):
-        match = player_pattern.match(line)
-        if match:
-            players.append(match.group(1).strip())
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+        # Skip header and separator lines (first 3 lines after the comment and title)
+        # So, actual data starts from line 5 (index 4)
+        if len(lines) > 4:
+            for line in lines[4:]:
+                line = line.strip()
+                if line.startswith('|') and '|' in line[1:]:
+                    parts = [p.strip() for p in line.split('|')]
+                    if len(parts) > 2: # Ensure there's at least a player name column
+                        player_name = parts[1] # Assuming player name is in the second column
+                        if player_name: # Ensure it's not empty
+                            players.append(player_name)
     return players
 
 def get_next_opponent_roster():

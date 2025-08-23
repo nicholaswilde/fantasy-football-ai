@@ -85,20 +85,29 @@ def ask_llm(question):
 
 
 def get_team_roster(roster_file=None):
-    """Reads the team roster from a Markdown file and returns a list of player names."""
+    """Reads the team roster from a Markdown table file and returns a list of player names."""
     if roster_file is None:
         roster_file = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'my_team.md'
         )
     if not os.path.exists(roster_file):
         return []
+    
+    roster = []
     with open(roster_file, "r") as f:
-        # Only include lines that start with '- ' to get player names
-        roster = [line.strip().lstrip('- ').strip() for line in f if line.strip().startswith('- ')]
+        lines = f.readlines()
+        # Skip header and separator lines (first 3 lines after the comment and title)
+        # So, actual data starts from line 5 (index 4)
+        if len(lines) > 4:
+            for line in lines[4:]:
+                line = line.strip()
+                if line.startswith('|') and '|' in line[1:]:
+                    parts = [p.strip() for p in line.split('|')]
+                    if len(parts) > 2: # Ensure there's at least a player name column
+                        player_name = parts[1] # Assuming player name is in the second column
+                        if player_name: # Ensure it's not empty
+                            roster.append(player_name)
     return roster
-
-
-def get_llm_analysis(user_query):
     """
     Generates fantasy football analysis by providing rich context to an LLM.
     """
