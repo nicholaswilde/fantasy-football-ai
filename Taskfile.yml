@@ -206,6 +206,12 @@ tasks:
       - |
         {{ .SOURCE }} && python3 scripts/compare_roster_positions.py
 
+  compare_players:
+    desc: Compare fantasy football players side-by-side
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/player_comparer.py
+
   analyze_game:
     desc: Analyze your last fantasy football game and get improvement suggestions
     cmds:
