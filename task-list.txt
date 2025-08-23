@@ -1,12 +1,16 @@
 task: Available tasks for this project:
+* ai_chat:                 Interact with the Fantasy Football AI assistant.
+* analyze_game:            Analyze your last fantasy football game and get improvement suggestions
+* analyze_next_game:       Analyze your next fantasy football game and get suggestions to win
 * available_players:       Get available players from your league and create available_players.csv
 * bootstrap:               Bootstrap the project
 * build:                   Build the Dockerfile
+* compare_players:         Compare fantasy football players side-by-side
 * compare_roster:          Compare roster settings with actual team composition
 * decrypt:                 Decrypt secret and environment files using sops.
 * deps:                    Install Python dependencies
 * docker:                  Run a task inside the Docker container
-* download:                Download NFL player stats. Usage: task download -- --years 2022 2023
+* download:                Download NFL player stats. Defaults to years specified in config.yaml. Usage: task download -- --years 2022 2023
 * download_data:           Download player data from Sleeper API
 * draft_prep:              Download data and create a draft strategy
 * draft_strategy:          Run the draft strategizer to get draft recommendations
@@ -15,6 +19,7 @@ task: Available tasks for this project:
 * gflash:                  Run Gemini with the gemini-2.5-flash model.
 * glite:                   Run Gemini with the gemini-2.5-flash-lite model.
 * gpro:                    Run Gemini with the gemini-2.5-pro model.
+* identify_team:           Identify your team and save it to config.yaml
 * init:                    Initialize the project by creating environment file from templates.
 * lint:                    Lint the code with flake8
 * my_team:                 Get your fantasy football team and create my_team.md
@@ -26,6 +31,7 @@ task: Available tasks for this project:
 * serve:                   Serve the documentation locally using Docker.
 * settings:                Get your league settings
 * shell:                   Open a shell inside the Docker container
+* test:                    Run unit tests
 * trade:                   Get trade suggestions based on player stats
 * update:                  Update Docker container
 * weekly_update:           Run the full weekly update: download stats, update team, get available players, analyze, get suggestions, and generate report.
