@@ -34,6 +34,35 @@ Welcome to your weekly fantasy football analysis, powered by Gemini. This report
 | J.Warren       | PIT    | RB         | -15.0292  |                 7.92662 |
 | B.Corum        | LA     | RB         | -32.8292  |                 1.44792 |
 
+### Roster vs. League Settings Comparison
+
+| Position   |   Expected |   Actual | Status   |
+|------------|------------|----------|----------|
+| BE         |          7 |        5 | MISMATCH |
+| DP         |          2 |        0 | MISMATCH |
+| D_ST       |          1 |        0 | MISMATCH |
+| IR         |          1 |        0 | MISMATCH |
+| K          |          1 |        1 | OK       |
+| QB         |          1 |        1 | OK       |
+| RB         |          2 |        5 | MISMATCH |
+| RB_WR      |          1 |        0 | MISMATCH |
+| TE         |          1 |        1 | OK       |
+| WR         |          2 |        6 | MISMATCH |
+| WR_TE      |          1 |        0 | MISMATCH |
+
+#### Mismatches
+
+| Position   |   Expected |   Actual |
+|------------|------------|----------|
+| BE         |          7 |        5 |
+| DP         |          2 |        0 |
+| D_ST       |          1 |        0 |
+| IR         |          1 |        0 |
+| RB         |          2 |        5 |
+| RB_WR      |          1 |        0 |
+| WR         |          2 |        6 |
+| WR_TE      |          1 |        0 |
+
 ### Team Strengths and Weaknesses
 
 This analysis compares your team's Value Over Replacement (VOR) at each position against the league average for top-tier players. A positive difference means your players at that position are, on average, more valuable than the league's top players.

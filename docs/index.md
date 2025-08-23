@@ -5,7 +5,7 @@
 
 > Using AI to dominate your fantasy football league. It's like having a secret weapon, but for nerds.
 
-This project leverages Google's Gemini AI to provide data-driven insights and analysis for your fantasy football league. It helps you make informed decisions on player stats, team analysis, and trade suggestions.
+This project leverages Google's Gemini AI to provide data-driven insights and analysis for your fantasy football league. The behavior and instructions for the AI agents are defined in `AGENTS.md` files throughout the repository, with the main guidelines available at [AGENTS.md](https://agents.md). It helps you make informed decisions on player stats, team analysis, and trade suggestions.
 
 !!! warning "Development Version"
 

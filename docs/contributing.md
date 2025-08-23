@@ -73,6 +73,10 @@ This project follows the [PEP 8](https://www.python.org/dev/peps/pep-0008/) styl
 
 Commit messages should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
 
+### :robot: Agent Guidelines
+
+This project utilizes AI agents, and their behavior and output are governed by specific guidelines defined in the `AGENTS.md` files located throughout the repository. These files ensure consistent and effective interaction with the AI. For more information, refer to the main [AGENTS.md](https://agents.md) document.
+
 ## :question: Questions
 
 If you have any questions, feel free to open an issue.

@@ -20,6 +20,10 @@ To use the Gemini API, you need to configure your API key.
 
 1.  Obtain an API key from Google AI Studio: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
 
+To use the OpenAI API, you need to configure your API key.
+
+1.  Obtain an API key from OpenAI: [https://platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys)
+
 2. Find your `LEAGUE_ID` from the URL of your ESPN fantasy football league.
 
 3. Find your `ESPN_S2` and `SWID` cookies from your browser after logging into your ESPN account. See [this discussion](https://github.com/cwendt94/espn-api/discussions/150).
@@ -99,6 +103,16 @@ To use the Gemini API, you need to configure your API key.
         interceptions_thrown: -3.0
         # ... other scoring rules
     ```
+
+2.  **Configure AI Provider (Optional)**:
+    The `config.yaml` file also allows you to specify which AI provider to use (Gemini or OpenAI) and, for OpenAI, the specific model name.
+
+    ```yaml
+    # config.yaml example
+    ai_provider: "gemini" # or "openai"
+    openai_model_name: "gpt-4" # or other OpenAI model name
+    ```
+    For a list of available OpenAI models, refer to the [OpenAI Models documentation](https://platform.openai.com/docs/models).
 
 3.  **Configure Year Settings (Optional)**:
     The `config.yaml` file also contains fields for `year` and `data_years` under the `league_settings` section.

@@ -8,3 +8,4 @@ espn_api
 pyyaml
 markdown
 requests
+openai

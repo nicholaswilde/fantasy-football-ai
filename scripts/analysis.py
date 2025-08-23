@@ -7,12 +7,13 @@
 #
 # @author Nicholas Wilde, 0xb299a622
 # @date 21 08 2025
-# @version 0.2.3
+# @version 0.4.0
 #
 ################################################################################
 
 import os
 import google.generativeai as genai
+from openai import OpenAI
 import pandas as pd
 from dotenv import load_dotenv
 
@@ -34,26 +35,52 @@ def load_config():
 
 CONFIG = load_config()
 SCORING_RULES = CONFIG.get('scoring_rules', {})
+LLM_SETTINGS = CONFIG.get('llm_settings', {})
+LLM_PROVIDER = LLM_SETTINGS.get('provider', 'google')
+LLM_MODEL = LLM_SETTINGS.get('model', 'gemini-pro')
+CLIENT = None
+
+def configure_llm_api():
+    """Configure the LLM API based on the provider."""
+    global CLIENT
+    if LLM_PROVIDER == 'google':
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "API key not found. Please set the GOOGLE_API_KEY "
+                "environment variable."
+            )
+        genai.configure(api_key=api_key)
+    elif LLM_PROVIDER == 'openai':
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "API key not found. Please set the OPENAI_API_KEY "
+                "environment variable."
+            )
+        CLIENT = OpenAI(api_key=api_key)
+    else:
+        raise ValueError(f"Unsupported LLM provider: {LLM_PROVIDER}")
 
 
-def configure_api():
-    """Configure the Gemini API with the API key."""
-    api_key = os.getenv("GOOGLE_API_KEY")
-    if not api_key:
-        raise ValueError(
-            "API key not found. Please set the GOOGLE_API_KEY "
-            "environment variable."
+def ask_llm(question):
+    """
+    Sends a question to the configured LLM and returns the response.
+    """
+    if LLM_PROVIDER == 'google':
+        model = genai.GenerativeModel(LLM_MODEL)
+        response = model.generate_content(question)
+        return response.text
+    elif LLM_PROVIDER == 'openai':
+        if not CLIENT:
+            raise ValueError("OpenAI client not configured.")
+        response = CLIENT.chat.completions.create(
+            model=LLM_MODEL,
+            messages=[{"role": "user", "content": question}]
         )
-    genai.configure(api_key=api_key)
-
-
-def ask_gemini(question, model_name):
-    """
-    Sends a question to the Gemini model and returns the response.
-    """
-    model = genai.GenerativeModel(model_name)
-    response = model.generate_content(question)
-    return response.text
+        return response.choices[0].message.content.strip()
+    else:
+        raise ValueError(f"Unsupported LLM provider: {LLM_PROVIDER}")
 
 
 def get_team_roster(roster_file="data/my_team.md"):

@@ -1,4 +1,5 @@
----\nleague_settings:
+---
+league_settings:
   league_name: San Cola Cup Covid Years
   number_of_teams: 12
   playoff_teams: 8
@@ -87,3 +88,9 @@ scoring_rules:
   total_fumbles_lost: -2.0
   total_tackles: 0.1
 my_team_id: 8
+llm_settings:
+  provider: "google"
+  model: "gemini-2.5-flash"
+  # provider: "openai"
+  # model: "gpt-3.5-turbo"
+  # openai_request_delay: 1
