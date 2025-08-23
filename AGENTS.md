@@ -27,7 +27,12 @@ Refer to `config.yaml` for the latest scoring rules.
 
 **Workflow Instructions:**
 * **Context Awareness:** Always assume all prompts are related to my fantasy football league unless I specify otherwise.
-* **Data Analysis:** When asked to analyze data, use the files in the `data/` directory, especially the `player_stats.csv` file.
+*   **Data Analysis:** When asked to analyze data, you must use the files in the `data/` directory. Here's a breakdown of the key files and their purpose:
+    *   `player_stats.csv`: Contains weekly historical player statistics, crucial for performance analysis and trend identification.
+    *   `player_projections.csv`: Provides projected fantasy points for players, useful for future performance estimations.
+    *   `player_adp.csv`: Stores Average Draft Position (ADP) data, essential for draft strategy and player valuation.
+    *   `my_team.md`: Your current team roster, used for personalized analysis and recommendations.
+    *   `available_players.csv`: A list of players currently available on the waiver wire in the league, vital for pickup suggestions.
 * **Script Execution:** You can be asked to write or run scripts within the `scripts/` directory. If I say `/run <script_name>`, you should act as a command-line interpreter.
 * **Output Format:** Provide analysis in clear, well-structured Markdown format. Use tables, lists, and bolding to make key insights easy to read.
 
