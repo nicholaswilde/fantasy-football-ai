@@ -34,7 +34,7 @@ This will create a virtual environment and install all the necessary dependencie
 
 Before submitting a pull request, please ensure that your code is well-tested and follows the existing code style. You can run the following tasks to help you with this:
 
-*   `task lint`: Lints the code using `ruff`.
+*   `task lint`: Lints the code with `flake8`.
 *   `task format`: Formats the code using `ruff`.
 *   `task test`: Runs the test suite.
 *   **Write Unit Tests**: For any new features or bug fixes, please include corresponding unit tests to ensure correctness and prevent regressions.

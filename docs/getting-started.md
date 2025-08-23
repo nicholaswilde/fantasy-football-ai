@@ -92,7 +92,7 @@ To use the OpenAI API, you need to configure your API key.
     === "Task"
     
         ```bash
-        task settings
+        task get_league_settings
         ```
 
     === "Manual"
@@ -134,4 +134,15 @@ To use the OpenAI API, you need to configure your API key.
         year: 2024
         data_years: [2023, 2024]
     ```
+
+### :arrow_down: ADP Data
+
+The project uses Average Draft Position (ADP) data for draft strategy and player valuation. This data is automatically downloaded when you run `task download_adp`.
+
+```bash
+task download_adp
+```
+
+This will fetch the latest ADP data and save it to `data/player_adp.csv`.
+
     
