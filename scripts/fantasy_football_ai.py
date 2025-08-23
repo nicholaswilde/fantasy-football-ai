@@ -6,18 +6,33 @@
 # Main entry point for the Fantasy Football AI assistant, handling user interactions and integrating various analytical tools.
 #
 # @author Nicholas Wilde, 0xb299a622
-# @date 2025-08-22
-# @version 0.4.0
+# @date 2025-08-23
+# @version 0.5.0
 #
 ################################################################################
 
 import os
+import sys
 import yaml
 import google.generativeai as genai
 import openai
 from openai import OpenAI
 from dotenv import load_dotenv
 import time
+
+# Add src to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from fantasy_ai.errors import (
+    APIError, AuthenticationError, ConfigurationError, 
+    RateLimitError, wrap_exception
+)
+from fantasy_ai.utils.retry import retry
+from fantasy_ai.utils.logging import setup_logging, get_logger
+
+# Set up logging
+setup_logging(level='INFO', format_type='console', log_file='logs/fantasy_football_ai.log')
+logger = get_logger(__name__)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -39,26 +54,49 @@ OPENAI_REQUEST_DELAY = LLM_SETTINGS.get('openai_request_delay', 0) # Default to 
 CLIENT = None
 
 def configure_llm_api():
-    """Configure the LLM API based on the provider."""
+    """Configure the LLM API based on the provider with proper error handling."""
     global CLIENT
-    if LLM_PROVIDER == 'google':
-        api_key = os.getenv("GOOGLE_API_KEY")
-        if not api_key:
-            raise ValueError(
-                "API key not found. Please set the GOOGLE_API_KEY "
-                "environment variable."
+    logger.debug(f"Configuring LLM API for provider: {LLM_PROVIDER}")
+    
+    try:
+        if LLM_PROVIDER == 'google':
+            api_key = os.getenv("GOOGLE_API_KEY")
+            if not api_key:
+                raise AuthenticationError(
+                    "Google API key not found. Please set the GOOGLE_API_KEY environment variable.",
+                    api_name="Google Gemini",
+                    credential_type="API_KEY"
+                )
+            genai.configure(api_key=api_key)
+            logger.info("Google Gemini API configured successfully")
+            
+        elif LLM_PROVIDER == 'openai':
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                raise AuthenticationError(
+                    "OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.",
+                    api_name="OpenAI",
+                    credential_type="API_KEY"
+                )
+            CLIENT = OpenAI(api_key=api_key)
+            logger.info("OpenAI API configured successfully")
+            
+        else:
+            raise ConfigurationError(
+                f"Unsupported LLM provider: {LLM_PROVIDER}",
+                config_key="llm_settings.provider",
+                config_file=CONFIG_FILE
             )
-        genai.configure(api_key=api_key)
-    elif LLM_PROVIDER == 'openai':
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError(
-                "API key not found. Please set the OPENAI_API_KEY "
-                "environment variable."
+            
+    except Exception as e:
+        if isinstance(e, (AuthenticationError, ConfigurationError)):
+            raise  # Re-raise our custom exceptions
+        else:
+            raise wrap_exception(
+                e, APIError,
+                f"Failed to configure {LLM_PROVIDER} API",
+                api_name=LLM_PROVIDER
             )
-        CLIENT = OpenAI(api_key=api_key)
-    else:
-        raise ValueError(f"Unsupported LLM provider: {LLM_PROVIDER}")
 
 def ask_llm(question):
     """
@@ -106,33 +144,87 @@ def ask_llm(question):
     else:
         raise ValueError(f"Unsupported LLM provider: {LLM_PROVIDER}")
 
-if __name__ == "__main__":
+def main():
+    """
+    Main function with comprehensive error handling.
+    
+    Returns:
+        Exit code (0 for success, 1 for error)
+    """
     try:
-        configure_llm_api()
-        print("Welcome to the Fantasy Football AI!")
-        print(
-            "You can ask questions about player stats, draft strategy, "
-            "and more."
-        )
-
-        answer = None # Initialize answer to None
-        while True:
-            user_question = input(f"Ask {LLM_PROVIDER} a question (or 'quit' to exit): ").strip()
-            if user_question.lower() == 'quit':
-                break
-            else:
-                print()
-                print(f"Asking {LLM_PROVIDER}: '{user_question}'")
-                answer = ask_llm(user_question)
-                print()
-                print(f"{LLM_PROVIDER.capitalize()}'s Answer:")
-                print(answer)
+        logger.info("Starting Fantasy Football AI assistant")
         
-
-    except ValueError as e:
-        print(f"Error: {e}")
-        print(
-            "Please make sure you have a .env file with your API key for " + LLM_PROVIDER + " or have it set as an environment variable."
-        )
+        # Configure LLM API
+        configure_llm_api()
+        
+        print("🏈 Welcome to the Fantasy Football AI!")
+        print("You can ask questions about player stats, draft strategy, and more.")
+        print(f"Using {LLM_PROVIDER.upper()} with model: {LLM_MODEL}")
+        print("Type 'quit' to exit.\n")
+        
+        question_count = 0
+        while True:
+            try:
+                user_question = input(f"❓ Ask {LLM_PROVIDER} a question: ").strip()
+                
+                if user_question.lower() in ['quit', 'exit', 'q']:
+                    print("👋 Thanks for using Fantasy Football AI!")
+                    break
+                
+                if not user_question:
+                    print("Please enter a question or 'quit' to exit.")
+                    continue
+                
+                question_count += 1
+                logger.info(f"Processing question #{question_count}: {user_question[:50]}...")
+                
+                print(f"\n🤔 Asking {LLM_PROVIDER}: '{user_question}'")
+                answer = ask_llm(user_question)
+                
+                print(f"\n🧠 {LLM_PROVIDER.capitalize()}'s Answer:")
+                print("─" * 50)
+                print(answer)
+                print("─" * 50 + "\n")
+                
+            except KeyboardInterrupt:
+                print("\n👋 Goodbye!")
+                break
+            except Exception as e:
+                logger.error(f"Error processing question: {e}")
+                print(f"❌ Error processing your question: {e}")
+                print("Please try again or type 'quit' to exit.\n")
+        
+        logger.info(f"Session completed. Processed {question_count} questions.")
+        return 0
+        
+    except AuthenticationError as e:
+        logger.error(f"Authentication error: {e.get_detailed_message()}")
+        print(f"\n❌ Authentication Error: {e}")
+        print("\nTroubleshooting:")
+        print(f"- Check your .env file contains a valid {e.api_name} API key")
+        print(f"- Verify the {e.credential_type} is correctly set")
+        return 1
+    except ConfigurationError as e:
+        logger.error(f"Configuration error: {e.get_detailed_message()}")
+        print(f"\n❌ Configuration Error: {e}")
+        print("\nTroubleshooting:")
+        print("- Check your config.yaml file for valid LLM settings")
+        print("- Ensure the provider and model are correctly specified")
+        return 1
+    except APIError as e:
+        logger.error(f"API error: {e.get_detailed_message()}")
+        print(f"\n❌ API Error: {e}")
+        print("\nTroubleshooting:")
+        print("- Check your internet connection")
+        print("- Verify your API credentials are valid")
+        print("- The AI service may be temporarily unavailable")
+        return 1
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        logger.error(f"Unexpected error: {e}", exc_info=True)
+        print(f"\n❌ An unexpected error occurred: {e}")
+        print("Check the log file for more details.")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
