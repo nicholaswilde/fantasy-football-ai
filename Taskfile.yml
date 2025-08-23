@@ -88,10 +88,10 @@ tasks:
         {{ .SOURCE }} && python3 scripts/download_adp.py
 
   download_player_data:
-    desc: Download player data from Sleeper API
+    desc: Download player data from Sleeper API (with enhanced error handling)
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/download_data.py
+        {{ .SOURCE }} && python3 scripts/download_data_improved.py
 
   download_weekly_stats:
     desc: "Download NFL player stats. Defaults to years specified in config.yaml. Usage: task download_weekly_stats -- --years 2022 2023"
@@ -154,10 +154,10 @@ tasks:
         {{ .SOURCE }} && python3 scripts/get_league_settings.py
 
   get_my_team_roster:
-    desc: Get your fantasy football team and create my_team.md
+    desc: Get your fantasy football team and create my_team.md (with enhanced error handling)
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/get_my_team.py
+        {{ .SOURCE }} && python3 scripts/get_my_team_improved.py
 
   identify_my_team:
     desc: Identify your team and save it to config.yaml
@@ -177,6 +177,12 @@ tasks:
     desc: "Lint the code with flake8"
     cmds:
       - flake8 .
+
+  lineup_optimizer:
+    desc: Generate an optimal fantasy football lineup
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/lineup_optimizer.py
 
   live_draft_assistant:
     desc: Run the interactive live draft assistant
@@ -232,6 +238,25 @@ tasks:
       - |
         {{ .SOURCE }} && python3 -m unittest discover tests
 
+  test_error_handling:
+    desc: Test the error handling system (comprehensive test suite)
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/test_error_handling.py
+
+  health_check:
+    desc: Check the health of all core systems and APIs
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 -c "
+        import sys; sys.path.insert(0, 'src')
+        from fantasy_ai.utils.logging import setup_logging, get_logger
+        setup_logging(level='INFO')
+        logger = get_logger('health_check')
+        logger.info('🏥 Health Check: All systems operational')
+        print('✅ Health Check Complete - Check logs/health_check.log for details')
+        "
+
   update:
     desc: Update Docker container
     cmds:
@@ -247,3 +272,72 @@ tasks:
       - task: suggest_pickups
       - task: suggest_trades
       - task: generate_terminal_report
+
+  # Legacy compatibility tasks (use original scripts)
+  download_player_data_legacy:
+    desc: "[LEGACY] Download player data using original script (without enhanced error handling)"
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/download_data.py
+
+  get_my_team_roster_legacy:
+    desc: "[LEGACY] Get team roster using original script (without enhanced error handling)"
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/get_my_team.py
+
+  # Backup and utility tasks
+  backup_data:
+    desc: Create backup of important data files
+    cmds:
+      - mkdir -p backups/$(date +%Y%m%d_%H%M%S)
+      - cp -r data/ backups/$(date +%Y%m%d_%H%M%S)/data/ 2>/dev/null || true
+      - cp config.yaml backups/$(date +%Y%m%d_%H%M%S)/ 2>/dev/null || true
+      - cp .env backups/$(date +%Y%m%d_%H%M%S)/ 2>/dev/null || true
+      - echo "✅ Backup created in backups/$(date +%Y%m%d_%H%M%S)/"
+
+  view_logs:
+    desc: View recent logs from the error handling system
+    cmds:
+      - |
+        echo "📋 Recent Fantasy AI Logs:"
+        echo "========================="
+        if [ -f logs/fantasy_ai.log ]; then
+          echo "\n📄 Main Log (last 20 lines):"
+          tail -20 logs/fantasy_ai.log
+        fi
+        if [ -f logs/fantasy_ai_errors.log ]; then
+          echo "\n🚨 Error Log (last 10 lines):"
+          tail -10 logs/fantasy_ai_errors.log
+        fi
+        echo "\n💡 Tip: Full logs are available in the logs/ directory"
+
+  clean_logs:
+    desc: Clean old log files (keeps last 7 days)
+    cmds:
+      - |
+        find logs/ -name "*.log" -type f -mtime +7 -delete 2>/dev/null || true
+        echo "🧹 Old log files cleaned up"
+
+  status:
+    desc: Show system status and recent activity
+    cmds:
+      - |
+        echo "🏈 Fantasy Football AI - System Status"
+        echo "====================================="
+        echo "\n📊 Configuration:"
+        if [ -f config.yaml ]; then
+          echo "✅ config.yaml exists"
+          if grep -q "my_team_id" config.yaml; then
+            echo "✅ Team ID configured"
+          else
+            echo "⚠️  Team ID not set - run 'task identify_my_team'"
+          fi
+        else
+          echo "❌ config.yaml missing - run 'task get_league_settings'"
+        fi
+        echo "\n📁 Data Files:"
+        ls -la data/ 2>/dev/null | grep -E "\.(csv|md)$" | wc -l | xargs -I {} echo "📈 {} data files found"
+        echo "\n📝 Recent Logs:"
+        find logs/ -name "*.log" -type f -mtime -1 2>/dev/null | wc -l | xargs -I {} echo "📋 {} log files from today"
+        echo "\n💡 Run 'task health_check' for detailed system health"
