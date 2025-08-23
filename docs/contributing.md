@@ -37,6 +37,7 @@ Before submitting a pull request, please ensure that your code is well-tested an
 *   `task lint`: Lints the code using `ruff`.
 *   `task format`: Formats the code using `ruff`.
 *   `task test`: Runs the test suite.
+*   **Write Unit Tests**: For any new features or bug fixes, please include corresponding unit tests to ensure correctness and prevent regressions.
 
 ## :arrow_upper_right: Submitting a Pull Request
 

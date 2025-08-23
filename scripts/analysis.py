@@ -228,6 +228,31 @@ def calculate_fantasy_points(df):
     if 'receiving_2pt_conversions' in df.columns:
         df['fantasy_points'] += df['receiving_2pt_conversions'] * SCORING_RULES.get('2pt_receiving_conversion', 0)
 
+    # Offensive Bonuses
+    # Passing Bonuses
+    if 'passing_td_yards' in df.columns:
+        df.loc[df['passing_td_yards'] >= 50, 'fantasy_points'] += SCORING_RULES.get('50+_yard_td_pass_bonus', 0)
+        df.loc[df['passing_td_yards'] >= 40, 'fantasy_points'] += SCORING_RULES.get('40+_yard_td_pass_bonus', 0)
+    if 'passing_yards' in df.columns:
+        df.loc[(df['passing_yards'] >= 300) & (df['passing_yards'] < 400), 'fantasy_points'] += SCORING_RULES.get('300_399_yard_passing_game', 0)
+        df.loc[df['passing_yards'] >= 400, 'fantasy_points'] += SCORING_RULES.get('400+_yard_passing_game', 0)
+
+    # Rushing Bonuses
+    if 'rushing_td_yards' in df.columns:
+        df.loc[df['rushing_td_yards'] >= 50, 'fantasy_points'] += SCORING_RULES.get('50+_yard_td_rush_bonus', 0)
+        df.loc[df['rushing_td_yards'] >= 40, 'fantasy_points'] += SCORING_RULES.get('40+_yard_td_rush_bonus', 0)
+    if 'rushing_yards' in df.columns:
+        df.loc[(df['rushing_yards'] >= 100) & (df['rushing_yards'] < 200), 'fantasy_points'] += SCORING_RULES.get('100_199_yard_rushing_game', 0)
+        df.loc[df['rushing_yards'] >= 200, 'fantasy_points'] += SCORING_RULES.get('200+_yard_rushing_game', 0)
+
+    # Receiving Bonuses
+    if 'receiving_td_yards' in df.columns:
+        df.loc[df['receiving_td_yards'] >= 50, 'fantasy_points'] += SCORING_RULES.get('50+_yard_td_rec_bonus', 0)
+        df.loc[df['receiving_td_yards'] >= 40, 'fantasy_points'] += SCORING_RULES.get('40+_yard_td_rec_bonus', 0)
+    if 'receiving_yards' in df.columns:
+        df.loc[(df['receiving_yards'] >= 100) & (df['receiving_yards'] < 200), 'fantasy_points'] += SCORING_RULES.get('100_199_yard_receiving_game', 0)
+        df.loc[df['receiving_yards'] >= 200, 'fantasy_points'] += SCORING_RULES.get('200+_yard_receiving_game', 0)
+
     # Fumbles
     fumbles_lost = 0
     if 'rushing_fumbles_lost' in df.columns:
@@ -239,12 +264,13 @@ def calculate_fantasy_points(df):
     # Special Teams (from nfl_data_py)
     if 'special_teams_tds' in df.columns:
         df['fantasy_points'] += df['special_teams_tds'] * SCORING_RULES.get('kickoff_return_td', 0)
+    if '2pt_return' in df.columns:
+        df['fantasy_points'] += df['2pt_return'] * SCORING_RULES.get('2pt_return', 0)
 
     # Kicking Stats (from espn_api)
     if 'position' in df.columns and 'K' in df['position'].unique():
         k_df = df[df['position'] == 'K']
         if 'madeFieldGoalsFrom50Plus' in k_df.columns:
-            df.loc[k_df.index, 'fantasy_points'] += k_df['madeFieldGoalsFrom50Plus'] * SCORING_RULES.get('fg_made_(60+_yards)', 0) # Assuming 50+ is 60+
             df.loc[k_df.index, 'fantasy_points'] += k_df['madeFieldGoalsFrom50Plus'] * SCORING_RULES.get('fg_made_(50_59_yards)', 0) # Assuming 50+ is 50-59
         if 'madeFieldGoalsFrom40To49' in k_df.columns:
             df.loc[k_df.index, 'fantasy_points'] += k_df['madeFieldGoalsFrom40To49'] * SCORING_RULES.get('fg_made_(40_49_yards)', 0)

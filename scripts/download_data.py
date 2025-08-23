@@ -7,7 +7,7 @@
 #
 # @author Nicholas Wilde, 0xb299a622
 # @date 2025-08-20
-# @version 0.1.0
+# @version 0.2.0
 #
 ################################################################################
 
@@ -23,6 +23,17 @@ def fetch_sleeper_data():
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"Error fetching data from Sleeper API: {e}")
+        return None
+
+def fetch_adp_data():
+    """Fetches NFL ADP data from the Sleeper API."""
+    url = "https://api.sleeper.app/v1/draft/nfl/adp"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching ADP data from Sleeper API: {e}")
         return None
 
 def generate_player_projections_csv(player_data):
@@ -43,10 +54,26 @@ def generate_player_projections_csv(player_data):
     print("data/player_projections.csv has been created successfully.")
 
 def generate_player_adp_csv(player_data):
-    """Generates player_adp.csv from the player data."""
+    """Generates player_adp.csv from the player data and fetched ADP."""
     if not player_data:
         print("No player data to process for ADP.")
         return
+
+    adp_data = fetch_adp_data()
+    if not adp_data:
+        print("Could not fetch ADP data. Generating with N/A placeholders.")
+        # Fallback to N/A if ADP data cannot be fetched
+        with open('data/player_adp.csv', 'w', newline='', encoding='utf-8') as csvfile:
+            fieldnames = ['player_id', 'full_name', 'position', 'team', 'adp']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
+            writer.writeheader()
+            for player_id, player in player_data.items():
+                player['adp'] = 'N/A'
+                writer.writerow(player)
+        return
+
+    # Create a dictionary for quick ADP lookup by player_id
+    adp_lookup = {item['player_id']: item['adp'] for item in adp_data}
 
     with open('data/player_adp.csv', 'w', newline='', encoding='utf-8') as csvfile:
         fieldnames = ['player_id', 'full_name', 'position', 'team', 'adp']
@@ -54,10 +81,10 @@ def generate_player_adp_csv(player_data):
 
         writer.writeheader()
         for player_id, player in player_data.items():
-            # Placeholder for ADP data. You'll need to source this and add it.
-            player['adp'] = 'N/A'
+            # Get ADP for the player, default to 'N/A' if not found
+            player['adp'] = adp_lookup.get(player_id, 'N/A')
             writer.writerow(player)
-    print("data/player_adp.csv has been created successfully.")
+    print("data/player_adp.csv has been created successfully with ADP data.")
 
 if __name__ == "__main__":
     print("Downloading player data from the Sleeper API...")

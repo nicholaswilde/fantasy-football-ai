@@ -131,6 +131,12 @@ tasks:
     desc: "Lint the code with flake8"
     cmds:
       - flake8 .
+
+  test:
+    desc: Run unit tests
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 -m unittest discover tests
   # A task to install all the necessary Python dependencies from requirements.txt.
   deps:
     desc: Install Python dependencies

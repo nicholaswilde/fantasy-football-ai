@@ -8,7 +8,7 @@
 #
 # @author Nicholas Wilde, 0xb299a622
 # @date 23 08 2025
-# @version 0.1.0
+# @version 0.1.4
 #
 ################################################################################
 
@@ -43,7 +43,10 @@ def load_config():
 
 def normalize_player_name(name):
     """Normalizes player names to match the format in player_stats.csv (e.g., 'Patrick Mahomes' to 'P.Mahomes')."""
-    parts = name.split(' ')
+    # Ensure name is a string before splitting
+    if pd.isna(name):
+        return "" # Return empty string for NaN values
+    parts = str(name).split(' ')
     if len(parts) > 1:
         return f"{parts[0][0]}.{' '.join(parts[1:])}"
     return name
@@ -77,35 +80,62 @@ def compare_players(player_names):
     if current_year_stats.empty:
         return f"No player stats found for the year {league_year}. Please ensure data is available for this season."
 
+    # Calculate fantasy points, VOR, and consistency for weekly data first
+    current_year_stats = calculate_fantasy_points(current_year_stats)
+    current_year_stats = get_advanced_draft_recommendations(current_year_stats)
+
+    # Aggregate weekly stats to season totals for comparison
+    # Group by player_name, position, and team, then sum fantasy_points, and average VOR/consistency
+    # For 'team', we can take the first non-null value if there are multiple entries for a player
+    aggregated_stats = current_year_stats.groupby(['player_name', 'position']).agg(
+        FPts=('fantasy_points', 'sum'),
+        VOR=('vor', 'mean'),
+        Consistency=('consistency_std_dev', 'mean'),
+        Team=('recent_team', lambda x: x.dropna().iloc[0] if not x.dropna().empty else pd.NA) # Get the most recent team
+    ).reset_index()
+    aggregated_stats.rename(columns={'FPts': 'fantasy_points', 'Consistency': 'consistency_std_dev'}, inplace=True)
+
+
     # Merge with ADP and Projections
+    # Use aggregated_stats as the base for merging
+    final_comparison_df = aggregated_stats.copy()
+
     if not player_adp_df.empty:
-        # Rename 'full_name' to 'player_name' in player_adp_df
         if 'full_name' in player_adp_df.columns:
             player_adp_df.rename(columns={'full_name': 'player_name'}, inplace=True)
-        current_year_stats = pd.merge(current_year_stats, player_adp_df, on='player_name', how='left')
+            player_adp_df['player_name'] = player_adp_df['player_name'].apply(normalize_player_name)
+        # Convert 'adp' column to numeric, coercing errors to NaN
+        player_adp_df['adp'] = pd.to_numeric(player_adp_df['adp'], errors='coerce')
+        # Select only 'player_name' and 'adp' from player_adp_df to avoid merging unnecessary columns
+        player_adp_df = player_adp_df[['player_name', 'adp']].copy()
+        final_comparison_df = pd.merge(final_comparison_df, player_adp_df, on='player_name', how='left')
+
     if not player_projections_df.empty:
         # Rename 'full_name' to 'player_name' in player_projections_df
         if 'full_name' in player_projections_df.columns:
             player_projections_df.rename(columns={'full_name': 'player_name'}, inplace=True)
-        current_year_stats = pd.merge(current_year_stats, player_projections_df, on='player_name', how='left')
+            player_projections_df['player_name'] = player_projections_df['player_name'].apply(normalize_player_name)
+        # Select only 'player_name' and 'projected_points' from player_projections_df
+        # Assuming 'projected_points' is the column for projection
+        if 'projected_points' in player_projections_df.columns:
+            player_projections_df.rename(columns={'projected_points': 'projection'}, inplace=True)
+            player_projections_df = player_projections_df[['player_name', 'projection']].copy()
+            final_comparison_df = pd.merge(final_comparison_df, player_projections_df, on='player_name', how='left')
 
-    # Calculate fantasy points, VOR, and consistency
-    current_year_stats = calculate_fantasy_points(current_year_stats)
-    current_year_stats = get_advanced_draft_recommendations(current_year_stats)
 
     # Normalize input player names
     normalized_player_names = [normalize_player_name(name) for name in player_names]
 
     # Filter for the requested players
-    comparison_df = current_year_stats[current_year_stats['player_name'].isin(normalized_player_names)].copy()
+    comparison_df = final_comparison_df[final_comparison_df['player_name'].isin(normalized_player_names)].copy()
 
     if comparison_df.empty:
         return "No matching players found in the data for comparison."
 
     # Select and reorder columns for display
     display_columns = [
-        'player_name', 'position', 'team', 'fantasy_points', 
-        'vor', 'consistency_std_dev', 'adp', 'projection'
+        'player_name', 'position', 'Team', 'fantasy_points', 
+        'VOR', 'consistency_std_dev', 'adp', 'projection'
     ]
     # Ensure all display columns exist, fill missing with NaN or a default value
     for col in display_columns:
@@ -118,12 +148,8 @@ def compare_players(player_names):
     comparison_df.rename(columns={
         'player_name': 'Player',
         'position': 'Pos',
-        'team': 'Team',
         'fantasy_points': 'FPts',
-        'vor': 'VOR',
-        'consistency_std_dev': 'Consistency (Std Dev)',
-        'adp': 'ADP',
-        'projection': 'Projection'
+        'consistency_std_dev': 'Consistency (Std Dev)'
     }, inplace=True)
 
     # Format output using tabulate
