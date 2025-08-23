@@ -68,7 +68,7 @@ def analyze_last_game():
         return
 
     try:
-        player_stats_df = pd.read_csv(PLAYER_STATS_FILE)
+        player_stats_df = pd.read_csv(PLAYER_STATS_FILE, low_memory=False)
     except FileNotFoundError:
         print(f"Error: {PLAYER_STATS_FILE} not found. Please run 'task download' to get player stats.")
         return
