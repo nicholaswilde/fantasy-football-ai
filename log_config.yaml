@@ -1,0 +1,72 @@
+---
+# Logging configuration for Fantasy Football AI
+
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  console:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+  
+  json:
+    (): src.fantasy_ai.utils.logging.JSONFormatter
+  
+  detailed:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(module)s:%(funcName)s:%(lineno)d - %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: console
+    stream: ext://sys.stdout
+  
+  file:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: json
+    filename: logs/fantasy_ai.log
+    maxBytes: 10485760  # 10MB
+    backupCount: 5
+    encoding: utf8
+  
+  error_file:
+    class: logging.FileHandler
+    level: ERROR
+    formatter: detailed
+    filename: logs/fantasy_ai_errors.log
+    encoding: utf8
+
+loggers:
+  fantasy_ai:
+    level: DEBUG
+    handlers: [console, file, error_file]
+    propagate: false
+  
+  scripts:
+    level: INFO
+    handlers: [console, file]
+    propagate: false
+  
+  # Third-party loggers - reduce noise
+  requests:
+    level: WARNING
+    propagate: true
+  
+  urllib3:
+    level: WARNING
+    propagate: true
+  
+  espn_api:
+    level: INFO
+    propagate: true
+
+root:
+  level: INFO
+  handlers: [console]
+
+# Environment-specific overrides
+# Set LOG_LEVEL environment variable to override levels
+# Set LOG_FORMAT environment variable to 'json' for structured logging
