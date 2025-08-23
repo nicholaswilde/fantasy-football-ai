@@ -79,8 +79,14 @@ def compare_players(player_names):
 
     # Merge with ADP and Projections
     if not player_adp_df.empty:
+        # Rename 'full_name' to 'player_name' in player_adp_df
+        if 'full_name' in player_adp_df.columns:
+            player_adp_df.rename(columns={'full_name': 'player_name'}, inplace=True)
         current_year_stats = pd.merge(current_year_stats, player_adp_df, on='player_name', how='left')
     if not player_projections_df.empty:
+        # Rename 'full_name' to 'player_name' in player_projections_df
+        if 'full_name' in player_projections_df.columns:
+            player_projections_df.rename(columns={'full_name': 'player_name'}, inplace=True)
         current_year_stats = pd.merge(current_year_stats, player_projections_df, on='player_name', how='left')
 
     # Calculate fantasy points, VOR, and consistency
