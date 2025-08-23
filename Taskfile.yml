@@ -212,6 +212,12 @@ tasks:
       - |
         {{ .SOURCE }} && python3 scripts/analyze_last_game.py
 
+  analyze_next_game:
+    desc: Analyze your next fantasy football game and get suggestions to win
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/analyze_next_game.py
+
   download_data:
     desc: Download player data from Sleeper API
     cmds:

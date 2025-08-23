@@ -74,6 +74,18 @@ To analyze your team's performance in the last game and get suggestions for impr
 
 This will provide an AI-generated analysis of your team's performance and actionable advice.
 
+### :trophy: Analyze Next Game
+
+To analyze your upcoming fantasy football game against an opponent and get strategic suggestions to win, run:
+
+=== "Task"
+
+    ```bash
+    task analyze_next_game
+    ```
+
+This script will prompt you to enter your opponent's roster (comma-separated player names) and then provide an AI-generated analysis of strengths, weaknesses, key matchups, and strategic advice.
+
 ### :page_with_curl: Generate Report
 
 To generate a comprehensive report with draft recommendations, bye week analysis, and trade suggestions, run:
