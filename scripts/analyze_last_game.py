@@ -8,7 +8,7 @@
 #
 # @author Nicholas Wilde, 0xb299a622
 # @date 23 August 2025
-# @version 0.1.0
+# @version 0.2.0
 #
 ################################################################################
 
@@ -16,7 +16,7 @@ import os
 import pandas as pd
 import yaml
 from dotenv import load_dotenv
-from analysis import ask_llm, configure_llm_api, LLM_MODEL, LLM_PROVIDER
+from analysis import ask_llm, configure_llm_api
 
 # Load environment variables
 load_dotenv()
@@ -42,8 +42,6 @@ def get_my_team_roster(file_path):
     with open(file_path, 'r') as f:
         content = f.read()
     players = []
-    # Regex to find player names in markdown list format: - Player Name (Team Pos)
-    # This regex is more robust to handle various formats of player names and team/pos
     import re
     player_pattern = re.compile(r"^- \s*([A-Za-z0-9'.\s-]+)")
     for line in content.split('\n'):
@@ -62,8 +60,11 @@ def normalize_player_name(name):
 def analyze_last_game():
     """Analyzes the user's last game performance and suggests improvements."""
     config = load_config()
-    league_year = config.get('league_settings', {}).get('year')
-    league_name = config.get('league_settings', {}).get('league_name', 'Your League') # Get league name
+    league_settings = config.get('league_settings', {})
+    roster_settings = config.get('roster_settings', {})
+    scoring_rules = config.get('scoring_rules', {})
+    league_year = league_settings.get('year')
+
     if not league_year:
         print("Error: 'year' not found in config.yaml under 'league_settings'.")
         return
@@ -79,17 +80,14 @@ def analyze_last_game():
         print(f"Error: No players found in {MY_TEAM_FILE}. Please ensure your team roster is correctly set up.")
         return
 
-    # Normalize player names from my_team.md to match player_stats.csv
     my_team_players_normalized = [normalize_player_name(p) for p in my_team_players_raw]
 
-    # Filter for the current league year
     current_year_stats = player_stats_df[player_stats_df['season'] == league_year]
 
     if current_year_stats.empty:
         print(f"No player stats found for the year {league_year}. Please ensure data is available for this season.")
         return
 
-    # Determine the most recent week with data
     last_week = current_year_stats['week'].max()
     if pd.isna(last_week):
         print(f"No weekly data found for the year {league_year}.")
@@ -97,18 +95,44 @@ def analyze_last_game():
 
     print(f"Analyzing performance for Week {int(last_week)} of the {league_year} season...")
 
-    # Get stats for the last week
     last_week_stats = current_year_stats[current_year_stats['week'] == last_week]
 
-    # Calculate total points for my team
     my_team_last_week_stats = last_week_stats[last_week_stats['player_name'].isin(my_team_players_normalized)]
     my_team_total_points = my_team_last_week_stats['fantasy_points'].sum()
 
     print(f"Your team scored {my_team_total_points:.2f} points in Week {int(last_week)}.")
 
-    # Prepare data for LLM analysis
+    league_settings_str = yaml.dump(league_settings, default_flow_style=False)
+    roster_settings_str = yaml.dump(roster_settings, default_flow_style=False)
+    scoring_rules_str = yaml.dump(scoring_rules, default_flow_style=False)
+
+    player_performance_details = ""
+    if not my_team_last_week_stats.empty:
+        player_performance_details = my_team_last_week_stats[['player_name', 'fantasy_points', 'position']].to_markdown(index=False)
+    else:
+        player_performance_details = "No individual player stats found for your team this week."
+
     llm_prompt = f"""
-    Analyze my fantasy football team's performance for Week {int(last_week)} of the {league_year} season in the {league_name} league.
+    Analyze my fantasy football team's performance for Week {int(last_week)} of the {league_year} season.
+
+    **League Context:**
+
+    **1. League Settings:**
+    ```yaml
+    {league_settings_str}
+    ```
+
+    **2. Roster Settings:**
+    ```yaml
+    {roster_settings_str}
+    ```
+
+    **3. Scoring Rules:**
+    ```yaml
+    {scoring_rules_str}
+    ```
+
+    **Analysis Details:**
 
     My team's roster:
     {', '.join(my_team_players_raw)}
@@ -116,13 +140,7 @@ def analyze_last_game():
     My team's fantasy points for Week {int(last_week)}: {my_team_total_points:.2f}
 
     Here are the individual player performances from my team for Week {int(last_week)}:
-    """
-    if not my_team_last_week_stats.empty:
-        llm_prompt += my_team_last_week_stats[['player_name', 'fantasy_points', 'position']].to_markdown(index=False)
-    else:
-        llm_prompt += "No individual player stats found for your team this week."
-
-    llm_prompt += """
+{player_performance_details}
 
     Based on this information, please provide:
     1. An evaluation of my team's performance in Week {int(last_week)}. Did I do well or poorly, and why?

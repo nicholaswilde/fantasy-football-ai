@@ -4,7 +4,7 @@ import yaml
 from dotenv import load_dotenv
 from espn_api.football import League
 from datetime import datetime
-from analysis import ask_llm, configure_llm_api, LLM_MODEL, LLM_PROVIDER
+from analysis import ask_llm, configure_llm_api
 
 # Load environment variables
 load_dotenv()
@@ -96,7 +96,11 @@ def analyze_next_game(opponent_players_raw=None):
             return error_message
 
     config = load_config()
-    league_year = config.get('league_settings', {}).get('year')
+    league_settings = config.get('league_settings', {})
+    roster_settings = config.get('roster_settings', {})
+    scoring_rules = config.get('scoring_rules', {})
+    league_year = league_settings.get('year')
+
     if not league_year:
         return "Error: 'year' not found in config.yaml under 'league_settings'."
 
@@ -113,19 +117,39 @@ def analyze_next_game(opponent_players_raw=None):
 
     opponent_players_normalized = [normalize_player_name(p) for p in opponent_players_raw]
 
-    # Filter for the current league year
     current_year_stats = player_stats_df[player_stats_df['season'] == league_year]
 
     if current_year_stats.empty:
         return f"No player stats found for the year {league_year}. Please ensure data is available for this season."
 
-    # Calculate average fantasy points for my team and opponent's team
     my_team_avg_points = current_year_stats[current_year_stats['player_name'].isin(my_team_players_normalized)]['fantasy_points'].mean()
     opponent_avg_points = current_year_stats[current_year_stats['player_name'].isin(opponent_players_normalized)]['fantasy_points'].mean()
 
-    # Prepare data for LLM analysis
+    league_settings_str = yaml.dump(league_settings, default_flow_style=False)
+    roster_settings_str = yaml.dump(roster_settings, default_flow_style=False)
+    scoring_rules_str = yaml.dump(scoring_rules, default_flow_style=False)
+
     llm_prompt = f"""
-    Analyze the upcoming fantasy football game based on the following information:
+    Analyze the upcoming fantasy football game based on the following information.
+
+    **League Context:**
+
+    **1. League Settings:**
+    ```yaml
+    {league_settings_str}
+    ```
+
+    **2. Roster Settings:**
+    ```yaml
+    {roster_settings_str}
+    ```
+
+    **3. Scoring Rules:**
+    ```yaml
+    {scoring_rules_str}
+    ```
+
+    **Matchup Details:**
 
     My Team Roster:
     {', '.join(my_team_players_raw)}
