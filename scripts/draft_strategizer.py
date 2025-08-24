@@ -14,6 +14,22 @@
 import os
 import pandas as pd
 import yaml
+import sys
+
+# Add src to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from fantasy_ai.errors import (
+    FileOperationError,
+    DataValidationError,
+    ConfigurationError,
+    wrap_exception
+)
+from fantasy_ai.utils.logging import setup_logging, get_logger
+
+# Set up logging
+setup_logging(level='INFO', format_type='console', log_file='logs/draft_strategizer.log')
+logger = get_logger(__name__)
 
 # --- Configuration and Data Paths ---
 CONFIG_FILE = os.path.join(
@@ -22,46 +38,139 @@ CONFIG_FILE = os.path.join(
 PLAYER_ADP_PATH = 'data/player_adp.csv'
 PLAYER_PROJECTIONS_PATH = 'data/player_projections.csv'
 
-def load_config():
+def load_config() -> dict:
     """
-    Loads configuration from the config.yaml file.
+    Loads configuration from the config.yaml file with proper error handling.
+    
+    Returns:
+        Configuration dictionary.
+        
+    Raises:
+        ConfigurationError: If config file cannot be read or parsed.
+        FileOperationError: If config file cannot be accessed.
     """
-    with open(CONFIG_FILE, 'r') as f:
-        return yaml.safe_load(f)
+    try:
+        logger.debug(f"Loading configuration from {CONFIG_FILE}")
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+        
+        if not isinstance(config, dict):
+            raise ConfigurationError(
+                "Configuration file does not contain a valid dictionary",
+                config_file=CONFIG_FILE
+            )
+        
+        logger.info("Configuration loaded successfully")
+        return config
+        
+    except FileNotFoundError as e:
+        raise ConfigurationError(
+            f"Configuration file not found: {CONFIG_FILE}. Please run 'task init' first.",
+            config_file=CONFIG_FILE,
+            original_error=e
+        )
+    except yaml.YAMLError as e:
+        raise ConfigurationError(
+            f"Invalid YAML in configuration file: {CONFIG_FILE}",
+            config_file=CONFIG_FILE,
+            original_error=e
+        )
+    except PermissionError as e:
+        raise FileOperationError(
+            f"Permission denied reading configuration file: {CONFIG_FILE}",
+            file_path=CONFIG_FILE,
+            operation="read",
+            original_error=e
+        )
+    except Exception as e:
+        raise wrap_exception(
+            e, ConfigurationError,
+            f"Failed to load configuration from {CONFIG_FILE}",
+            config_file=CONFIG_FILE
+        )
+
 
 CONFIG = load_config()
 
-def load_player_data(adp_path, projections_path):
+def load_player_data(adp_path: str, projections_path: str) -> pd.DataFrame:
     """
-    Loads player ADP and projected points data.
-    These files are assumed to exist for the purpose of this script's structure.
+    Loads player ADP and projected points data with error handling.
+    Generates dummy data if files are not found or are empty.
+    
+    Args:
+        adp_path: Path to player ADP CSV file.
+        projections_path: Path to player projections CSV file.
+        
+    Returns:
+        DataFrame with combined player data.
+        
+    Raises:
+        FileOperationError: If files cannot be read.
+        DataValidationError: If files are malformed.
     """
-    print(f"Loading player ADP from {adp_path}...")
+    logger.info(f"Loading player data from {adp_path} and {projections_path}...")
+    adp_df = pd.DataFrame()
+    projections_df = pd.DataFrame()
+
     try:
-        adp_df = pd.read_csv(adp_path)
+        adp_df = pd.read_csv(adp_path, low_memory=False)
+        if adp_df.empty:
+            logger.warning(f"ADP file is empty: {adp_path}. Generating dummy ADP data.")
+            adp_df = pd.DataFrame({
+                'full_name': [f'Player {i}' for i in range(1, 101)],
+                'position': ['QB', 'RB', 'WR', 'TE'] * 25,
+                'adp': range(1, 101)
+            })
     except FileNotFoundError:
-        print(f"Warning: {adp_path} not found. Creating dummy ADP data.")
+        logger.warning(f"ADP file not found: {adp_path}. Generating dummy ADP data.")
         adp_df = pd.DataFrame({
             'full_name': [f'Player {i}' for i in range(1, 101)],
             'position': ['QB', 'RB', 'WR', 'TE'] * 25,
             'adp': range(1, 101)
         })
+    except pd.errors.ParserError as e:
+        raise DataValidationError(
+            f"Cannot parse ADP file: {adp_path}",
+            field_name="adp_file",
+            original_error=e
+        )
+    except Exception as e:
+        raise wrap_exception(
+            e, FileOperationError,
+            f"Failed to read ADP file {adp_path}",
+            file_path=adp_path,
+            operation="read"
+        )
 
-    print(f"Loading player projections from {projections_path}...")
     try:
-        projections_df = pd.read_csv(projections_path)
+        projections_df = pd.read_csv(projections_path, low_memory=False)
+        if projections_df.empty:
+            logger.warning(f"Projections file is empty: {projections_path}. Generating dummy projections data.")
+            projections_df = pd.DataFrame({
+                'full_name': [f'Player {i}' for i in range(1, 101)],
+                'position': ['QB', 'RB', 'WR', 'TE'] * 25,
+                'projected_points': [i * 2.5 for i in range(100, 0, -1)]
+            })
     except FileNotFoundError:
-        print(f"Warning: {projections_path} not found. Creating dummy projections data.")
+        logger.warning(f"Projections file not found: {projections_path}. Generating dummy projections data.")
         projections_df = pd.DataFrame({
             'full_name': [f'Player {i}' for i in range(1, 101)],
-            'position': ['QB', 'RB', 'WR', 'TE'] * 25, # Added position for dummy data
+            'position': ['QB', 'RB', 'WR', 'TE'] * 25,
             'projected_points': [i * 2.5 for i in range(100, 0, -1)]
         })
-
-    
-    # print(adp_df.columns)
-    
-    # print(projections_df.columns)
+    except pd.errors.ParserError as e:
+        raise DataValidationError(
+            f"Cannot parse projections file: {projections_path}",
+            field_name="projections_file",
+            original_error=e
+        )
+    except Exception as e:
+        raise wrap_exception(
+            e, FileOperationError,
+            f"Failed to read projections file {projections_path}",
+            file_path=projections_path,
+            operation="read"
+        )
 
     # Merge dataframes
     player_data = pd.merge(adp_df, projections_df, on='full_name', how='outer')
@@ -72,72 +181,80 @@ def load_player_data(adp_path, projections_path):
     if 'position_y' in player_data.columns:
         player_data.drop(columns=['position_y'], inplace=True)
 
-    # print("--- Debug: player_data columns after merge and rename ---")
-    # print(player_data.columns)
-    # 
-    
-
     # Fill NaNs. For 'position', fill with an empty string, otherwise fill with 0.
-    # This line will be executed only if 'position' column exists after merge
     if 'position' in player_data.columns:
         player_data['position'].fillna('', inplace=True)
     player_data.fillna(0, inplace=True)
+    
+    if player_data.empty:
+        raise DataValidationError("Combined player data is empty.", field_name="player_data")
+
+    logger.info(f"Successfully loaded and combined {len(player_data)} player records.")
     return player_data
 
-def calculate_vbd(player_data, roster_settings, scoring_settings):
+
+def calculate_vbd(player_data: pd.DataFrame, roster_settings: dict, scoring_settings: dict) -> pd.DataFrame:
     """
     Calculates Value-Based Drafting (VBD) scores for players.
-    A more robust VBD calculation considering replacement level players for each position
-    across the entire league.
-    """
-    print("Calculating VBD scores...")
     
-    # Define core offensive positions for VBD calculation
+    Args:
+        player_data: DataFrame with player data including 'position' and 'projected_points'.
+        roster_settings: Dictionary of roster settings from config.
+        scoring_settings: Dictionary of scoring settings from config.
+        
+    Returns:
+        DataFrame with an added 'vbd' column.
+        
+    Raises:
+        DataValidationError: If input DataFrame is empty or missing required columns.
+    """
+    logger.info("Calculating VBD scores...")
+    if player_data.empty:
+        raise DataValidationError("Player data for VBD calculation is empty.", field_name="player_data")
+
+    required_cols = ['position', 'projected_points']
+    missing_cols = [col for col in required_cols if col not in player_data.columns]
+    if missing_cols:
+        raise DataValidationError(
+            f"Missing required columns for VBD calculation: {missing_cols}",
+            field_name="player_data_columns",
+            expected_type=f"columns: {required_cols}",
+            actual_value=f"missing: {missing_cols}"
+        )
+
     core_positions = ['QB', 'RB', 'WR', 'TE']
     
-    # Calculate total number of starters for each core position across the league
     total_starters_per_position = {
         pos: roster_settings.get(pos, 0) * CONFIG.get('league_settings', {}).get('number_of_teams', 12) for pos in core_positions
     }
     
-    # Determine a reasonable "replacement level" for each position
-    # This is often the last drafted player at that position in a typical draft
-    # For simplicity, we'll use the total number of starters + a few bench players
     replacement_level_count = {
-        'QB': total_starters_per_position['QB'], # Only consider starting QBs for replacement level
-        'RB': total_starters_per_position['RB'] + CONFIG.get('league_settings', {}).get('number_of_teams', 12) * 1.5, # 1.5 bench RBs per team
-        'WR': total_starters_per_position['WR'] + CONFIG.get('league_settings', {}).get('number_of_teams', 12) * 1.5, # 1.5 bench WRs per team
-        'TE': total_starters_per_position['TE'] + CONFIG.get('league_settings', {}).get('number_of_teams', 12) * 0.5, # 0.5 bench TEs per team
+        'QB': total_starters_per_position['QB'],
+        'RB': total_starters_per_position['RB'] + CONFIG.get('league_settings', {}).get('number_of_teams', 12) * 1.5,
+        'WR': total_starters_per_position['WR'] + CONFIG.get('league_settings', {}).get('number_of_teams', 12) * 1.5,
+        'TE': total_starters_per_position['TE'] + CONFIG.get('league_settings', {}).get('number_of_teams', 12) * 0.5,
     }
 
-    player_data['vbd'] = 0 # Initialize VBD column
+    player_data['vbd'] = 0.0 # Initialize VBD column
 
     for position in core_positions:
         position_players = player_data[player_data['position'] == position].sort_values(by='projected_points', ascending=False)
         
         if not position_players.empty:
-            # Determine the replacement level player for this position
-            # Ensure we don't go out of bounds if there aren't enough players
             rl_index = min(int(replacement_level_count.get(position, 0)) - 1, len(position_players) - 1)
             
             if rl_index >= 0:
                 replacement_level_points = position_players.iloc[rl_index]['projected_points']
-                
-                # Calculate VBD for players at this position
                 player_data.loc[player_data['position'] == position, 'vbd'] = \
                     player_data['projected_points'] - replacement_level_points
             else:
-                # If no replacement level can be determined (e.g., not enough players), VBD is just projected points
                 player_data.loc[player_data['position'] == position, 'vbd'] = player_data['projected_points']
         else:
-            player_data.loc[player_data['position'] == position, 'vbd'] = 0 # No players, no VBD
+            player_data.loc[player_data['position'] == position, 'vbd'] = 0.0
 
-    # For K and D/ST, calculate VBD relative to a replacement level
     for position in ['K', 'D/ST']:
         position_players = player_data[player_data['position'] == position].sort_values(by='projected_points', ascending=False)
         if not position_players.empty:
-            # For K and D/ST, replacement level can be much lower, e.g., the 12th or 15th best
-            # We'll use the number of starters for that position across the league as replacement level
             num_starters_pos = roster_settings.get(position, 0) * CONFIG.get('league_settings', {}).get('number_of_teams', 12)
             rl_index = min(num_starters_pos - 1, len(position_players) - 1)
             
@@ -148,31 +265,52 @@ def calculate_vbd(player_data, roster_settings, scoring_settings):
             else:
                 player_data.loc[player_data['position'] == position, 'vbd'] = player_data['projected_points']
         else:
-            player_data.loc[player_data['position'] == position, 'vbd'] = 0
+            player_data.loc[player_data['position'] == position, 'vbd'] = 0.0
         
+    logger.info("VBD scores calculated successfully.")
     return player_data
 
 
-from tabulate import tabulate
-
-def get_team_needs(my_team, roster_settings):
+def get_team_needs(my_team: dict, roster_settings: dict) -> dict:
     """
     Determines the current positional needs of the user's team.
+    
+    Args:
+        my_team: Dictionary representing the user's current team roster.
+        roster_settings: Dictionary of roster settings from config.
+        
+    Returns:
+        Dictionary with positional needs.
     """
     needs = {}
+    if not isinstance(roster_settings, dict) or not roster_settings:
+        logger.warning("Invalid or empty roster_settings provided for get_team_needs.")
+        return needs
+
     for pos, count in roster_settings.items():
         if pos in my_team and len(my_team[pos]) < count:
             needs[pos] = count - len(my_team[pos])
     return needs
 
-def get_best_available_player(available_players, my_team, roster_settings):
+
+def get_best_available_player(available_players: pd.DataFrame, my_team: dict, roster_settings: dict) -> pd.Series:
     """
     Suggests the best available player based on VBD and current team needs.
+    
+    Args:
+        available_players: DataFrame of players not yet drafted.
+        my_team: Dictionary representing the user's current team roster.
+        roster_settings: Dictionary of roster settings from config.
+        
+    Returns:
+        Pandas Series representing the best available player, or None if no players are available.
     """
+    if available_players.empty:
+        logger.info("No available players left to suggest.")
+        return None
+
     current_needs = get_team_needs(my_team, roster_settings)
 
-    # Prioritize filling starting spots first, then flex, then bench
-    # This order should align with how a real draft progresses
     priority_order = [
         'QB', 'RB', 'WR', 'TE', 
         'RB/WR', 'WR/TE', 
@@ -191,23 +329,24 @@ def get_best_available_player(available_players, my_team, roster_settings):
             elif pos_type == 'WR/TE':
                 eligible_players = available_players[available_players['position'].isin(['WR', 'TE'])]
             elif pos_type == 'BE':
-                # For bench, consider all remaining positions by VBD
                 eligible_players = available_players
             
             if not eligible_players.empty:
-                # Sort by VBD to get the best player for the current need
                 eligible_players = eligible_players.sort_values(by='vbd', ascending=False)
                 return eligible_players.iloc[0]
     
-    # Fallback: if no specific needs, just pick the highest VBD player
     if not available_players.empty:
         return available_players.sort_values(by='vbd', ascending=False).iloc[0]
     
     return None
 
-def display_my_team(my_team):
+
+def display_my_team(my_team: dict) -> None:
     """
     Displays the current roster of the user's team.
+    
+    Args:
+        my_team: Dictionary representing the user's current team roster.
     """
     print("\n--- Your Current Roster ---")
     for pos, players in my_team.items():
@@ -217,24 +356,47 @@ def display_my_team(my_team):
             print(f"{pos}: (Empty)")
     print("---------------------------")
 
-def live_draft_assistant():
+
+def live_draft_assistant() -> int:
+    """
+    Simulates a live draft and provides draft recommendations.
+    
+    Returns:
+        Exit code (0 for success, 1 for error).
+    """
+    logger.info("Starting Live Draft Assistant.")
     print("\n--- Starting Live Draft Assistant ---")
-    print("Loading player data and calculating VBD scores...")
-    player_data = load_player_data(PLAYER_ADP_PATH, PLAYER_PROJECTIONS_PATH)
-    player_data = calculate_vbd(player_data, CONFIG.get('roster_settings', {}), CONFIG.get('scoring_rules', {}))
+    
+    try:
+        player_data = load_player_data(PLAYER_ADP_PATH, PLAYER_PROJECTIONS_PATH)
+        player_data = calculate_vbd(player_data, CONFIG.get('roster_settings', {}), CONFIG.get('scoring_rules', {}))
+    except (FileOperationError, DataValidationError, ConfigurationError) as e:
+        logger.error(f"Draft assistant setup error: {e.get_detailed_message()}")
+        print(f"\n❌ Error setting up draft assistant: {e}")
+        print("\nTroubleshooting:")
+        if isinstance(e, FileOperationError):
+            print("- Ensure data files (player_adp.csv, player_projections.csv) exist and are accessible.")
+            print("- Run 'task download_adp' and 'task download_projections' to prepare data.")
+        elif isinstance(e, DataValidationError):
+            print("- Check the format and content of your data files.")
+        elif isinstance(e, ConfigurationError):
+            print("- Check config.yaml for valid settings.")
+        return 1
+    except Exception as e:
+        logger.critical(f"An unhandled critical error occurred during draft assistant setup: {e}", exc_info=True)
+        print(f"\n❌ An unexpected critical error occurred during setup: {e}")
+        print("Please check the log file for more details.")
+        return 1
 
     available_players = player_data.copy()
-    my_team = {pos: [] for pos in CONFIG.get('roster_settings', {})}
-    
-    # Initialize roster counts for flex positions
     roster_settings = CONFIG.get('roster_settings', {})
-    # Map flex positions to their base positions for easier tracking
+    my_team = {pos: [] for pos in roster_settings}
+    
     flex_map = {
         'RB/WR': ['RB', 'WR'],
         'WR/TE': ['WR', 'TE']
     }
 
-    # Calculate total number of picks in the draft
     total_roster_spots = sum(roster_settings.values())
     total_teams = CONFIG.get('league_settings', {}).get('number_of_teams', 12)
     total_picks = total_roster_spots * total_teams
@@ -264,32 +426,29 @@ def live_draft_assistant():
             else:
                 print("No recommendations available. All players drafted or an error occurred.")
             
-            player_name = input("Enter your pick (full name, or 'exit' to quit): ").strip()
-            if player_name.lower() == 'exit' or player_name.lower() == 'quit':
+            player_name_input = input("Enter your pick (full name, or 'exit' to quit): ").strip()
+            if player_name_input.lower() in ['exit', 'quit']:
                 break
             
-            picked_player_df = available_players[available_players['full_name'].str.lower() == player_name.lower()]
+            picked_player_df = available_players[available_players['full_name'].str.lower() == player_name_input.lower()]
             if picked_player_df.empty:
-                print(f"Player '{player_name}' not found or already drafted. Please try again.")
+                print(f"Player '{player_name_input}' not found or already drafted. Please try again.")
                 continue
             picked_player = picked_player_df.iloc[0]
 
             # Add player to my team
             pos_added = False
-            # Try to fill exact position first
             if picked_player['position'] in my_team and len(my_team[picked_player['position']]) < roster_settings.get(picked_player['position'], 0):
                 my_team[picked_player['position']].append(picked_player['full_name'])
                 pos_added = True
             else:
-                # Try to fill flex spots
                 for flex_pos, base_positions in flex_map.items():
-                    if picked_player['position'] in base_positions and len(my_team[flex_pos]) < roster_settings.get(flex_pos, 0):
+                    if flex_pos in my_team and picked_player['position'] in base_positions and len(my_team[flex_pos]) < roster_settings.get(flex_pos, 0):
                         my_team[flex_pos].append(picked_player['full_name'])
                         pos_added = True
                         break
             
-            # If not added to a specific position or flex, add to bench
-            if not pos_added and len(my_team['BE']) < roster_settings.get('BE', 0):
+            if not pos_added and 'BE' in my_team and len(my_team['BE']) < roster_settings.get('BE', 0):
                 my_team['BE'].append(picked_player['full_name'])
                 pos_added = True
             
@@ -299,18 +458,17 @@ def live_draft_assistant():
                 display_my_team(my_team)
             else:
                 print(f"Could not add {picked_player['full_name']} to your roster. Check roster settings or team capacity.")
-                # Don't increment pick number if player wasn't successfully added
                 continue
 
         else:
             print(f"\n--- Round {current_round}, Pick {current_pick_number} (Other Team's Pick) ---")
-            player_name = input("Enter player drafted by other team (full name, or 'exit' to quit): ").strip()
-            if player_name.lower() == 'exit' or player_name.lower() == 'quit':
+            player_name_input = input("Enter player drafted by other team (full name, or 'exit' to quit): ").strip()
+            if player_name_input.lower() in ['exit', 'quit']:
                 break
             
-            picked_player_df = available_players[available_players['full_name'].str.lower() == player_name.lower()]
+            picked_player_df = available_players[available_players['full_name'].str.lower() == player_name_input.lower()]
             if picked_player_df.empty:
-                print(f"Player '{player_name}' not found or already drafted. Please try again.")
+                print(f"Player '{player_name_input}' not found or already drafted. Please try again.")
                 continue
             picked_player = picked_player_df.iloc[0]
             available_players = available_players[available_players['full_name'] != picked_player['full_name']] # Remove from available
@@ -320,10 +478,36 @@ def live_draft_assistant():
 
     print("\n--- Draft Assistant Session Ended ---")
     display_my_team(my_team)
-    print("Final available players count:", len(available_players))
+    logger.info(f"Final available players count: {len(available_players)}")
+    return 0
 
-def main():
-    live_draft_assistant()
+
+def main() -> int:
+    """Entry point for the draft strategizer with error handling."""
+    try:
+        return live_draft_assistant()
+    except KeyboardInterrupt:
+        logger.info("Draft assistant interrupted by user.")
+        print("\nDraft assistant interrupted by user.")
+        return 130
+    except (FileOperationError, DataValidationError, ConfigurationError) as e:
+        logger.error(f"Draft strategizer error: {e.get_detailed_message()}")
+        print(f"\n❌ Error during draft strategizer: {e}")
+        print("\nTroubleshooting:")
+        if isinstance(e, FileOperationError):
+            print("- Ensure data files (player_adp.csv, player_projections.csv) exist and are accessible.")
+            print("- Run 'task download_adp' and 'task download_projections' to prepare data.")
+        elif isinstance(e, DataValidationError):
+            print("- Check the format and content of your data files.")
+        elif isinstance(e, ConfigurationError):
+            print("- Check config.yaml for valid settings.")
+        return 1
+    except Exception as e:
+        logger.critical(f"An unhandled critical error occurred: {e}", exc_info=True)
+        print(f"\n❌ An unexpected critical error occurred: {e}")
+        print("Please check the log file for more details.")
+        return 1
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
