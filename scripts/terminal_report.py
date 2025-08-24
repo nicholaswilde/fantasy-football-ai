@@ -18,6 +18,20 @@ from datetime import datetime
 import argparse
 from tabulate import tabulate
 
+# Add src to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from fantasy_ai.errors import (
+    FileOperationError,
+    DataValidationError,
+    wrap_exception
+)
+from fantasy_ai.utils.logging import setup_logging, get_logger
+
+# Set up logging
+setup_logging(level='INFO', format_type='console', log_file='logs/terminal_report.log')
+logger = get_logger(__name__)
+
 # Assume the analysis.py script is in the same directory and can be imported
 from analysis import (
     get_advanced_draft_recommendations,
@@ -65,7 +79,7 @@ def format_dataframe_for_terminal(df, column_names):
     """
     return tabulate(df[column_names], headers=column_names, tablefmt="fancy_grid", floatfmt=".2f", showindex=False)
 
-def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df, positional_breakdown_df, last_game_analysis_str, next_game_analysis_str):
+def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df, positional_breakdown_df, last_game_analysis_str, next_game_analysis_str, my_team_df):
 
     """
     Generates a Markdown report to the terminal from the analysis data.
@@ -214,7 +228,7 @@ def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
     print("\n")
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description="Generate a fantasy football analysis report.")
     parser.add_argument(
         "--output-dir",
@@ -226,22 +240,63 @@ if __name__ == "__main__":
     # Ensure the data file exists before running
     data_file = "data/player_stats.csv"
     if not os.path.exists(data_file):
-        print(f"Error: Data file not found at '{data_file}'. Please run 'download_stats.py' first.", file=sys.stderr)
-        sys.exit(1)
+        raise FileOperationError(
+            f"Data file not found at '{data_file}'. Please run 'download_stats.py' first.",
+            file_path=data_file,
+            operation="read"
+        )
 
     # Create a dummy roster file if it doesn't exist
     roster_file = "data/my_team.md"
     if not os.path.exists(roster_file):
-        with open(roster_file, "w") as f:
-            f.write("- Patrick Mahomes\n")
-            f.write("- Tyreek Hill\n")
-            f.write("- Saquon Barkley\n")
-            f.write("- Keenan Allen\n")
-            f.write("- Travis Kelce\n")
-
+        try:
+            with open(roster_file, "w") as f:
+                f.write("- Patrick Mahomes\n")
+                f.write("- Tyreek Hill\n")
+                f.write("- Saquon Barkley\n")
+                f.write("- Keenan Allen\n")
+                f.write("- Travis Kelce\n")
+        except IOError as e:
+            raise FileOperationError(
+                f"Could not create dummy roster file '{roster_file}': {e}",
+                file_path=roster_file,
+                operation="write"
+            ) from e
 
     # Load and process data
-    stats_df = pd.read_csv(data_file, low_memory=False)
+    try:
+        stats_df = pd.read_csv(data_file, low_memory=False)
+    except pd.errors.EmptyDataError as e:
+        raise DataValidationError(
+            f"Data file is empty or invalid: {data_file}",
+            field_name="player_stats_file",
+            expected_type="valid CSV with player data",
+            actual_value="empty file",
+            original_error=e
+        )
+    except pd.errors.ParserError as e:
+        raise DataValidationError(
+            f"Cannot parse data file: {data_file}",
+            field_name="player_stats_file",
+            expected_type="valid CSV format",
+            actual_value="malformed CSV",
+            original_error=e
+        )
+    except IOError as e:
+        raise FileOperationError(
+            f"Could not read data file '{data_file}': {e}",
+            file_path=data_file,
+            operation="read",
+            original_error=e
+        ) from e
+    except Exception as e:
+        raise wrap_exception(
+            e, FileOperationError,
+            f"An unexpected error occurred while reading data file {data_file}",
+            file_path=data_file,
+            operation="read"
+        )
+
     stats_with_points = calculate_fantasy_points(stats_df)
 
     # Add a placeholder bye_week column for demonstration purposes
@@ -277,4 +332,25 @@ if __name__ == "__main__":
     next_game_analysis_str = analyze_next_game()
 
     # Generate the report
-    generate_terminal_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, positional_breakdown_df, last_game_analysis_str, next_game_analysis_str)
+    generate_terminal_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, positional_breakdown_df, last_game_analysis_str, next_game_analysis_str, my_team_df)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (FileOperationError, DataValidationError) as e:
+        logger.error(f"Terminal report error: {e.get_detailed_message()}")
+        print(f"\n❌ Error: {e}")
+        print("\nTroubleshooting:")
+        if "player_stats.csv" in str(e):
+            print("- Ensure 'data/player_stats.csv' exists and is accessible.")
+            print("- Run 'task download_stats' to get the latest data.")
+        elif "my_team.md" in str(e):
+            print("- Ensure 'data/my_team.md' exists and is accessible.")
+            print("- Run 'task get_my_team' to set up your team roster.")
+        sys.exit(1)
+    except Exception as e:
+        logger.critical(f"An unhandled critical error occurred: {e}", exc_info=True)
+        print(f"\n❌ An unexpected critical error occurred: {e}")
+        print("Please check the log file for more details.")
+        sys.exit(1)
