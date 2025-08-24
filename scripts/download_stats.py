@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""
-Script to download weekly NFL player statistics with comprehensive error handling.
-
-Downloads weekly player stats from nfl_data_py and ESPN API, combines them,
-and saves to CSV with robust error handling.
-
-@author Nicholas Wilde, 0xb299a622
-@date 21 08 2025
-@version 0.4.0
-"""
+################################################################################
+#
+# Script Name: download_stats.py
+# ----------------
+# Downloads weekly NFL player statistics with comprehensive error handling.
+#
+# @author Nicholas Wilde, 0xb299a622
+# @date 21 08 2025
+# @version 0.4.0
+#
+################################################################################
 
 import nfl_data_py as nfl
 import pandas as pd
@@ -25,7 +26,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from fantasy_ai.errors import (
     APIError, AuthenticationError, ConfigurationError, 
-    FileIOError, DataValidationError, wrap_exception
+    FileOperationError, DataValidationError, wrap_exception
 )
 from fantasy_ai.utils.retry import retry
 from fantasy_ai.utils.logging import setup_logging, get_logger
@@ -52,13 +53,22 @@ def load_config() -> dict:
         
     Raises:
         ConfigurationError: If config file cannot be read or parsed
+        FileOperationError: If config file cannot be accessed
     """
     try:
         logger.debug(f"Loading configuration from {CONFIG_FILE}")
-        with open(CONFIG_FILE, 'r') as f:
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
+        
+        if not isinstance(config, dict):
+            raise ConfigurationError(
+                "Configuration file does not contain a valid dictionary",
+                config_file=CONFIG_FILE
+            )
+        
         logger.info("Configuration loaded successfully")
         return config
+        
     except FileNotFoundError as e:
         raise ConfigurationError(
             f"Configuration file not found: {CONFIG_FILE}. Please run 'task init' first.",
@@ -69,6 +79,13 @@ def load_config() -> dict:
         raise ConfigurationError(
             f"Invalid YAML in configuration file: {CONFIG_FILE}",
             config_file=CONFIG_FILE,
+            original_error=e
+        )
+    except PermissionError as e:
+        raise FileOperationError(
+            f"Permission denied reading configuration file: {CONFIG_FILE}",
+            file_path=CONFIG_FILE,
+            operation="read",
             original_error=e
         )
     except Exception as e:
@@ -134,15 +151,13 @@ def safe_create_directory(directory: str) -> None:
         directory: Directory path to create
         
     Raises:
-        FileIOError: If directory cannot be created
+        FileOperationError: If directory cannot be created
     """
     try:
-        if directory and not os.path.exists(directory):
-            os.makedirs(directory)
-            logger.info(f"Created directory: {directory}")
+        os.makedirs(directory, exist_ok=True)
         logger.debug(f"Directory ensured: {directory}")
     except PermissionError as e:
-        raise FileIOError(
+        raise FileOperationError(
             f"Permission denied creating directory: {directory}",
             file_path=directory,
             operation="create_directory",
@@ -150,7 +165,7 @@ def safe_create_directory(directory: str) -> None:
         )
     except Exception as e:
         raise wrap_exception(
-            e, FileIOError,
+            e, FileOperationError,
             f"Failed to create directory: {directory}",
             file_path=directory,
             operation="create_directory"
@@ -171,6 +186,7 @@ def download_nfl_data(years: list) -> pd.DataFrame:
     Raises:
         APIError: If data download fails
         DataValidationError: If data is invalid
+        NetworkError: If there's a network connectivity issue.
     """
     try:
         logger.info(f"Downloading NFL data for years: {years}")
@@ -200,6 +216,7 @@ def download_nfl_data(years: list) -> pd.DataFrame:
         player_ids_df = nfl.import_ids()
         if player_ids_df.empty:
             logger.warning("No player IDs data available, continuing without ID mapping")
+            # Return df_nfl as is, without merging player IDs
             return df_nfl
         
         # Process and merge data
@@ -236,7 +253,7 @@ def download_nfl_data(years: list) -> pd.DataFrame:
         error_msg = str(e).lower()
         if any(net_term in error_msg for net_term in ['connection', 'timeout', 'network', 'http']):
             raise wrap_exception(
-                e, APIError,
+                e, NetworkError,
                 f"Network error downloading NFL data for years {years}",
                 api_name="nfl_data_py"
             )
@@ -262,6 +279,7 @@ def get_espn_player_stats(years: list) -> pd.DataFrame:
     Raises:
         APIError: If ESPN data fetch fails
         AuthenticationError: If credentials are invalid
+        NetworkError: If there's a network connectivity issue.
     """
     try:
         logger.info(f"Fetching ESPN player stats for years: {years}")
@@ -311,6 +329,12 @@ def get_espn_player_stats(years: list) -> pd.DataFrame:
                 elif any(nf_term in error_msg for nf_term in ['404', 'not found', 'does not exist']):
                     logger.warning(f"League not found for year {year}, skipping")
                     continue
+                elif any(net_term in error_msg for net_term in ['connection', 'timeout', 'network', 'http']):
+                    raise NetworkError(
+                        f"Network error fetching ESPN data for year {year}: {e}",
+                        api_name="ESPN",
+                        original_error=e
+                    )
                 else:
                     raise wrap_exception(
                         e, APIError,
@@ -322,7 +346,7 @@ def get_espn_player_stats(years: list) -> pd.DataFrame:
         logger.info(f"Successfully fetched {len(espn_stats)} ESPN player records")
         return df_espn
         
-    except (AuthenticationError, APIError):
+    except (AuthenticationError, APIError, NetworkError):
         raise  # Re-raise our custom exceptions
     except Exception as e:
         raise wrap_exception(
@@ -341,7 +365,7 @@ def save_combined_data(df_combined: pd.DataFrame, output_file: str) -> None:
         output_file: Output file path
         
     Raises:
-        FileIOError: If file cannot be written
+        FileOperationError: If file cannot be written
     """
     try:
         logger.debug(f"Saving combined data to {output_file}")
@@ -356,15 +380,22 @@ def save_combined_data(df_combined: pd.DataFrame, output_file: str) -> None:
         logger.info(f"Successfully saved {len(df_combined)} records to {output_file}")
         
     except PermissionError as e:
-        raise FileIOError(
+        raise FileOperationError(
             f"Permission denied writing to {output_file}",
+            file_path=output_file,
+            operation="write",
+            original_error=e
+        )
+    except IOError as e:
+        raise FileOperationError(
+            f"IO error writing to {output_file}: {e}",
             file_path=output_file,
             operation="write",
             original_error=e
         )
     except Exception as e:
         raise wrap_exception(
-            e, FileIOError,
+            e, FileOperationError,
             f"Failed to save data to {output_file}",
             file_path=output_file,
             operation="write"
@@ -376,7 +407,7 @@ def update_last_updated_log() -> None:
     Update the last_updated.log file with error handling.
     
     Raises:
-        FileIOError: If log file cannot be written
+        FileOperationError: If log file cannot be written
     """
     log_file_path = "data/last_updated.log"
     try:
@@ -386,21 +417,28 @@ def update_last_updated_log() -> None:
         now = datetime.datetime.now()
         log_content = f"Player stats last updated: {now.strftime('%Y-%m-%d %H:%M:%S')}"
         
-        with open(log_file_path, "w") as log_file:
+        with open(log_file_path, "w", encoding='utf-8') as log_file:
             log_file.write(log_content)
         
         logger.info(f"Updated {log_file_path}")
         
     except PermissionError as e:
-        raise FileIOError(
+        raise FileOperationError(
             f"Permission denied writing to {log_file_path}",
+            file_path=log_file_path,
+            operation="write",
+            original_error=e
+        )
+    except IOError as e:
+        raise FileOperationError(
+            f"IO error writing to {log_file_path}: {e}",
             file_path=log_file_path,
             operation="write",
             original_error=e
         )
     except Exception as e:
         raise wrap_exception(
-            e, FileIOError,
+            e, FileOperationError,
             f"Failed to update log file {log_file_path}",
             file_path=log_file_path,
             operation="write"
@@ -473,14 +511,14 @@ def download_and_save_weekly_stats(years: list, output_file: str = "data/player_
         print("- Run 'task init' to create configuration file")
         print("- Check config.yaml for valid settings")
         return 1
-    except (APIError, DataValidationError) as e:
-        logger.error(f"API/Data error: {e.get_detailed_message()}")
+    except (APIError, DataValidationError, NetworkError) as e:
+        logger.error(f"API/Data/Network error: {e.get_detailed_message()}")
         print(f"\n❌ Error: {e}")
         print("\nTroubleshooting:")
         print("- Check your internet connection")
         print("- Verify the years specified are valid")
         return 1
-    except FileIOError as e:
+    except FileOperationError as e:
         logger.error(f"File I/O error: {e.get_detailed_message()}")
         print(f"\n❌ File Error: {e}")
         print("\nTroubleshooting:")
@@ -503,11 +541,14 @@ def main() -> int:
         try:
             config = load_config()
             default_years = config.get('league_settings', {}).get(
-                'data_years', 
+                'data_years',
                 [datetime.datetime.now().year - 1, datetime.datetime.now().year]
             )
+        except (ConfigurationError, FileOperationError) as e:
+            logger.warning(f"Could not load config for default years: {e}")
+            default_years = [datetime.datetime.now().year - 1, datetime.datetime.now().year]
         except Exception as e:
-            logger.warning(f"Could not load config, using default years: {e}")
+            logger.warning(f"Unexpected error loading config for default years: {e}")
             default_years = [datetime.datetime.now().year - 1, datetime.datetime.now().year]
         
         parser.add_argument(
