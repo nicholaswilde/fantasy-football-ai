@@ -244,6 +244,11 @@ tasks:
       - |
         {{ .SOURCE }} && python3 scripts/test_error_handling.py
 
+  test:all:
+    desc: "Test all python scripts in the scripts/ directory for syntax errors."
+    cmds:
+      - for f in scripts/*.py; do echo "Testing $f"; python3 -m py_compile "$f"; done
+
   health_check:
     desc: Check the health of all core systems and APIs
     cmds:
