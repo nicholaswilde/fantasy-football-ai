@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from fantasy_ai.errors import (
     APIError, AuthenticationError, ConfigurationError, 
-    FileIOError, wrap_exception
+    FileOperationError, wrap_exception
 )
 from fantasy_ai.utils.retry import retry
 from fantasy_ai.utils.logging import setup_logging, get_logger
@@ -93,7 +93,7 @@ def load_existing_config():
         
     Raises:
         ConfigurationError: If config file exists but cannot be parsed
-        FileIOError: If config file cannot be read
+        FileOperationError: If config file cannot be read
     """
     if not os.path.exists(CONFIG_FILE):
         logger.debug("No existing config file found, starting fresh")
@@ -118,7 +118,7 @@ def load_existing_config():
             original_error=e
         )
     except (PermissionError, UnicodeDecodeError) as e:
-        raise FileIOError(
+        raise FileOperationError(
             f"Cannot read configuration file: {CONFIG_FILE}",
             file_path=CONFIG_FILE,
             operation="read",
@@ -273,7 +273,7 @@ def save_config_file(config_data):
         config_data: Configuration dictionary to save
         
     Raises:
-        FileIOError: If file cannot be written
+        FileOperationError: If file cannot be written
     """
     try:
         # Ensure directory exists
@@ -283,13 +283,13 @@ def save_config_file(config_data):
         
         logger.debug(f"Writing configuration to {CONFIG_FILE}")
         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-            f.write("---\n")
+            f.write("---")
             yaml.dump(config_data, f, default_flow_style=False, sort_keys=False)
         
         logger.info(f"Successfully updated {CONFIG_FILE} with league settings")
         
     except PermissionError as e:
-        raise FileIOError(
+        raise FileOperationError(
             f"Permission denied writing to {CONFIG_FILE}",
             file_path=CONFIG_FILE,
             operation="write",
@@ -297,7 +297,7 @@ def save_config_file(config_data):
         )
     except Exception as e:
         raise wrap_exception(
-            e, FileIOError,
+            e, FileOperationError,
             f"Failed to write configuration to {CONFIG_FILE}",
             file_path=CONFIG_FILE,
             operation="write"
@@ -367,7 +367,7 @@ def get_league_settings():
         print("- Check your internet connection")
         print("- Verify the league exists for the specified year")
         return 1
-    except FileIOError as e:
+    except FileOperationError as e:
         logger.error(f"File I/O error: {e.get_detailed_message()}")
         print(f"\n❌ File Error: {e}")
         print("\nTroubleshooting:")
