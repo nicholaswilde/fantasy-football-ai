@@ -30,6 +30,7 @@ from fantasy_ai.errors import (
     FileOperationError, NetworkError, wrap_exception
 )
 from fantasy_ai.utils.logging import setup_logging, get_logger
+from fantasy_ai.utils.retry import retry
 
 # Set up logging
 setup_logging(level='INFO', format_type='console', log_file='logs/download_data.log')
@@ -72,6 +73,7 @@ def load_config() -> dict:
 
 CONFIG = load_config()
 
+@retry(max_attempts=3, base_delay=1.0, backoff_factor=2.0, retryable_exceptions=(APIError, NetworkError))
 def fetch_sleeper_data() -> dict:
     """Fetches all player data from the Sleeper API with error handling."""
     url = "https://api.sleeper.app/v1/players/nfl"
@@ -107,6 +109,7 @@ def fetch_sleeper_data() -> dict:
             url=url
         )
 
+@retry(max_attempts=3, base_delay=1.0, backoff_factor=2.0, retryable_exceptions=(APIError, NetworkError))
 def fetch_player_projections() -> pd.DataFrame:
     """
     Fetches player projections from ESPN API with error handling.
@@ -261,37 +264,19 @@ def generate_player_adp_csv(player_data: dict):
         logger.info("data/player_adp.csv has been created successfully by download_adp.py.")
     except subprocess.CalledProcessError as e:
         logger.error(f"Error running download_adp.py: {e.returncode}\nStdout: {e.stdout}\nStderr: {e.stderr}")
-        print("Could not fetch ADP data. Generating with N/A placeholders (fallback)...")
-        output_path = os.path.join(PROJECT_ROOT, 'data', 'player_adp.csv')
-        try:
-            with open(output_path, 'w', newline='', encoding='utf-8') as csvfile:
-                fieldnames = ['player_id', 'full_name', 'position', 'team', 'adp']
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
-                writer.writeheader()
-                for player_id, player in player_data.items():
-                    player['adp'] = 'N/A'
-                    writer.writerow(player)
-            logger.info(f"Generated fallback {output_path} successfully.")
-        except IOError as e_io:
-            raise FileOperationError(
-                f"Could not write fallback player ADP CSV file: {output_path}",
-                file_path=output_path,
-                operation="write",
-                original_error=e_io
-            ) from e_io
-        except Exception as e_gen:
-            raise wrap_exception(
-                e_gen, FileOperationError,
-                f"An unexpected error occurred while writing fallback player ADP to {output_path}",
-                file_path=output_path,
-                operation="write"
-            ) from e_gen
+        raise FileOperationError(
+            "Failed to generate player_adp.csv due to subprocess error.",
+            file_path="scripts/download_adp.py",
+            operation="execute",
+            original_error=e
+        )
     except Exception as e:
         raise wrap_exception(
-            e, NetworkError, # Assuming most subprocess errors here are related to network issues for ADP
+            e, FileOperationError, # Assuming most subprocess errors here are related to network issues for ADP
             f"An unexpected error occurred while running download_adp.py: {e}",
             detail="Check if python3 is in your PATH or if download_adp.py has execution permissions."
         )
+
 
 def main():
     logger.info("--- Starting data download process ---")
@@ -310,16 +295,6 @@ def main():
     except (ConfigurationError, NetworkError, APIError, AuthenticationError, FileOperationError) as e:
         logger.error(f"Data download error: {e.get_detailed_message()}")
         print(f"\n❌ Data Download Error: {e}")
-        print("\nTroubleshooting:")
-        if isinstance(e, ConfigurationError):
-            print("- Check config.yaml for valid settings.")
-        elif isinstance(e, NetworkError):
-            print("- Check your internet connection.")
-            print("- Verify API endpoints are reachable.")
-        elif isinstance(e, AuthenticationError):
-            print("- Ensure LEAGUE_ID, ESPN_S2, and SWID are correctly set in your .env file.")
-        elif isinstance(e, FileOperationError):
-            print("- Check file permissions for the 'data/' directory.")
         return 1
     except Exception as e:
         logger.critical(f"An unhandled critical error occurred: {e}", exc_info=True)

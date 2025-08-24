@@ -33,6 +33,7 @@ from fantasy_ai.errors import (
     wrap_exception
 )
 from fantasy_ai.utils.logging import setup_logging, get_logger
+from fantasy_ai.utils.retry import retry
 
 # Set up logging
 setup_logging(level='INFO', format_type='console', log_file='logs/analyze_next_game.log')
@@ -173,6 +174,12 @@ def get_my_team_roster(file_path: str) -> list:
         )
 
 
+@retry(
+    max_attempts=3,
+    base_delay=1.0,
+    backoff_factor=2.0,
+    retryable_exceptions=(APIError, NetworkError)
+)
 def get_next_opponent_roster(league_year: int) -> tuple[list, str]:
     """
     Fetches the user's next opponent's roster from ESPN with error handling.
@@ -341,39 +348,42 @@ def analyze_next_game(opponent_players_raw: list = None) -> str:
             expected_type="non-empty DataFrame",
             actual_value="empty DataFrame"
         )
+    try:
+        my_team_players_raw = get_my_team_roster(MY_TEAM_FILE)
+        if not my_team_players_raw:
+            raise DataValidationError(
+                f"No players found in {MY_TEAM_FILE}. Please ensure your team roster is correctly set up.",
+                field_name="my_team_roster",
+                expected_type="non-empty list",
+                actual_value="empty list"
+            )
 
-    my_team_players_raw = get_my_team_roster(MY_TEAM_FILE)
-    if not my_team_players_raw:
-        raise DataValidationError(
-            f"No players found in {MY_TEAM_FILE}. Please ensure your team roster is correctly set up.",
-            field_name="my_team_roster",
-            expected_type="non-empty list",
-            actual_value="empty list"
-        )
+        my_team_players_normalized = [normalize_player_name(p) for p in my_team_players_raw]
 
-    my_team_players_normalized = [normalize_player_name(p) for p in my_team_players_raw]
+        if not opponent_players_raw:
+            raise DataValidationError(
+                "Opponent players list is empty. Cannot proceed with analysis.",
+                field_name="opponent_players_raw",
+                expected_type="non-empty list",
+                actual_value="empty list"
+            )
+        opponent_players_normalized = [normalize_player_name(p) for p in opponent_players_raw]
 
-    if not opponent_players_raw:
-        raise DataValidationError(
-            "Opponent players list is empty. Cannot proceed with analysis.",
-            field_name="opponent_players_raw",
-            expected_type="non-empty list",
-            actual_value="empty list"
-        )
-    opponent_players_normalized = [normalize_player_name(p) for p in opponent_players_raw]
+        current_year_stats = player_stats_df[player_stats_df['season'] == league_year]
 
-    current_year_stats = player_stats_df[player_stats_df['season'] == league_year]
+        if current_year_stats.empty:
+            raise DataValidationError(
+                f"No player stats found for the year {league_year}. Please ensure data is available for this season.",
+                field_name="current_year_stats",
+                expected_type="non-empty DataFrame",
+                actual_value="empty DataFrame"
+            )
 
-    if current_year_stats.empty:
-        raise DataValidationError(
-            f"No player stats found for the year {league_year}. Please ensure data is available for this season.",
-            field_name="current_year_stats",
-            expected_type="non-empty DataFrame",
-            actual_value="empty DataFrame"
-        )
-
-    my_team_avg_points = current_year_stats[current_year_stats['player_name'].isin(my_team_players_normalized)]['fantasy_points'].mean()
-    opponent_avg_points = current_year_stats[current_year_stats['player_name'].isin(opponent_players_normalized)]['fantasy_points'].mean()
+        my_team_avg_points = current_year_stats[current_year_stats['player_name'].isin(my_team_players_normalized)]['fantasy_points'].mean()
+        opponent_avg_points = current_year_stats[current_year_stats['player_name'].isin(opponent_players_normalized)]['fantasy_points'].mean()
+    except (FileOperationError, DataValidationError) as e:
+        logger.error(f"Error processing team data: {e.get_detailed_message()}")
+        raise
 
     league_settings_str = yaml.dump(league_settings, default_flow_style=False)
     roster_settings_str = yaml.dump(roster_settings, default_flow_style=False)
@@ -439,20 +449,6 @@ def main():
     except (ConfigurationError, FileOperationError, DataValidationError, APIError, AuthenticationError, NetworkError) as e:
         logger.error(f"Next game analysis error: {e.get_detailed_message()}")
         print(f"\n❌ Error during next game analysis: {e}")
-        print("\nTroubleshooting:")
-        if isinstance(e, ConfigurationError):
-            print("- Check config.yaml for valid settings, especially 'league_settings.year' and 'my_team_id'.")
-        elif isinstance(e, FileOperationError):
-            print("- Ensure data files (player_stats.csv, my_team.md) exist and are accessible.")
-            print("- Run 'task download_stats' and 'task get_my_team' to prepare data.")
-        elif isinstance(e, DataValidationError):
-            print("- Check the format and content of your data files.")
-        elif isinstance(e, AuthenticationError):
-            print("- Verify your LLM API key and ESPN credentials are correctly set in your .env file.")
-        elif isinstance(e, NetworkError):
-            print("- Check your internet connection.")
-        elif isinstance(e, APIError):
-            print("- There might be an issue with the LLM or ESPN API service. Try again later.")
         return 1
     except Exception as e:
         logger.critical(f"An unhandled critical error occurred: {e}", exc_info=True)

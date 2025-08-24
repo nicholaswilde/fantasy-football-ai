@@ -30,11 +30,13 @@ from fantasy_ai.errors import (
     wrap_exception
 )
 from fantasy_ai.utils.logging import setup_logging, get_logger
+from fantasy_ai.utils.retry import retry
 
 # Set up logging
 setup_logging(level='INFO', format_type='console', log_file='logs/get_available_players.log')
 logger = get_logger(__name__)
 
+@retry(max_attempts=3, base_delay=1.0, backoff_factor=2.0, retryable_exceptions=(APIError, NetworkError))
 def get_available_players(league_id: int, espn_s2: str, swid: str) -> None:
     """
     Fetches available players from an ESPN fantasy football league 
@@ -156,17 +158,6 @@ def main():
     except (AuthenticationError, APIError, NetworkError, DataValidationError, FileOperationError) as e:
         logger.error(f"Available players fetch error: {e.get_detailed_message()}")
         print(f"\n❌ Error fetching available players: {e}")
-        print("\nTroubleshooting:")
-        if isinstance(e, AuthenticationError):
-            print("- Verify your ESPN credentials (LEAGUE_ID, ESPN_S2, SWID) in your .env file.")
-        elif isinstance(e, NetworkError):
-            print("- Check your internet connection.")
-        elif isinstance(e, APIError):
-            print("- There might be an issue with the ESPN API service. Try again later.")
-        elif isinstance(e, DataValidationError):
-            print("- The ESPN API might have returned unexpected data. Check the log for details.")
-        elif isinstance(e, FileOperationError):
-            print("- Check file permissions for the 'data/' directory.")
         return 1
     except Exception as e:
         logger.critical(f"An unhandled critical error occurred: {e}", exc_info=True)
