@@ -21,46 +21,49 @@ Welcome to your weekly fantasy football analysis, powered by Gemini. This report
 
 | Player         | Team   | Position   |       VOR |   Consistency (Std Dev) |
 |:---------------|:-------|:-----------|----------:|------------------------:|
-| J.Love         | SEA    | SS         |  -0.79    |                 0       |
-| P.Nacua        | LA     | WR         |  -1.91917 |                11.9179  |
-| C.Lamb         | DAL    | WR         |  -2.01917 |                12.0092  |
-| D.London       | ATL    | WR         |  -2.01917 |                11.0833  |
-| T.McBride      | ARI    | TE         |  -2.96    |                11.2348  |
-| D.Metcalf      | SEA    | WR         |  -3.31917 |                10.1592  |
-| J.Smith-Njigba | SEA    | WR         |  -4.21917 |                 9.57523 |
-| D.Swift        | CHI    | RB         | -11.0292  |                11.1033  |
-| J.Meyers       | LV     | WR         | -13.1192  |                10.7578  |
-| T.Chandler     | MIN    | RB         | -13.8292  |                 5.89618 |
-| J.Warren       | PIT    | RB         | -15.0292  |                 7.92662 |
-| B.Corum        | LA     | RB         | -32.8292  |                 1.44792 |
+| C.Lamb         | DAL    | WR         |  150.129  |                13.4505  |
+| P.Nacua        | LA     | WR         |   47.3292 |                13.2618  |
+| T.McBride      | ARI    | TE         |   36.4833 |                12.2398  |
+| J.Love         | GB     | SS         |   -1.0375 |                 0       |
+| D.London       | ATL    | WR         |  -67.7908 |                12.1777  |
+| D.Metcalf      | SEA    | WR         |  -84.8708 |                11.4083  |
+| J.Meyers       | LV     | WR         |  -84.8908 |                11.5171  |
+| D.Swift        | PHI    | RB         |  -99.1992 |                11.5027  |
+| J.Smith-Njigba | SEA    | WR         | -123.171  |                10.2672  |
+| J.Warren       | PIT    | RB         | -202.199  |                 8.54019 |
+| T.Chandler     | MIN    | RB         | -371.199  |                 6.49367 |
+| B.Corum        | LA     | RB         | -460.099  |                 1.44792 |
 
 ### Roster vs. League Settings Comparison
 
 | Position   |   Expected |   Actual | Status   |
 |------------|------------|----------|----------|
-| BE         |          7 |        5 | MISMATCH |
+| BE         |          7 |        0 | MISMATCH |
 | DP         |          2 |        0 | MISMATCH |
 | D_ST       |          1 |        0 | MISMATCH |
 | IR         |          1 |        0 | MISMATCH |
-| K          |          1 |        1 | OK       |
-| QB         |          1 |        1 | OK       |
-| RB         |          2 |        5 | MISMATCH |
+| K          |          1 |        0 | MISMATCH |
+| QB         |          1 |        0 | MISMATCH |
+| RB         |          2 |        0 | MISMATCH |
 | RB_WR      |          1 |        0 | MISMATCH |
-| TE         |          1 |        1 | OK       |
-| WR         |          2 |        6 | MISMATCH |
+| TE         |          1 |        0 | MISMATCH |
+| WR         |          2 |        0 | MISMATCH |
 | WR_TE      |          1 |        0 | MISMATCH |
 
 #### Mismatches
 
 | Position   |   Expected |   Actual |
 |------------|------------|----------|
-| BE         |          7 |        5 |
+| BE         |          7 |        0 |
 | DP         |          2 |        0 |
 | D_ST       |          1 |        0 |
 | IR         |          1 |        0 |
-| RB         |          2 |        5 |
+| K          |          1 |        0 |
+| QB         |          1 |        0 |
+| RB         |          2 |        0 |
 | RB_WR      |          1 |        0 |
-| WR         |          2 |        6 |
+| TE         |          1 |        0 |
+| WR         |          2 |        0 |
 | WR_TE      |          1 |        0 |
 
 ### Team Strengths and Weaknesses
@@ -76,99 +79,186 @@ This analysis compares your team's Value Over Replacement (VOR) at each position
 
 | Position   |   My Team Avg VOR |   League Avg VOR |   VOR Difference |
 |:-----------|------------------:|-----------------:|-----------------:|
-| RB         |            -29.32 |             4.99 |           -34.31 |
-| QB         |            -27.17 |             6.30 |           -33.47 |
-| WR         |            -25.13 |             4.55 |           -29.68 |
-| TE         |            -17.28 |             5.65 |           -22.93 |
-| SS         |             -0.79 |             2.04 |            -2.83 |
+| RB         |           -246.38 |           162.15 |          -408.53 |
+| QB         |            -90.55 |           122.09 |          -212.64 |
+| WR         |            -27.21 |            77.61 |          -104.82 |
+| TE         |             36.48 |            88.36 |           -51.88 |
+| SS         |             -1.04 |             2.96 |            -4.00 |
 
 ---
 
 ## Last Game Analysis
 
-It seems there might be a misunderstanding regarding the fantasy football season timeline.
+It appears there might be a misunderstanding or a unique situation regarding "Week 22 of the 2024 season."
 
-**The NFL regular season typically concludes around Week 18, and most fantasy football leagues run their playoffs and championship games between Week 14 and Week 17.** By Week 22, the actual NFL season is long over, and no games are being played. This is why your team scored 0.00 points and no individual player stats were found. All players would have scored 0.00 points this week because they weren't playing.
+The NFL regular season typically concludes around Week 18, usually in early January. Playoff games then follow. Fantasy football leagues almost universally wrap up their seasons by Week 17 or 18 at the absolute latest, well before an NFL Week 22 would ever occur.
 
-Therefore, an analysis of your team's "performance" for Week 22 in the traditional sense isn't applicable. Instead, I'll provide an evaluation based on the *implication* of Week 22 being past the season, and then offer suggestions looking forward to the next fantasy football season (2025), assuming this is a redraft, keeper, or dynasty league.
+Given that your team scored **0.00 points** and there were **"No individual player stats found for your team this week,"** the most logical conclusion is that the 2024 fantasy football season for your league has concluded, and Week 22 is an inactive period.
 
----
-
-### 1. Evaluation of Your Team's "Performance" in Week 22
-
-**Did you do well or poorly, and why?**
-You scored 0.00 points, which is technically "poor" if we were judging a live week, but in reality, it's the expected score for Week 22. Every team in your league would have scored 0.00 points, as the NFL season concluded weeks ago. Your team did not underperform; the season simply ended.
+Therefore, an analysis of Week 22 performance in the traditional sense is not possible. However, I can still provide an analysis based on the assumption that the season is over and offer forward-looking advice.
 
 ---
 
-### 2. Specific Suggestions for Improvement (Looking Towards the 2025 Season)
+### Analysis Based on Season Conclusion:
 
-Since Week 22 is an offseason week, the focus shifts to how your current roster might set you up for success in the *next* fantasy season (2025), or how you should approach the offseason if this is a redraft league.
+**1. Evaluation of Your Team's Performance in Week 22:**
+*   **Performance:** Your team scored 0.00 points, which is the lowest possible score. However, this is not due to poor play but because, most likely, no NFL games were being played that count for fantasy purposes in Week 22. All your players were inactive for fantasy scoring, as expected if the season is over.
+*   **Conclusion:** This is not a "good" or "poor" performance in a competitive sense; it's the expected outcome for a week where fantasy football scoring is no longer active. If, by some extremely rare and unusual league setting, Week 22 *was* an active scoring week, then a 0.00 performance would be disastrous, indicating either all your players were on bye/injured/benched (unlikely for an entire roster) or you had an empty roster (also unlikely). But given the standard NFL calendar, the season is simply done.
 
-**Overall Roster Strength (Looking to 2025):**
+**2. Specific Suggestions for Improvement (Looking Ahead to Next Season / Offseason):**
 
-*   **Quarterback (QB): Jordan Love** had a strong finish to the 2024 season, establishing himself as a viable fantasy starter. He could be a high-end QB2 or low-end QB1 moving forward.
-*   **Running Back (RB):** You have good depth here with D'Andre Swift, Brian Robinson Jr., Jaylen Warren, and Ty Chandler. Blake Corum is a rookie who could emerge. However, you lack a true bell-cow, elite RB1. Swift's situation for 2025 (e.g., free agency, team change) will be key.
-*   **Wide Receiver (WR): This is a major strength.** CeeDee Lamb is an elite, top-tier WR. Puka Nacua exploded as a rookie and looks like a legitimate WR1. DK Metcalf is a solid WR2, and Drake London and Jaxon Smith-Njigba have high upside, especially if their QB situations improve. Jakobi Meyers is a reliable, but lower-upside, flex option.
-*   **Tight End (TE): Trey McBride** emerged as a very promising tight end, especially with target volume. He looks like a strong TE1 candidate for 2025.
-*   **Kicker (K): Cairo Santos** is a kicker. These are usually streamable.
-*   **Defense/Special Teams (D/ST): Chiefs D** is usually a solid pick.
-*   **Individual Defensive Players (DP - assuming these are IDP players):** Maxx Crosby is an elite pass rusher. Aidan Hutchinson is a very good edge rusher. Brian Branch is a promising young defensive back. This is a strong IDP core.
+Since the season is likely concluded, your focus should shift to the offseason and preparation for the 2025 season.
 
-**Suggestions based on roster strength (for 2025 offseason):**
+*   **Review Your 2024 Season:**
+    *   **Overall Performance:** How did you finish in the league (e.g., did you make playoffs? win a championship?)? This will tell you if your core strategy worked.
+    *   **Player Consistency:** Identify which players were consistent producers vs. boom-or-bust options.
+    *   **Draft Hits & Misses:** Learn from your draft picks. Who exceeded expectations? Who disappointed?
+    *   **Waiver Wire/Trade Success:** Evaluate your in-season moves.
 
-*   **Keeper/Dynasty Leagues:**
-    *   **Keepers:** CeeDee Lamb, Puka Nacua, Trey McBride, Jordan Love, Maxx Crosby, Aidan Hutchinson, and Brian Branch are all excellent keeper candidates with high value.
-    *   **RB Strategy:** Consider trading some of your RB depth if you can consolidate into a top-tier RB. Otherwise, maintain depth as RBs are injury-prone. Monitor Swift's free agency closely.
-    *   **WR Depth:** Your WR corps is fantastic. You might even have enough depth to trade one of your high-upside WRs (like London or JSN) if it allows you to upgrade at RB or get draft capital.
-*   **Redraft Leagues:**
-    *   **Draft Strategy:** With such a strong WR/TE/QB foundation potentially available later in the draft (depending on where your league values them), you could prioritize securing a top-tier RB early in your 2025 draft.
-    *   **Value at WR/TE:** If you decide to go heavy on RB in the early rounds, you know there's potential value with your existing players like Puka, Metcalf, London, and McBride in later rounds if they fall due to others' skepticism.
+*   **Keeper/Dynasty Considerations (if applicable to your league):**
+    *   **Strong Core:** You have excellent young talent with CeeDee Lamb, Puka Nacua, Trey McBride, and potentially Jordan Love. These are prime keeper/dynasty assets.
+    *   **Veteran Value:** DK Metcalf and D'Andre Swift are solid, but evaluate their long-term outlook vs. their cost if you have keeper penalties.
+    *   **Rookies/Sleepers:** Jaxon Smith-Njigba, Ty Chandler, and Blake Corum (if he was a late-season stash/rookie draft pick) are players with potential for growth.
+    *   **Defensive Players (DP/D_ST):** Zaire Franklin, Maxx Crosby, Aidan Hutchinson, and Brian Branch are all strong IDP options. If your league uses individual defensive players (which the DP slot and IDP scoring rules suggest), assess their year-end production. Chiefs D/ST is typically reliable.
 
----
+*   **Offseason Research:**
+    *   **NFL Free Agency:** Monitor player movement. A player changing teams can drastically alter their fantasy value (e.g., Swift to Bears, or a QB getting a new WR).
+    *   **NFL Draft:** Identify promising rookies. With your roster, you might target a strong RB or a complementary WR depending on your keeper choices.
+    *   **Team Depth:** Analyze positions where you lacked depth or where injuries hurt you the most.
 
-### 3. Identify Any Underperforming Players on My Team (Re-contextualized for 2024 Season & 2025 Outlook)
+**3. Identify Any Underperforming Players (Season-Long Perspective, not Week 22):**
 
-For Week 22, every player scored 0.00 points, so everyone "underperformed" in that specific week.
+As mentioned, no one "underperformed" in Week 22 because no one played. To identify underperformers over the *entire season*, I would need their full season stats and your expectations for them. However, based on general fantasy consensus and your roster:
 
-Looking at your roster in the context of the *actual 2024 season* and *2025 outlook*, players who might have been drafted with higher expectations or have question marks moving forward include:
+*   **Jaxon Smith-Njigba:** While he showed flashes, his rookie year (2023) was often overshadowed by Lockett and Metcalf. His future is bright, but his 2024 performance might have been considered "under" expectations by some owners, especially in a PPR league with his talent. If he didn't consistently produce, he could be an underperformer relative to his draft capital.
+*   **Drake London:** Another talented receiver who has often been held back by QB play and offensive scheme. If he wasn't a consistent WR2/3 for you, he might have been an underperformer based on his potential.
+*   **Brian Robinson Jr. / Jaylen Warren / Ty Chandler:** These RBs often live in committees. If they didn't get enough volume to be reliable starters for you, they might be considered underperformers compared to their potential or what you hoped for when drafting them.
 
-*   **Drake London:** While he showed flashes of potential, his fantasy production has often been capped by his team's coaching and quarterback play. He has high upside, but he's been consistently "underperforming" relative to his talent level. His 2025 outlook depends heavily on the Falcons' QB situation.
-*   **Jaxon Smith-Njigba:** As a rookie, he had a solid year, but perhaps didn't fully live up to the hype that some had for him entering the draft. He's still very promising, but sharing targets with Metcalf and Lockett makes his ceiling somewhat capped unless one of them declines or moves on.
-*   **D'Andre Swift:** While he had good weeks, his overall season could be seen as inconsistent, and his usage sometimes varied. His free agency status for 2025 adds a layer of uncertainty; his value will heavily depend on where he lands and his role.
-*   **Brian Robinson Jr. / Ty Chandler / Jaylen Warren:** These players are good "flex" options or valuable handcuffs, but they generally didn't break into the truly elite RB tier in 2024, often needing specific game scripts or injuries to be top performers. Whether they "underperformed" depends on their draft cost, but they represent the tier below the elite RBs.
+**4. Suggest Potential Strategies for the Upcoming Weeks (Shifting to Next Season):**
 
----
+*   **Post-Season Analysis:** Take the time to look at your league's final standings. Identify top-scoring teams and analyze their roster construction. What strategies worked for others?
+*   **Rule Changes/Discussions:** If your league holds discussions about potential rule changes for the next season (e.g., keeper rules, scoring adjustments), participate actively to shape the league in your favor.
+*   **Mock Drafts (Closer to next season):** As the NFL draft and free agency unfold, start doing mock drafts to gauge player values and identify targets.
+*   **Maintain Your Core:** Your team has a strong foundation with CeeDee Lamb, Puka Nacua, and Trey McBride. These are cornerstone pieces to build around. Jordan Love also emerged as a solid QB.
+*   **Address Running Back Depth:** While Swift is good, having more consistent RB options is always key. This will be a primary focus for your next draft or offseason trades.
+*   **Leverage IDP:** With strong IDP players like Franklin, Crosby, Hutchinson, and Branch, make sure you're maximizing their value in your lineup each week. In leagues with DPs, these players can provide a significant advantage if managed well.
 
-### 4. Suggest Potential Strategies for the Upcoming Weeks (Re-contextualized for the 2025 Offseason and Draft)
-
-Since the season is over, your focus should shift to offseason strategy:
-
-1.  **Review the 2024 Season:**
-    *   Analyze your overall league performance. Did you make the playoffs? How did your draft strategy work out?
-    *   Identify which positions were consistently strong and which were weak. Your WRs and TE were strong. Your RBs were deep but lacked an elite option.
-    *   Reflect on your waiver wire pickups and trades.
-
-2.  **Monitor NFL Offseason News:**
-    *   **Free Agency:** Keep an eye on player movement, especially for your RBs (Swift) and any potential QB changes that could affect your WRs (London, JSN).
-    *   **NFL Draft:** Research the incoming rookie class. Identify potential impact RBs, WRs, or even a QB if you're looking for an upgrade or depth. Blake Corum is a rookie on your team – his NFL draft capital and landing spot will be critical for his 2025 fantasy value.
-    *   **Coaching Changes:** New offensive coordinators can significantly impact player usage and scheme, affecting fantasy value.
-
-3.  **Prepare for Your 2025 League:**
-    *   **Keeper/Dynasty:** Determine your keepers early. If you have excess value at WR, consider trading one for an upgrade at RB or draft picks.
-    *   **Redraft:** Start mock drafting to get a feel for player values. Identify your target players and potential sleepers.
-
-4.  **Strengths to Build On:** Your wide receiver group (Lamb, Nacua, Metcalf, London, JSN) is fantastic and offers a great foundation. Trey McBride at TE and Jordan Love at QB also provide solid starting options. Your IDP core is also very strong.
-
-5.  **Areas to Address:** The primary area for potential improvement is at **running back**. While you have good depth, securing a more consistent, high-volume RB1 could elevate your team significantly.
-
-In summary, congratulations on likely making it through a full fantasy season! While Week 22 is irrelevant for points, your roster shows a strong core for the upcoming 2025 fantasy football season, particularly at WR and TE. Focus on offseason news and strategizing to build on these strengths.
+In summary, don't worry about the 0.00 score for Week 22. Use this time to reflect on the 2024 season and start preparing for a successful 2025 campaign!
 
 ---
 
 ## Next Game Analysis
 
-The fantasy football season has not started yet.
+Let's break down this upcoming fantasy football matchup in the San Cola Cup Covid Years league. Your league features a unique blend of half-PPR, yardage bonuses, significant big-play and return yardage scoring, and a robust IDP system, making for high-scoring and volatile weeks.
+
+The "Season-to-Date Average Fantasy Points" provided (8.65 for your team, 10.37 for your opponent) are extremely low for a full team's weekly score and are likely a *per-player average* or an average of top performers. Regardless, the opponent's higher average suggests their core players have been more consistently productive to date.
+
+---
+
+### 1. Assessment of My Team's Strengths and Weaknesses Against the Opponent
+
+**My Team Strengths:**
+
+*   **Elite Wide Receiver Corps:** This is your absolute strongest position. CeeDee Lamb, Puka Nacua, and DK Metcalf are all potential WR1s, and you have excellent depth with Drake London, Jaxon Smith-Njigba, and Jakobi Meyers. In a half-PPR league with yardage bonuses, this trio can put up massive numbers.
+*   **Dominant IDP Group:** Zaire Franklin is a tackle machine, and Maxx Crosby along with Aidan Hutchinson are elite pass rushers. With 2 DP slots and strong scoring for tackles, sacks, and turnovers, your IDP unit is significantly superior and can swing the game in your favor.
+*   **Ascending Tight End:** Trey McBride has shown flashes of being a top-tier TE, especially with Kyler Murray back. He offers a high ceiling.
+*   **QB Upside:** Jordan Love has proven capable of big weeks, especially with his strong WR corps.
+
+**My Team Weaknesses:**
+
+*   **Running Back Depth/Elite Talent:** While D'Andre Swift is a solid RB2 with receiving upside, and Brian Robinson Jr. is a decent grinder, your RB room simply doesn't compare to your opponent's elite duo. This is your biggest disparity.
+*   **Kicker Consistency:** Cairo Santos is a reliable kicker, but may not offer the explosive upside of some others.
+
+**Opponent Team Strengths:**
+
+*   **Superstar Running Backs:** Christian McCaffrey is a cheat code, providing an incredibly high floor and ceiling every week. Jahmyr Gibbs is also a dynamic play-maker with RB1 upside. This RB duo is virtually unmatched.
+*   **Dual-Threat Quarterbacks:** Kyler Murray and Jayden Daniels offer significant rushing upside, which translates to a higher floor and ceiling, especially with the potential for rushing TDs.
+*   **Solid Receiving Core:** Mike Evans is a consistent TD threat, Cooper Kupp (when healthy) is an elite target hog, and DeVonta Smith is a reliable WR2.
+
+**Opponent Team Weaknesses:**
+
+*   **IDP Group:** While Quincy Williams and Quay Walker are good tacklers, they lack the sack upside of your Crosby/Hutchinson, and neither consistently matches Zaire Franklin's tackle volume. This is a clear disadvantage for them.
+*   **Kicker:** Chase McLaughlin is serviceable but not a game-changer.
+*   **WR Depth:** After their top three, their WR depth (Sutton, Hollywood Brown) is more boom-or-bust compared to your deeper, more consistent options.
+
+---
+
+### 2. Key Player Matchups to Watch
+
+*   **Christian McCaffrey vs. Your Entire Team:** This is the ultimate "unstoppable force." McCaffrey alone could outscore several of your players combined. Limiting his damage (as much as possible) is paramount.
+*   **Your WR Trio (Lamb, Nacua, Metcalf) vs. Their WR Trio (Kupp, Evans, Smith):** This is where you can make up ground. Your WRs offer higher upside and more consistent volume, especially with Kupp's recent injury history and target share concerns.
+*   **Your IDP (Franklin, Crosby, Hutchinson) vs. Opponent's IDP (Q. Williams, Q. Walker):** Your IDP unit has a massive advantage in this scoring system. Watch for sacks, turnovers, and a tackle-heavy performance from Franklin to create a significant scoring gap.
+*   **Jordan Love vs. Kyler Murray/Jayden Daniels:** This QB battle could be tight. Love's passing volume and efficiency against the rushing prowess and big-play potential of Murray/Daniels.
+*   **D'Andre Swift vs. Jahmyr Gibbs:** While Swift is solid, Gibbs has the higher ceiling in this matchup, especially with his receiving usage.
+
+---
+
+### 3. Strategic Suggestions to Win the Game
+
+**Lineup Considerations (Assuming Standard Starters):**
+
+*   **QB:** Jordan Love (Start)
+*   **RB:** D'Andre Swift, Brian Robinson Jr. (Start)
+*   **WR:** CeeDee Lamb, Puka Nacua (Start)
+*   **TE:** Trey McBride (Start)
+*   **RB_WR Flex:** This is where you have a huge advantage. You should absolutely start **DK Metcalf** here. He's a locked-in WR1/2 with immense upside.
+*   **WR_TE Flex:** Another prime spot for your WR depth. **Drake London** or **Jaxon Smith-Njigba** are excellent choices. London offers higher target volume, JSN has big-play potential. Go with the player who has the better matchup/target projection.
+*   **K:** Cairo Santos (Start)
+*   **D_ST:** Chiefs D/ST (Start)
+*   **DP:** Zaire Franklin, Maxx Crosby (Start).
+*   **Bench:** Jaylen Warren, Ty Chandler, Blake Corum (RBs), Jaxon Smith-Njigba/Jakobi Meyers (WRs depending on flex), Aidan Hutchinson, Brian Branch (DPs).
+
+**Recommended Lineup Changes/Flex Play:**
+
+*   **Move DK Metcalf to RB_WR Flex.**
+*   **Choose between Drake London and Jaxon Smith-Njigba for WR_TE Flex.** Based on recent trends and potential volume, London might be slightly safer, but JSN has shown explosive play capability. Look for matchup strength.
+*   **IDP Strategy:** You have *four* excellent IDP players (Franklin, Crosby, Hutchinson, Branch) for two spots. You should definitely start Franklin and Crosby. For the bench, Hutchinson is another elite pass rusher, and Branch is a high-volume tackler in the secondary. Keep Hutchinson on the bench for injury or if a specific matchup for Crosby/Franklin is terrible (unlikely).
+
+**Waiver Wire Pickups (Consider for long-term depth or specific matchups):**
+
+*   **High-Volume Tackling LBs/Safeties:** Given the IDP scoring, always look for players averaging 8+ combined tackles. Even if your starters are locked, depth is key.
+*   **Pass Rushers:** If there's an active DE/OLB with a good matchup available, they could be worth stashing, especially as your current pass rushers are elite.
+*   **Return Specialists:** While you don't appear to have one on your roster, your opponent does (KaVontae Turpin). With 1 point per 25 return yards, this is a hidden source of points. Keep an eye on any bench players or waiver wire options who get significant punt/kickoff return duties and could be viable flex plays in a pinch.
+*   **Handcuff RBs:** Your opponent's RBs (CMC, Gibbs) are crucial. Keep an eye on their handcuffs (if available) or even your own (Jaylen Warren for Swift/BRob) for future insurance.
+
+**Trade Targets:**
+
+*   **Upgrade at RB:** This is your most pressing need. Your WR depth is a massive trade asset. Consider packaging one of your deeper WRs (e.g., DK Metcalf or Drake London) with a bench RB (e.g., Brian Robinson Jr. or Jaylen Warren) to try and acquire a higher-end RB2 or even one of your opponent's RBs like Javonte Williams if they're willing to move him for WR help. Your opponent has a surplus of RBs; try to exploit that.
+*   **Another Top-Tier IDP:** While you're strong, consolidating another elite IDP if the opportunity arises wouldn't hurt, especially if it means giving up a bench player you don't foresee starting.
+
+---
+
+### 4. Identify Overperforming or Underperforming Players
+
+Given the average fantasy points provided, and assuming they represent a general "value" metric for players on each team:
+
+**My Team (Average 8.65):**
+
+*   **Underperforming (Relative to potential/ADP):**
+    *   **CeeDee Lamb, Puka Nacua, DK Metcalf:** These players are typically weekly WR1/2s, and their individual averages should be significantly higher than 8.65, especially in your scoring. If their actual weekly output is closer to that number, they are underperforming expectations.
+    *   **Jordan Love:** Has shown high upside; if his average contributes to 8.65, he's likely having an inconsistent season.
+    *   **Zaire Franklin, Maxx Crosby, Aidan Hutchinson:** With your generous IDP scoring, these elite defenders should be scoring well above an 8.65 average. If they aren't, they are drastically underperforming their potential in this league format.
+*   **Potentially Overperforming:**
+    *   **Trey McBride:** While his recent play has been strong, if his season-long average is contributing significantly to 8.65, he's doing well for a TE.
+
+**Opponent Team (Average 10.37):**
+
+*   **Overperforming (Relative to potential/ADP):**
+    *   **Christian McCaffrey:** He's almost certainly the primary driver of their higher average. He consistently outperforms expectations and likely has an individual average much higher than 10.37.
+    *   **Jahmyr Gibbs:** His explosive plays and receiving work likely put him above this average as well.
+    *   **Kyler Murray/Jayden Daniels:** Their rushing upside often helps QBs exceed their passing-only projections, making them strong contributors to the higher team average.
+*   **Potentially Underperforming:**
+    *   **Cooper Kupp:** His average might be depressed by injuries or inconsistent target share if he hasn't returned to his elite form.
+    *   **Javonte Williams:** While a solid RB, his average might be lower than anticipated by owners hoping for a true RB1 season.
+    *   **Dolphins D/ST:** While capable of big weeks, they can also give up points, which would depress their average in your scoring system.
+
+---
+
+**Overall Outlook:**
+
+This matchup is a clash of titans at different positions. Your team has a significant edge at Wide Receiver and a *massive* advantage in the IDP department. Your opponent boasts an unparalleled RB room. The game will likely come down to whether your combined strength at WR and IDP can overcome McCaffrey's dominance.
+
+**Focus on maximizing your IDP scores and getting big plays from your WRs. Good luck!**
 
 ---
 
@@ -176,18 +266,18 @@ The fantasy football season has not started yet.
 
 These players are ranked based on their **Value Over Replacement (VOR)**, a metric that measures a player's value relative to a typical starter at their position. We also look at consistency to see who you can rely on week in and week out.
 
-| Player      | Team   | Position   |      VOR |   Consistency (Std Dev) |
-|:------------|:-------|:-----------|---------:|------------------------:|
-| D.Achane    | MIA    | RB         | 12.2708  |                 12.0332 |
-| J.Chase     | CIN    | WR         | 12.1808  |                 19.9336 |
-| J.Allen     | BUF    | QB         | 10.9317  |                 14.01   |
-| T.Hill      | NO     | TE         |  9.26    |                 11.1856 |
-| A.Cooper    | CLE    | WR         |  8.28083 |                 12.2247 |
-| C.McCaffrey | SF     | RB         |  8.17083 |                  8.9769 |
-| D.Moore     | CHI    | WR         |  7.28083 |                 16.7407 |
-| S.Barkley   | PHI    | RB         |  7.17083 |                 14.1023 |
-| J.Chase     | CIN    | WR         |  6.98083 |                 19.9336 |
-| J.Gibbs     | DET    | RB         |  6.47083 |                 14.9355 |
+| Player      | Team   | Position   |     VOR |   Consistency (Std Dev) |
+|:------------|:-------|:-----------|--------:|------------------------:|
+| B.Robinson  | WAS    | RB         | 433.401 |                 20.4276 |
+| B.Robinson  | ATL    | RB         | 433.401 |                 20.4276 |
+| J.Allen     | BUF    | QB         | 241.29  |                 14.4732 |
+| L.Jackson   | BAL    | QB         | 234.13  |                 17.384  |
+| S.Barkley   | NYG    | RB         | 192.301 |                 15.0551 |
+| S.Barkley   | PHI    | RB         | 192.301 |                 15.0551 |
+| A.St. Brown | DET    | WR         | 185.909 |                 13.3034 |
+| D.Henry     | TEN    | RB         | 160.461 |                 14.8358 |
+| D.Henry     | BAL    | RB         | 160.461 |                 14.8358 |
+| J.Gibbs     | DET    | RB         | 156.701 |                 16.3215 |
 
 ---
 
@@ -197,21 +287,23 @@ These players are ranked based on their **Value Over Replacement (VOR)**, a metr
 
 Drafting strategically means planning for bye weeks. The following highly-ranked players share a bye week, which could leave your roster thin. Plan accordingly!
 
+**Week 4**: 3 top players are on bye.
+
 **Week 5**: 8 top players are on bye.
 
 **Week 6**: 5 top players are on bye.
 
-**Week 7**: 9 top players are on bye.
+**Week 7**: 8 top players are on bye.
 
 **Week 8**: 5 top players are on bye.
 
-**Week 9**: 7 top players are on bye.
+**Week 9**: 6 top players are on bye.
 
 **Week 11**: 3 top players are on bye.
 
-**Week 14**: 4 top players are on bye.
+**Week 14**: 3 top players are on bye.
 
-**Week 16**: 4 top players are on bye.
+**Week 16**: 3 top players are on bye.
 
 
 ---
@@ -220,18 +312,18 @@ Drafting strategically means planning for bye weeks. The following highly-ranked
 
 Looking to make a move? These are potential trade targets based on their positional value and consistency. Acquiring one of these players could be the key to a championship run.
 
-| Player              | Position   | Team   |      VOR |   Consistency (Std Dev) |   PPR Points |   Bye |
-|:--------------------|:-----------|:-------|---------:|------------------------:|-------------:|------:|
-| De'Von Achane       | RB         | MIA    | 12.2708  |                 12.0332 |        51.3  |     7 |
-| Ja'Marr Chase       | WR         | CIN    | 12.1808  |                 19.9336 |        55.4  |    14 |
-| Josh Allen          | QB         | BUF    | 10.9317  |                 14.01   |        51.88 |     4 |
-| Taysom Hill         | TE         | NO     |  9.26    |                 11.1856 |        41.52 |    15 |
-| Amari Cooper        | WR         | CLE    |  8.28083 |                 12.2247 |        51.5  |     6 |
-| Christian McCaffrey | RB         | SF     |  8.17083 |                  8.9769 |        48.7  |     8 |
-| DJ Moore            | WR         | CHI    |  7.28083 |                 16.7407 |        49    |     9 |
-| Saquon Barkley      | RB         | PHI    |  7.17083 |                 14.1023 |        46.2  |    16 |
-| Ja'Marr Chase       | WR         | CIN    |  6.98083 |                 19.9336 |        52.2  |     9 |
-| Jahmyr Gibbs        | RB         | DET    |  6.47083 |                 14.9355 |        46    |     8 |
+| Player      | Position   | Team   |     VOR |   Consistency (Std Dev) | PPR Points   | Bye   |
+|:------------|:-----------|:-------|--------:|------------------------:|:-------------|:------|
+| B.Robinson  | RB         | WAS    | 433.401 |                 20.4276 |              |       |
+| B.Robinson  | RB         | ATL    | 433.401 |                 20.4276 |              |       |
+| J.Allen     | QB         | BUF    | 241.29  |                 14.4732 |              |       |
+| L.Jackson   | QB         | BAL    | 234.13  |                 17.384  |              |       |
+| S.Barkley   | RB         | NYG    | 192.301 |                 15.0551 |              |       |
+| S.Barkley   | RB         | PHI    | 192.301 |                 15.0551 |              |       |
+| A.St. Brown | WR         | DET    | 185.909 |                 13.3034 |              |       |
+| D.Henry     | RB         | TEN    | 160.461 |                 14.8358 |              |       |
+| D.Henry     | RB         | BAL    | 160.461 |                 14.8358 |              |       |
+| J.Gibbs     | RB         | DET    | 156.701 |                 16.3215 |              |       |
 
 
 ---
@@ -242,28 +334,27 @@ Here's a simulation of your draft, round by round, based on optimal VBD strategy
 
 ### Your Simulated Roster
 
-**K**:
-- Brandon Aubrey
 **QB**:
-- Kinkead Dent
+- Patrick Mahomes
 **RB**:
-- Le'Veon Bell
-- Lance Dunbar
-**TE**:
-- Matt Seybert
+- Christian McCaffrey
+- Jonathan Taylor
 **WR**:
-- Tyler Slavin
-- DeAndrew White
+- Justin Jefferson
+- Ja'Marr Chase
+**TE**:
+- Travis Kelce
 
 ### Simulated Draft Order
 
-1. Kinkead Dent
-2. Le'Veon Bell
-3. Lance Dunbar
-4. Tyler Slavin
-5. DeAndrew White
-6. Matt Seybert
-7. Brandon Aubrey
+1. Justin Jefferson
+2. Christian McCaffrey
+3. Patrick Mahomes
+4. Travis Kelce
+5. Jonathan Taylor
+6. Ja'Marr Chase
+7. Josh Allen
+8. Austin Ekeler
 
 
 
@@ -273,13 +364,13 @@ Here's a simulation of your draft, round by round, based on optimal VBD strategy
 
 Here are some of the top players available on the waiver wire, based on their recent performance and potential.
 
-| Player   | Position   | Team   |      VOR |
-|:---------|:-----------|:-------|---------:|
-| D.Achane | RB         | MIA    | 12.2708  |
-| J.Chase  | WR         | CIN    | 12.1808  |
-| J.Allen  | QB         | BUF    | 10.9317  |
-| T.Hill   | TE         | NO     |  9.26    |
-| A.Cooper | WR         | CLE    |  8.28083 |
+| Player     | Position   | Team   |     VOR |
+|:-----------|:-----------|:-------|--------:|
+| B.Robinson | RB         | WAS    | 433.401 |
+| B.Robinson | RB         | ATL    | 433.401 |
+| J.Allen    | QB         | BUF    | 241.29  |
+| L.Jackson  | QB         | BAL    | 234.13  |
+| S.Barkley  | RB         | NYG    | 192.301 |
 
 
 ---
@@ -288,21 +379,24 @@ Here are some of the top players available on the waiver wire, based on their re
 
 ### Sell-High Candidates
 
-| Player         | Position   | Team   |   Current Week Pts |   Avg Pts (Prev Weeks) |   Point Difference |
-|:---------------|:-----------|:-------|-------------------:|-----------------------:|-------------------:|
-| Xavier Worthy  | WR         | KC     |              31.7  |               10.1667  |            21.5333 |
-| Jauan Jennings | WR         | SF     |              19.04 |                7.71724 |            11.3228 |
-| Mecole Hardman | WR         | KC     |              13.2  |                3.025   |            10.175  |
+| Player          | Position   | Team   |   Current Week Pts |   Avg Pts (Prev Weeks) |   Point Difference |
+|:----------------|:-----------|:-------|-------------------:|-----------------------:|-------------------:|
+| Xavier Worthy   | WR         | KC     |              34.7  |               10.1667  |            24.5333 |
+| Jauan Jennings  | WR         | SF     |              19.04 |                7.82069 |            11.2193 |
+| Patrick Mahomes | QB         | KC     |              31.92 |               21.0416  |            10.8784 |
+| Mecole Hardman  | WR         | KC     |              13.2  |                3.025   |            10.175  |
 
 ### Buy-Low Candidates
 
 | Player           | Position   | Team   |   Current Week Pts |   Avg Pts (Prev Weeks) |   Point Difference |
 |:-----------------|:-----------|:-------|-------------------:|-----------------------:|-------------------:|
-| George Kittle    | TE         | SF     |                1.4 |               11.7606  |          -10.3606  |
-| Isiah Pacheco    | RB         | KC     |                1.7 |               11.4269  |           -9.72692 |
+| George Kittle    | TE         | SF     |                1.4 |               12.397   |          -10.997   |
+| Isiah Pacheco    | RB         | KC     |                1.7 |               11.7731  |          -10.0731  |
 | Kenny Pickett    | QB         | PHI    |               -0.4 |                8.11333 |           -8.51333 |
-| Deebo Samuel Sr. | WR         | SF     |                5.6 |               13.5706  |           -7.97059 |
-| Kareem Hunt      | RB         | KC     |                1.9 |                9.59677 |           -7.69677 |
-| Saquon Barkley   | RB         | PHI    |               12.7 |               18.8697  |           -6.1697  |
-| Travis Kelce     | TE         | KC     |                5.9 |               11.1139  |           -5.21389 |
+| Deebo Samuel Sr. | WR         | SF     |                5.6 |               14.1     |           -8.5     |
+| Kareem Hunt      | RB         | KC     |                1.9 |                9.79032 |           -7.89032 |
+| Saquon Barkley   | RB         | PHI    |               12.7 |               20.2939  |           -7.59394 |
+| Brandon Aiyuk    | WR         | SF     |                6.4 |               12.184   |           -5.784   |
+| Travis Kelce     | TE         | KC     |                5.9 |               11.5306  |           -5.63056 |
+| Rashee Rice      | WR         | KC     |                7.4 |               12.6909  |           -5.29091 |
 | Marquise Brown   | WR         | KC     |                2.5 |                7.51765 |           -5.01765 |

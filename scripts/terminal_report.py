@@ -42,6 +42,8 @@ from analysis import (
     analyze_team_needs
 )
 
+import analysis
+
 from analyze_last_game import analyze_last_game
 from analyze_next_game import analyze_next_game
 
@@ -167,6 +169,7 @@ def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
     print("Looking to make a move? These are potential trade targets based on their positional value and consistency. Acquiring one of these players could be the key to a championship run.\n")
     
     # Select and rename columns for a more readable trade targets table
+    trade_recs_df.rename(columns={'player_name': 'player_display_name'}, inplace=True)
     trade_recs_display_df = trade_recs_df[['player_display_name', 'position', 'recent_team', 'vor', 'consistency_std_dev', 'fantasy_points_ppr', 'bye_week']].copy()
     trade_recs_display_df.rename(columns={
         'player_display_name': 'Player',
@@ -236,6 +239,9 @@ def main():
         help="The directory to save the report in."
     )
     args = parser.parse_args()
+
+    # Initialize analysis globals (config, scoring rules, etc.)
+    analysis.initialize_globals()
 
     # Ensure the data file exists before running
     data_file = "data/player_stats.csv"
@@ -307,7 +313,22 @@ def main():
 
     # Get analysis data
     draft_recs = get_advanced_draft_recommendations(stats_with_points)
+
+    # Merge recent_team into draft_recs
+    # Ensure 'player_name' is the common column for merging
+    # Only select 'player_name' and 'recent_team' from stats_with_points to merge
+    draft_recs = pd.merge(draft_recs, stats_with_points[['player_name', 'recent_team']].drop_duplicates(), on='player_name', how='left')
+
     bye_conflicts = check_bye_week_conflicts(stats_with_points)
+
+    # Combine draft_recs (which has VOR and consistency) with stats_with_points (which has fantasy_points_ppr and bye_week)
+    # Ensure we only keep one row per player for the trade recommendations
+    trade_data_combined = pd.merge(
+        draft_recs,
+        stats_with_points[['player_name', 'fantasy_points_ppr', 'bye_week']].drop_duplicates(subset=['player_name']),
+        on='player_name',
+        how='left'
+    )
 
     # Get team roster and analysis
     my_team_raw = get_team_roster(roster_file)
@@ -315,12 +336,13 @@ def main():
     my_team_df = draft_recs[draft_recs['player_name'].isin(my_team_normalized)]
     team_analysis_str, positional_breakdown_df = analyze_team_needs(my_team_df, draft_recs)
 
-    trade_recs = get_trade_recommendations(draft_recs, team_roster=my_team_normalized)
+    # Pass the combined DataFrame to get_trade_recommendations
+    trade_recs = get_trade_recommendations(trade_data_combined, team_roster=my_team_normalized)
 
     # Get pickup and trade suggestions
     available_players_df = draft_recs[~draft_recs['player_name'].isin(my_team_normalized)]
     pickup_suggestions = get_pickup_suggestions(available_players_df)
-    sell_high_suggestions, buy_low_suggestions = get_trade_suggestions(draft_recs)
+    sell_high_suggestions, buy_low_suggestions = get_trade_suggestions(stats_with_points)
 
     # Run simulated draft
     # simulated_roster, simulated_draft_order = draft_strategizer.main() # Removed as per user request

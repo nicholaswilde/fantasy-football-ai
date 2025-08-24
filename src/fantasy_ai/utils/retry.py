@@ -12,7 +12,7 @@ import time
 import logging
 from typing import Callable, Type, Tuple, Any, Optional, Union
 
-from ..errors import NetworkError, RateLimitError, APIError, FantasyFootballError
+from ..errors import NetworkError, RateLimitError, APIError, FantasyFootballAIAgentError
 
 logger = logging.getLogger(__name__)
 

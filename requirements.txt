@@ -10,3 +10,4 @@ markdown
 requests
 openai
 lxml
+pulp

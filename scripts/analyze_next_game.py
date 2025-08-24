@@ -173,7 +173,7 @@ def get_my_team_roster(file_path: str) -> list:
         )
 
 
-def get_next_opponent_roster() -> tuple[list, str]:
+def get_next_opponent_roster(league_year: int) -> tuple[list, str]:
     """
     Fetches the user's next opponent's roster from ESPN with error handling.
     
@@ -205,7 +205,7 @@ def get_next_opponent_roster() -> tuple[list, str]:
         )
 
     try:
-        league = League(league_id=int(league_id), year=datetime.now().year, espn_s2=espn_s2, swid=swid)
+        league = League(league_id=int(league_id), year=league_year, espn_s2=espn_s2, swid=swid)
         current_week = league.current_week
         if current_week == 0:
             return [], "The fantasy football season has not started yet."
@@ -282,15 +282,6 @@ def analyze_next_game(opponent_players_raw: list = None) -> str:
         NetworkError: If there's a network issue during LLM API call.
     """
     logger.info("Starting next game analysis.")
-    if opponent_players_raw is None:
-        opponent_players_raw, error_message = get_next_opponent_roster()
-        if error_message:
-            # If get_next_opponent_roster returns an error message, it means an exception was already raised
-            # and caught within that function, or it's a non-critical warning.
-            # Here, we'll re-raise if it's a critical error that wasn't handled by custom exceptions.
-            # If it's just a message, we'll return it.
-            if not opponent_players_raw: # If opponent_players_raw is empty, it means a critical error occurred
-                raise wrap_exception(Exception(error_message), APIError, "Failed to get opponent roster.")
 
     config = load_config()
     league_settings = config.get('league_settings', {})
@@ -303,6 +294,12 @@ def analyze_next_game(opponent_players_raw: list = None) -> str:
             "'year' not found in config.yaml under 'league_settings'. Please run 'task get_league_settings' first.",
             config_key="league_settings.year"
         )
+
+    if opponent_players_raw is None:
+        opponent_players_raw, error_message = get_next_opponent_roster(league_year)
+        if error_message:
+            if not opponent_players_raw:
+                raise wrap_exception(Exception(error_message), APIError, error_message)
 
     try:
         player_stats_df = pd.read_csv(PLAYER_STATS_FILE, low_memory=False)

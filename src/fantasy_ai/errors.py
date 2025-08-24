@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional
 import traceback
 
 
-class FantasyFootballError(Exception):
+class FantasyFootballAIAgentError(Exception):
     """Base exception for all Fantasy Football AI errors."""
     
     def __init__(
@@ -20,7 +20,7 @@ class FantasyFootballError(Exception):
         context: Optional[Dict[str, Any]] = None
     ):
         """
-        Initialize base Fantasy Football error.
+        Initialize base Fantasy Football error. 
         
         Args:
             message: Human-readable error message
@@ -50,32 +50,6 @@ class FantasyFootballError(Exception):
 
 class ConfigurationError(FantasyFootballAIAgentError):
     """Exception raised for errors in configuration settings."""
-    pass
-
-
-class DataProcessingError(FantasyFootballAIAgentError):
-    """Exception raised for errors during data processing."""
-    pass
-
-
-class NetworkError(FantasyFootballAIAgentError):
-    """Exception raised for network-related errors."""
-    pass
-
-
-class FileOperationError(FantasyFootballAIAgentError):
-    """Exception raised for errors during file operations."""
-    pass
-
-
-class APIError(FantasyFootballAIAgentError):
-    """Exception raised for errors during API calls."""
-    pass
-
-
-class AuthenticationError(FantasyFootballAIAgentError):
-    """Exception raised for authentication-related errors."""
-    pass
     
     def __init__(
         self,
@@ -85,7 +59,7 @@ class AuthenticationError(FantasyFootballAIAgentError):
         original_error: Optional[Exception] = None
     ):
         """
-        Initialize configuration error.
+        Initialize configuration error. 
         
         Args:
             message: Error description
@@ -104,8 +78,13 @@ class AuthenticationError(FantasyFootballAIAgentError):
         self.config_file = config_file
 
 
-class NetworkError(FantasyFootballError):
-    """Raised when network-related operations fail."""
+class DataProcessingError(FantasyFootballAIAgentError):
+    """Exception raised for errors during data processing."""
+    pass
+
+
+class NetworkError(FantasyFootballAIAgentError):
+    """Exception raised for network-related errors."""
     
     def __init__(
         self,
@@ -116,7 +95,7 @@ class NetworkError(FantasyFootballError):
         original_error: Optional[Exception] = None
     ):
         """
-        Initialize network error.
+        Initialize network error. 
         
         Args:
             message: Error description
@@ -148,7 +127,7 @@ class RateLimitError(NetworkError):
         original_error: Optional[Exception] = None
     ):
         """
-        Initialize rate limit error.
+        Initialize rate limit error. 
         
         Args:
             message: Error description
@@ -162,7 +141,7 @@ class RateLimitError(NetworkError):
             self.context["retry_after"] = retry_after
 
 
-class DataValidationError(FantasyFootballError):
+class DataValidationError(FantasyFootballAIAgentError):
     """Raised when data validation fails."""
     
     def __init__(
@@ -174,7 +153,7 @@ class DataValidationError(FantasyFootballError):
         original_error: Optional[Exception] = None
     ):
         """
-        Initialize data validation error.
+        Initialize data validation error. 
         
         Args:
             message: Error description
@@ -197,7 +176,7 @@ class DataValidationError(FantasyFootballError):
         self.actual_value = actual_value
 
 
-class FileIOError(FantasyFootballError):
+class FileOperationError(FantasyFootballAIAgentError):
     """Raised when file I/O operations fail."""
     
     def __init__(
@@ -208,7 +187,7 @@ class FileIOError(FantasyFootballError):
         original_error: Optional[Exception] = None
     ):
         """
-        Initialize file I/O error.
+        Initialize file I/O error. 
         
         Args:
             message: Error description
@@ -227,7 +206,7 @@ class FileIOError(FantasyFootballError):
         self.operation = operation
 
 
-class APIError(FantasyFootballError):
+class APIError(FantasyFootballAIAgentError):
     """Raised when external API calls fail."""
     
     def __init__(
@@ -239,7 +218,7 @@ class APIError(FantasyFootballError):
         original_error: Optional[Exception] = None
     ):
         """
-        Initialize API error.
+        Initialize API error. 
         
         Args:
             message: Error description
@@ -273,7 +252,7 @@ class AuthenticationError(APIError):
         original_error: Optional[Exception] = None
     ):
         """
-        Initialize authentication error.
+        Initialize authentication error. 
         
         Args:
             message: Error description
@@ -287,7 +266,7 @@ class AuthenticationError(APIError):
             self.context["credential_type"] = credential_type
 
 
-class UnknownError(FantasyFootballError):
+class UnknownError(FantasyFootballAIAgentError):
     """Raised when an unexpected error occurs that doesn't fit other categories."""
     
     def __init__(
@@ -297,7 +276,7 @@ class UnknownError(FantasyFootballError):
         location: Optional[str] = None
     ):
         """
-        Initialize unknown error.
+        Initialize unknown error. 
         
         Args:
             message: Error description
@@ -324,7 +303,7 @@ def wrap_exception(
     error_class: type = UnknownError,
     message: Optional[str] = None,
     **kwargs
-) -> FantasyFootballError:
+) -> FantasyFootballAIAgentError:
     """
     Wrap a third-party exception in a Fantasy Football AI exception.
     
