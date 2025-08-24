@@ -422,4 +422,155 @@ def save_roster_to_markdown(roster_data: list, team_name: str) -> None:
         now = datetime.now()
         dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
         
-        content = f\"\"\"<!-- Last updated: {dt_string} -->\n# My Team: {team_name}\n\n{markdown_table}\n\"\"\"\n        \n        # Write to file with error handling\n        try:\n            with open(file_path, \"w\", encoding='utf-8') as f:\n                f.write(content)\n            \n            logger.info(f\"Successfully saved roster to {file_path}\")\n            \n        except PermissionError as e:\n            raise FileIOError(\n                f\"Permission denied writing to {file_path}\",\n                file_path=file_path,\n                operation=\"write\",\n                original_error=e\n            )\n        except UnicodeEncodeError as e:\n            raise FileIOError(\n                f\"Unicode encoding error writing to {file_path}\",\n                file_path=file_path,\n                operation=\"write\",\n                original_error=e\n            )\n        except Exception as e:\n            raise wrap_exception(\n                e, FileIOError,\n                f\"Failed to write roster file to {file_path}\",\n                file_path=file_path,\n                operation=\"write\"\n            )\n            \n    except FileIOError:\n        raise  # Re-raise our file IO errors\n    except Exception as e:\n        raise wrap_exception(\n            e, FileIOError,\n            \"Unexpected error saving roster to markdown\"\n        )\n\n\ndef display_roster_table(roster_data: list, team_name: str) -> None:\n    \"\"\"Display roster table in console with error handling.\"\"\"\n    try:\n        table_data = [[player['name'], player['position'], player['team']] for player in roster_data]\n        headers = ["Player Name", "Position", "NFL Team"]\n        \n        print(f\"\\n### {team_name} - Current Roster\\n\")\n        print(tabulate(table_data, headers=headers, tablefmt=\"fancy_grid\"))\n        print(\"\\n\")\n        \n    except Exception as e:\n        logger.warning(f\"Error displaying roster table: {e}\")\n        # Fallback to simple display\n        print(f\"\\n### {team_name} - Current Roster\\n\")\n        for player in roster_data:\n            print(f\"- {player['name']} ({player['position']}) - {player['team']}\")\n        print(\"\\n\")\n\n\ndef get_my_team() -> int:\n    \"\"\"\n    Main function to fetch team roster with comprehensive error handling.\n    \n    Returns:\n        Exit code (0 for success, 1 for error)\n    \"\"\"\n    try:\n        logger.info(\"Starting team roster fetch process\")\n        \n        # Step 1: Validate credentials\n        logger.info(\"Step 1: Validating ESPN credentials\")\n        league_id, espn_s2, swid, year = validate_espn_credentials()\n        \n        # Step 2: Get team ID\n        logger.info(\"Step 2: Getting team ID from configuration\")\n        my_team_id = get_my_team_id()\n        \n        # Step 3: Create league connection\n        logger.info(\"Step 3: Connecting to ESPN league\")\n        league = create_espn_league(league_id, year, espn_s2, swid)\n        \n        # Step 4: Find team\n        logger.info(\"Step 4: Finding team in league\")\n        team = find_team_by_id(league, my_team_id)\n        \n        # Step 5: Extract roster data\n        logger.info(\"Step 5: Extracting roster data\")\n        roster_data = extract_roster_data(team)\n        \n        # Step 6: Display roster\n        logger.info(\"Step 6: Displaying roster\")\n        display_roster_table(roster_data, team.team_name)\n        \n        # Step 7: Save to markdown\n        logger.info(\"Step 7: Saving roster to markdown file\")\n        save_roster_to_markdown(roster_data, team.team_name)\n        \n        logger.info(\"Team roster fetch completed successfully!\")\n        print(f\"✓ Team roster saved to data/my_team.md\")\n        return 0\n        \n    except KeyboardInterrupt:\n        logger.info(\"Process interrupted by user\")\n        print(\"\\nProcess interrupted by user.\")\n        return 130\n    except AuthenticationError as e:\n        logger.error(f\"Authentication error: {e.get_detailed_message()}\")\n        print(f\"\\n❌ Authentication Error: {e}\")\n        print(\"\\nTroubleshooting:\")\n        print(\"- Check your .env file contains valid ESPN credentials\")\n        print(\"- Verify LEAGUE_ID, ESPN_S2, and SWID are correct\")\n        print(\"- Make sure you have access to the specified league\")\n        return 1\n    except ConfigurationError as e:\n        logger.error(f\"Configuration error: {e.get_detailed_message()}\")\n        print(f\"\\n❌ Configuration Error: {e}\")\n        print(\"\\nTroubleshooting:\")\n        if \"my_team_id\" in str(e):\n            print(\"- Run 'task identify_my_team' to set up your team ID\")\n        if \"config.yaml\" in str(e):\n            print(\"- Run 'task init' to create configuration file\")\n        return 1\n    except (APIError, DataValidationError) as e:\n        logger.error(f\"API/Data error: {e.get_detailed_message()}\")\n        print(f\"\\n❌ Error: {e}\")\n        return 1\n    except FileIOError as e:\n        logger.error(f\"File I/O error: {e.get_detailed_message()}\")\n        print(f\"\\n❌ File Error: {e}\")\n        print(\"\\nTroubleshooting:\")\n        print(\"- Check file permissions in the current directory\")\n        print(\"- Make sure the data/ directory is writable\")\n        return 1\n    except Exception as e:\n        logger.error(f\"Unexpected error: {e}\", exc_info=True)\n        print(f\"\\n❌ Unexpected error occurred: {e}\")\n        print(\"Check the log file for more details.\")\n        return 1\n\n\ndef main():\n    \"\"\"Entry point with proper error handling.\"\"\"\n    exit_code = get_my_team()\n    return exit_code\n\n\nif __name__ == \"__main__\":\n    sys.exit(main())
+        content = f"""<!-- Last updated: {dt_string} -->
+# My Team: {team_name}
+
+{markdown_table}
+"""
+        
+        # Write to file with error handling
+        try:
+            with open(file_path, "w", encoding='utf-8') as f:
+                f.write(content)
+            
+            logger.info(f"Successfully saved roster to {file_path}")
+            
+        except PermissionError as e:
+            raise FileIOError(
+                f"Permission denied writing to {file_path}",
+                file_path=file_path,
+                operation="write",
+                original_error=e
+            )
+        except UnicodeEncodeError as e:
+            raise FileIOError(
+                f"Unicode encoding error writing to {file_path}",
+                file_path=file_path,
+                operation="write",
+                original_error=e
+            )
+        except Exception as e:
+            raise wrap_exception(
+                e, FileIOError,
+                f"Failed to write roster file to {file_path}",
+                file_path=file_path,
+                operation="write"
+            )
+            
+    except FileIOError:
+        raise  # Re-raise our file IO errors
+    except Exception as e:
+        raise wrap_exception(
+            e, FileIOError,
+            "Unexpected error saving roster to markdown"
+        )
+
+
+def display_roster_table(roster_data: list, team_name: str) -> None:
+    """Display roster table in console with error handling."""
+    try:
+        table_data = [[player['name'], player['position'], player['team']] for player in roster_data]
+        headers = ["Player Name", "Position", "NFL Team"]
+        
+        print(f"\n### {team_name} - Current Roster\n")
+        print(tabulate(table_data, headers=headers, tablefmt="fancy_grid"))
+        print("\n")
+        
+    except Exception as e:
+        logger.warning(f"Error displaying roster table: {e}")
+        # Fallback to simple display
+        print(f"\n### {team_name} - Current Roster\n")
+        for player in roster_data:
+            print(f"- {player['name']} ({player['position']}) - {player['team']}")
+        print("\n")
+
+
+def get_my_team() -> int:
+    """
+    Main function to fetch team roster with comprehensive error handling.
+    
+    Returns:
+        Exit code (0 for success, 1 for error)
+    """
+    try:
+        logger.info("Starting team roster fetch process")
+        
+        # Step 1: Validate credentials
+        logger.info("Step 1: Validating ESPN credentials")
+        league_id, espn_s2, swid, year = validate_espn_credentials()
+        
+        # Step 2: Get team ID
+        logger.info("Step 2: Getting team ID from configuration")
+        my_team_id = get_my_team_id()
+        
+        # Step 3: Create league connection
+        logger.info("Step 3: Connecting to ESPN league")
+        league = create_espn_league(league_id, year, espn_s2, swid)
+        
+        # Step 4: Find team
+        logger.info("Step 4: Finding team in league")
+        team = find_team_by_id(league, my_team_id)
+        
+        # Step 5: Extract roster data
+        logger.info("Step 5: Extracting roster data")
+        roster_data = extract_roster_data(team)
+        
+        # Step 6: Display roster
+        logger.info("Step 6: Displaying roster")
+        display_roster_table(roster_data, team.team_name)
+        
+        # Step 7: Save to markdown
+        logger.info("Step 7: Saving roster to markdown file")
+        save_roster_to_markdown(roster_data, team.team_name)
+        
+        logger.info("Team roster fetch completed successfully!")
+        print(f"✓ Team roster saved to data/my_team.md")
+        return 0
+        
+    except KeyboardInterrupt:
+        logger.info("Process interrupted by user")
+        print("\nProcess interrupted by user.")
+        return 130
+    except AuthenticationError as e:
+        logger.error(f"Authentication error: {e.get_detailed_message()}")
+        print(f"\n❌ Authentication Error: {e}")
+        print("\nTroubleshooting:")
+        print("- Check your .env file contains valid ESPN credentials")
+        print("- Verify LEAGUE_ID, ESPN_S2, and SWID are correct")
+        print("- Make sure you have access to the specified league")
+        return 1
+    except ConfigurationError as e:
+        logger.error(f"Configuration error: {e.get_detailed_message()}")
+        print(f"\n❌ Configuration Error: {e}")
+        print("\nTroubleshooting:")
+        if "my_team_id" in str(e):
+            print("- Run 'task identify_my_team' to set up your team ID")
+        if "config.yaml" in str(e):
+            print("- Run 'task init' to create configuration file")
+        return 1
+    except (APIError, DataValidationError) as e:
+        logger.error(f"API/Data error: {e.get_detailed_message()}")
+        print(f"\n❌ Error: {e}")
+        return 1
+    except FileIOError as e:
+        logger.error(f"File I/O error: {e.get_detailed_message()}")
+        print(f"\n❌ File Error: {e}")
+        print("\nTroubleshooting:")
+        print("- Check file permissions in the current directory")
+        print("- Make sure the data/ directory is writable")
+        return 1
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}", exc_info=True)
+        print(f"\n❌ Unexpected error occurred: {e}")
+        print("Check the log file for more details.")
+        return 1
+
+
+def main():
+    """Entry point with proper error handling."""
+    exit_code = get_my_team()
+    return exit_code
+
+
+if __name__ == "__main__":
+    sys.exit(main())
