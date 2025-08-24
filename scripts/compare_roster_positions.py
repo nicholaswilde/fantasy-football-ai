@@ -15,8 +15,25 @@
 import yaml
 import re
 from tabulate import tabulate
+import sys
+import os
 
-def compare_roster_positions(config_path, my_team_path):
+# Add src to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from fantasy_ai.errors import (
+    FileOperationError,
+    DataValidationError,
+    ConfigurationError,
+    wrap_exception
+)
+from fantasy_ai.utils.logging import setup_logging, get_logger
+
+# Set up logging
+setup_logging(level='INFO', format_type='console', log_file='logs/compare_roster_positions.log')
+logger = get_logger(__name__)
+
+def compare_roster_positions(config_path: str, my_team_path: str) -> tuple[str, str]:
     """
     Compares the number of positions in config.yaml roster_settings with the
     actual number of positions in data/my_team.md.
@@ -27,13 +44,87 @@ def compare_roster_positions(config_path, my_team_path):
 
     Returns:
         tuple: A tuple containing the main comparison table and the mismatch summary table.
+        
+    Raises:
+        ConfigurationError: If config file cannot be read or parsed, or roster_settings are invalid.
+        FileOperationError: If my_team.md cannot be read.
+        DataValidationError: If my_team.md content is malformed.
     """
-    with open(config_path, 'r') as f:
-        config = yaml.safe_load(f)
-    expected_roster = config.get('roster_settings', {})
+    logger.info(f"Comparing roster positions using config: {config_path} and team: {my_team_path}")
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+    except FileNotFoundError as e:
+        raise ConfigurationError(
+            f"Configuration file not found: {config_path}. Please run 'task init' first.",
+            config_file=config_path,
+            original_error=e
+        )
+    except yaml.YAMLError as e:
+        raise ConfigurationError(
+            f"Invalid YAML in configuration file: {config_path}",
+            config_file=config_path,
+            original_error=e
+        )
+    except PermissionError as e:
+        raise FileOperationError(
+            f"Permission denied reading configuration file: {config_path}",
+            file_path=config_path,
+            operation="read",
+            original_error=e
+        )
+    except Exception as e:
+        raise wrap_exception(
+            e, ConfigurationError,
+            f"Failed to load configuration from {config_path}",
+            config_file=config_path
+        )
 
-    with open(my_team_path, 'r') as f:
-        my_team_content = f.read()
+    expected_roster = config.get('roster_settings', {})
+    if not isinstance(expected_roster, dict) or not expected_roster:
+        raise ConfigurationError(
+            "'roster_settings' not found or is empty/invalid in config.yaml.",
+            config_key="roster_settings",
+            config_file=config_path
+        )
+
+    try:
+        with open(my_team_path, 'r', encoding='utf-8') as f:
+            my_team_content = f.read()
+    except FileNotFoundError as e:
+        raise FileOperationError(
+            f"My team file not found: {my_team_path}. Please run 'task get_my_team' first.",
+            file_path=my_team_path,
+            operation="read",
+            original_error=e
+        )
+    except PermissionError as e:
+        raise FileOperationError(
+            f"Permission denied reading my team file: {my_team_path}",
+            file_path=my_team_path,
+            operation="read",
+            original_error=e
+        )
+    except UnicodeDecodeError as e:
+        raise DataValidationError(
+            f"Cannot decode my team file (encoding issue): {my_team_path}",
+            field_name="my_team_file_encoding",
+            expected_type="UTF-8 encoded text",
+            actual_value="unreadable encoding",
+            original_error=e
+        )
+    except Exception as e:
+        raise wrap_exception(
+            e, FileOperationError,
+            f"Failed to read my team file {my_team_path}",
+            file_path=my_team_path,
+            operation="read"
+        )
+
+    if not my_team_content.strip():
+        logger.warning(f"My team file is empty: {my_team_path}.")
+        # Return empty tables if the file is empty
+        return "No team data found.", ""
 
     actual_roster = {}
     position_map = {
@@ -74,15 +165,40 @@ def compare_roster_positions(config_path, my_team_path):
         mismatch_headers = ["Position", "Expected", "Actual"]
         mismatch_table = tabulate(mismatches, headers=mismatch_headers, tablefmt="github")
 
+    logger.info("Roster comparison completed.")
     return comparison_table, mismatch_table
 
 
+def main():
+    """Main function to compare roster positions and handle errors."""
+    CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'config.yaml')
+    MY_TEAM_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'my_team.md')
+    
+    try:
+        comparison, mismatches = compare_roster_positions(CONFIG_FILE, MY_TEAM_FILE)
+        print("\nRoster Comparison:")
+        print(comparison)
+        if mismatches:
+            print("\nSummary of Mismatches:")
+            print(mismatches)
+        return 0
+    except (ConfigurationError, FileOperationError, DataValidationError) as e:
+        logger.error(f"Roster comparison error: {e.get_detailed_message()}")
+        print(f"\n❌ Error during roster comparison: {e}")
+        print("\nTroubleshooting:")
+        if isinstance(e, ConfigurationError):
+            print("- Check config.yaml for valid 'roster_settings'.")
+        elif isinstance(e, FileOperationError):
+            print("- Ensure config.yaml and data/my_team.md exist and are accessible.")
+        elif isinstance(e, DataValidationError):
+            print("- Check the format and content of data/my_team.md.")
+        return 1
+    except Exception as e:
+        logger.critical(f"An unhandled critical error occurred: {e}", exc_info=True)
+        print(f"\n❌ An unexpected critical error occurred: {e}")
+        print("Please check the log file for more details.")
+        return 1
+
+
 if __name__ == "__main__":
-    CONFIG_FILE = "/home/nicholas/git/nicholaswilde/fantasy-football-ai/config.yaml"
-    MY_TEAM_FILE = "/home/nicholas/git/nicholaswilde/fantasy-football-ai/data/my_team.md"
-    comparison, mismatches = compare_roster_positions(CONFIG_FILE, MY_TEAM_FILE)
-    print("\nRoster Comparison:")
-    print(comparison)
-    if mismatches:
-        print("\nSummary of Mismatches:")
-        print(mismatches)
+    sys.exit(main())
