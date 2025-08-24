@@ -202,3 +202,15 @@ To run the interactive live draft assistant, which provides real-time suggestion
 
     The assistant will prompt you to enter drafted players and will provide recommendations when it's your turn. You can type `exit` or `quit` at any prompt to end the session.
 
+### :star: Optimal Lineup Generator
+
+To generate an optimal fantasy football lineup based on projected points and your roster settings, run:
+
+=== "Task"
+
+    ```bash
+    task lineup_optimizer
+    ```
+
+    This will suggest the highest-scoring lineup for your team, considering all positional requirements.
+
