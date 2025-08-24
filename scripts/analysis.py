@@ -17,8 +17,26 @@ import google.generativeai as genai
 from openai import OpenAI
 import pandas as pd
 from dotenv import load_dotenv
-
 import yaml
+import sys
+
+# Add src to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from fantasy_ai.errors import (
+    FileOperationError,
+    DataValidationError,
+    ConfigurationError,
+    APIError,
+    AuthenticationError,
+    NetworkError,
+    wrap_exception
+)
+from fantasy_ai.utils.logging import setup_logging, get_logger
+
+# Set up logging
+setup_logging(level='INFO', format_type='console', log_file='logs/analysis.log')
+logger = get_logger(__name__)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -29,9 +47,56 @@ CONFIG_FILE = os.path.join(
 )
 
 
-def load_config():
-    with open(CONFIG_FILE, 'r') as f:
-        return yaml.safe_load(f)
+def load_config() -> dict:
+    """
+    Load configuration from config.yaml with proper error handling.
+    
+    Returns:
+        Configuration dictionary
+        
+    Raises:
+        ConfigurationError: If config file cannot be read or parsed
+        FileOperationError: If file cannot be accessed
+    """
+    try:
+        logger.debug(f"Loading configuration from {CONFIG_FILE}")
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+        
+        if not isinstance(config, dict):
+            raise ConfigurationError(
+                "Configuration file does not contain a valid dictionary",
+                config_file=CONFIG_FILE
+            )
+        
+        logger.info("Configuration loaded successfully")
+        return config
+        
+    except FileNotFoundError as e:
+        raise ConfigurationError(
+            f"Configuration file not found: {CONFIG_FILE}. Please run 'task init' first.",
+            config_file=CONFIG_FILE,
+            original_error=e
+        )
+    except yaml.YAMLError as e:
+        raise ConfigurationError(
+            f"Invalid YAML in configuration file: {CONFIG_FILE}",
+            config_file=CONFIG_FILE,
+            original_error=e
+        )
+    except PermissionError as e:
+        raise FileOperationError(
+            f"Permission denied reading configuration file: {CONFIG_FILE}",
+            file_path=CONFIG_FILE,
+            operation="read",
+            original_error=e
+        )
+    except Exception as e:
+        raise wrap_exception(
+            e, ConfigurationError,
+            f"Failed to load configuration from {CONFIG_FILE}",
+            config_file=CONFIG_FILE
+        )
 
 
 CONFIG = load_config()
@@ -42,103 +107,259 @@ LLM_MODEL = LLM_SETTINGS.get('model', 'gemini-pro')
 CLIENT = None
 
 def configure_llm_api():
-    """Configure the LLM API based on the provider."""
+    """Configure the LLM API based on the provider with error handling."""
     global CLIENT
-    if LLM_PROVIDER == 'google':
-        api_key = os.getenv("GOOGLE_API_KEY")
-        if not api_key:
-            raise ValueError(
-                "API key not found. Please set the GOOGLE_API_KEY "
-                "environment variable."
+    try:
+        if LLM_PROVIDER == 'google':
+            api_key = os.getenv("GOOGLE_API_KEY")
+            if not api_key:
+                raise AuthenticationError(
+                    "Google API key not found. Please set the GOOGLE_API_KEY environment variable.",
+                    api_name="Google Gemini"
+                )
+            genai.configure(api_key=api_key)
+            logger.info("Google Gemini API configured.")
+        elif LLM_PROVIDER == 'openai':
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                raise AuthenticationError(
+                    "OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.",
+                    api_name="OpenAI"
+                )
+            CLIENT = OpenAI(api_key=api_key)
+            logger.info("OpenAI API configured.")
+        else:
+            raise ConfigurationError(
+                f"Unsupported LLM provider: {LLM_PROVIDER}",
+                config_key="llm_settings.provider"
             )
-        genai.configure(api_key=api_key)
-    elif LLM_PROVIDER == 'openai':
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError(
-                "API key not found. Please set the OPENAI_API_KEY "
-                "environment variable."
-            )
-        CLIENT = OpenAI(api_key=api_key)
-    else:
-        raise ValueError(f"Unsupported LLM provider: {LLM_PROVIDER}")
-
-
-def ask_llm(question):
-    """
-    Sends a question to the configured LLM and returns the response.
-    """
-    if LLM_PROVIDER == 'google':
-        model = genai.GenerativeModel(LLM_MODEL)
-        response = model.generate_content(question)
-        return response.text
-    elif LLM_PROVIDER == 'openai':
-        if not CLIENT:
-            raise ValueError("OpenAI client not configured.")
-        response = CLIENT.chat.completions.create(
-            model=LLM_MODEL,
-            messages=[{"role": "user", "content": question}]
+    except Exception as e:
+        raise wrap_exception(
+            e, ConfigurationError,
+            f"Failed to configure LLM API for provider {LLM_PROVIDER}"
         )
-        return response.choices[0].message.content.strip()
-    else:
-        raise ValueError(f"Unsupported LLM provider: {LLM_PROVIDER}")
 
 
-def get_team_roster(roster_file=None):
-    """Reads the team roster from a Markdown table file and returns a list of player names."""
+def ask_llm(question: str) -> str:
+    """
+    Sends a question to the configured LLM and returns the response with error handling.
+    
+    Raises:
+        APIError: If there's an issue with the LLM API response.
+        NetworkError: If there's a network connectivity issue.
+        AuthenticationError: If LLM client is not configured or API key is invalid.
+    """
+    try:
+        logger.debug(f"Asking LLM: {question[:50]}...")
+        if LLM_PROVIDER == 'google':
+            model = genai.GenerativeModel(LLM_MODEL)
+            response = model.generate_content(question)
+            if not response.text:
+                raise APIError("LLM returned an empty response.", api_name=LLM_PROVIDER)
+            logger.info("Received response from Google Gemini.")
+            return response.text
+        elif LLM_PROVIDER == 'openai':
+            if not CLIENT:
+                raise AuthenticationError("OpenAI client not configured.", api_name="OpenAI")
+            response = CLIENT.chat.completions.create(
+                model=LLM_MODEL,
+                messages=[{"role": "user", "content": question}]
+            )
+            if not response.choices or not response.choices[0].message.content:
+                raise APIError("LLM returned an empty response.", api_name=LLM_PROVIDER)
+            logger.info("Received response from OpenAI.")
+            return response.choices[0].message.content.strip()
+        else:
+            raise ConfigurationError(f"Unsupported LLM provider: {LLM_PROVIDER}")
+    except (genai.types.BlockedPromptException, genai.types.HarmCategory) as e:
+        raise APIError(f"LLM prompt blocked due to safety concerns: {e}", api_name=LLM_PROVIDER, original_error=e)
+    except (genai.types.APIError, OpenAI.APIError) as e:
+        raise APIError(f"LLM API error: {e}", api_name=LLM_PROVIDER, original_error=e)
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+        raise NetworkError(f"Network error during LLM API call: {e}", api_name=LLM_PROVIDER, original_error=e)
+    except Exception as e:
+        raise wrap_exception(e, APIError, f"An unexpected error occurred during LLM API call: {e}", api_name=LLM_PROVIDER)
+
+
+def get_team_roster(roster_file: str = None) -> list:
+    """
+    Reads the team roster from a Markdown table file and returns a list of player names with error handling.
+    
+    Args:
+        roster_file: Path to the my_team.md file. If None, uses default path.
+        
+    Returns:
+        List of player names.
+        
+    Raises:
+        FileOperationError: If the file cannot be read or accessed.
+        DataValidationError: If the file content is malformed.
+    """
     if roster_file is None:
         roster_file = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'my_team.md'
         )
+    
     if not os.path.exists(roster_file):
+        logger.warning(f"Roster file not found at {roster_file}, returning empty roster.")
         return []
     
     roster = []
-    with open(roster_file, "r") as f:
-        lines = f.readlines()
-        # Skip header and separator lines (first 3 lines after the comment and title)
-        # So, actual data starts from line 5 (index 4)
-        if len(lines) > 4:
-            for line in lines[4:]:
-                line = line.strip()
-                if line.startswith('|') and '|' in line[1:]:
-                    parts = [p.strip() for p in line.split('|')]
-                    if len(parts) > 2: # Ensure there's at least a player name column
-                        player_name = parts[1] # Assuming player name is in the second column
-                        if player_name: # Ensure it's not empty
-                            roster.append(player_name)
-    return roster
+    try:
+        with open(roster_file, "r", encoding='utf-8') as f:
+            lines = f.readlines()
+            # Skip header and separator lines (first 3 lines after the comment and title)
+            # So, actual data starts from line 5 (index 4)
+            if len(lines) > 4:
+                for line in lines[4:]:
+                    line = line.strip()
+                    if line.startswith('|') and '|' in line[1:]:
+                        parts = [p.strip() for p in line.split('|')]
+                        if len(parts) > 2: # Ensure there's at least a player name column
+                            player_name = parts[1] # Assuming player name is in the second column
+                            if player_name: # Ensure it's not empty
+                                roster.append(player_name)
+        logger.info(f"Successfully loaded {len(roster)} players from roster file.")
+        return roster
+    except FileNotFoundError as e:
+        raise FileOperationError(
+            f"Roster file not found: {roster_file}",
+            file_path=roster_file,
+            operation="read",
+            original_error=e
+        )
+    except PermissionError as e:
+        raise FileOperationError(
+            f"Permission denied reading roster file: {roster_file}",
+            file_path=roster_file,
+            operation="read",
+            original_error=e
+        )
+    except UnicodeDecodeError as e:
+        raise DataValidationError(
+            f"Cannot decode roster file (encoding issue): {roster_file}",
+            field_name="roster_file_encoding",
+            expected_type="UTF-8 encoded text",
+            actual_value="unreadable encoding",
+            original_error=e
+        )
+    except Exception as e:
+        raise wrap_exception(
+            e, FileOperationError,
+            f"Failed to read roster file {roster_file}",
+            file_path=roster_file,
+            operation="read"
+        )
+
+
+def analyze_fantasy_situation(user_query: str) -> str:
     """
-    Generates fantasy football analysis by providing rich context to an LLM.
+    Generates fantasy football analysis by providing rich context to an LLM with error handling.
+    
+    Args:
+        user_query: The question or scenario from the user.
+        
+    Returns:
+        LLM-generated analysis.
+        
+    Raises:
+        FileOperationError: If data files cannot be read.
+        DataValidationError: If data files are malformed or empty.
+        ConfigurationError: If LLM or scoring rules are misconfigured.
+        APIError: If LLM API call fails.
+        AuthenticationError: If LLM API key is missing.
+        NetworkError: If there's a network issue during LLM API call.
     """
+    logger.info(f"Analyzing fantasy situation for query: {user_query[:50]}...")
     # 1. Load all necessary data
-    config = load_config()
-    scoring_rules = config.get('scoring_rules', {})
-    roster_settings = config.get('roster_settings', {})
+    try:
+        config = load_config()
+        scoring_rules = config.get('scoring_rules', {})
+        roster_settings = config.get('roster_settings', {})
+    except ConfigurationError:
+        raise # Re-raise configuration errors
+    except Exception as e:
+        raise wrap_exception(e, ConfigurationError, "Failed to load configuration for analysis.")
 
     data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data')
 
     try:
-        player_stats_df = pd.read_csv(os.path.join(data_dir, 'player_stats.csv'))
-    except FileNotFoundError:
-        return "Error: player_stats.csv not found."
+        player_stats_df = pd.read_csv(os.path.join(data_dir, 'player_stats.csv'), low_memory=False)
+    except FileNotFoundError as e:
+        raise FileOperationError(
+            f"player_stats.csv not found at {data_dir}. Please run data download scripts.",
+            file_path=os.path.join(data_dir, 'player_stats.csv'),
+            operation="read",
+            original_error=e
+        )
+    except pd.errors.EmptyDataError as e:
+        raise DataValidationError(
+            f"player_stats.csv is empty or invalid: {e}",
+            field_name="player_stats.csv",
+            original_error=e
+        )
+    except pd.errors.ParserError as e:
+        raise DataValidationError(
+            f"Cannot parse player_stats.csv: {e}",
+            field_name="player_stats.csv",
+            original_error=e
+        )
+    except Exception as e:
+        raise wrap_exception(e, FileOperationError, f"Failed to read player_stats.csv: {e}")
 
     try:
-        player_adp_df = pd.read_csv(os.path.join(data_dir, 'player_adp.csv'))
+        player_adp_df = pd.read_csv(os.path.join(data_dir, 'player_adp.csv'), low_memory=False)
     except FileNotFoundError:
+        logger.warning("player_adp.csv not found, proceeding without ADP data.")
+        player_adp_df = pd.DataFrame()
+    except pd.errors.EmptyDataError:
+        logger.warning("player_adp.csv is empty, proceeding without ADP data.")
+        player_adp_df = pd.DataFrame()
+    except pd.errors.ParserError as e:
+        logger.warning(f"Cannot parse player_adp.csv: {e}, proceeding without ADP data.")
+        player_adp_df = pd.DataFrame()
+    except Exception as e:
+        logger.warning(f"Failed to read player_adp.csv: {e}, proceeding without ADP data.")
         player_adp_df = pd.DataFrame()
 
     try:
-        player_projections_df = pd.read_csv(os.path.join(data_dir, 'player_projections.csv'))
+        player_projections_df = pd.read_csv(os.path.join(data_dir, 'player_projections.csv'), low_memory=False)
     except FileNotFoundError:
+        logger.warning("player_projections.csv not found, proceeding without projections data.")
+        player_projections_df = pd.DataFrame()
+    except pd.errors.EmptyDataError:
+        logger.warning("player_projections.csv is empty, proceeding without projections data.")
+        player_projections_df = pd.DataFrame()
+    except pd.errors.ParserError as e:
+        logger.warning(f"Cannot parse player_projections.csv: {e}, proceeding without projections data.")
+        player_projections_df = pd.DataFrame()
+    except Exception as e:
+        logger.warning(f"Failed to read player_projections.csv: {e}, proceeding without projections data.")
         player_projections_df = pd.DataFrame()
 
     try:
-        available_players_df = pd.read_csv(os.path.join(data_dir, 'available_players.csv'))
+        available_players_df = pd.read_csv(os.path.join(data_dir, 'available_players.csv'), low_memory=False)
     except FileNotFoundError:
+        logger.warning("available_players.csv not found, proceeding without available players data.")
+        available_players_df = pd.DataFrame()
+    except pd.errors.EmptyDataError:
+        logger.warning("available_players.csv is empty, proceeding without available players data.")
+        available_players_df = pd.DataFrame()
+    except pd.errors.ParserError as e:
+        logger.warning(f"Cannot parse available_players.csv: {e}, proceeding without available players data.")
+        available_players_df = pd.DataFrame()
+    except Exception as e:
+        logger.warning(f"Failed to read available_players.csv: {e}, proceeding without available players data.")
         available_players_df = pd.DataFrame()
 
-    my_team_roster = get_team_roster()
+    try:
+        my_team_roster = get_team_roster()
+    except (FileOperationError, DataValidationError) as e:
+        logger.warning(f"Failed to load my team roster: {e}, proceeding with empty roster.")
+        my_team_roster = []
+    except Exception as e:
+        logger.warning(f"Unexpected error loading my team roster: {e}, proceeding with empty roster.")
+        my_team_roster = []
 
     # 2. Process and format the data for the prompt
     scoring_rules_str = yaml.dump(scoring_rules, default_flow_style=False)
@@ -203,116 +424,104 @@ Provide a detailed analysis and actionable recommendations.
     return ask_llm(prompt)
 
 
-def calculate_fantasy_points(df):
+def calculate_fantasy_points(df: pd.DataFrame) -> pd.DataFrame:
     """
     Calculates fantasy points for each player based on the SCORING_RULES in config.yaml.
+    
+    Args:
+        df: DataFrame with player statistics.
+        
+    Returns:
+        DataFrame with an added 'fantasy_points' column.
+        
+    Raises:
+        DataValidationError: If required columns for scoring are missing.
     """
+    if df.empty:
+        logger.warning("Input DataFrame for calculate_fantasy_points is empty.")
+        return df
+
     df['fantasy_points'] = 0.0
 
+    # Define a helper to safely get column data
+    def get_col(col_name):
+        if col_name not in df.columns:
+            logger.debug(f"Column '{col_name}' not found in DataFrame for fantasy points calculation.")
+            return pd.Series(0.0, index=df.index) # Return a series of zeros if column is missing
+        return df[col_name]
+
     # Offensive stats
-    if 'passing_yards' in df.columns:
-        df['fantasy_points'] += (df['passing_yards'] / 25) * SCORING_RULES.get('every_25_passing_yards', 0)
-    if 'passing_tds' in df.columns:
-        df['fantasy_points'] += df['passing_tds'] * SCORING_RULES.get('td_pass', 0)
-    if 'interceptions' in df.columns:
-        df['fantasy_points'] += df['interceptions'] * SCORING_RULES.get('interceptions_thrown', 0)
-    if 'passing_2pt_conversions' in df.columns:
-        df['fantasy_points'] += df['passing_2pt_conversions'] * SCORING_RULES.get('2pt_passing_conversion', 0)
+    df['fantasy_points'] += (get_col('passing_yards') / 25) * SCORING_RULES.get('every_25_passing_yards', 0)
+    df['fantasy_points'] += get_col('passing_tds') * SCORING_RULES.get('td_pass', 0)
+    df['fantasy_points'] += get_col('interceptions') * SCORING_RULES.get('interceptions_thrown', 0)
+    df['fantasy_points'] += get_col('passing_2pt_conversions') * SCORING_RULES.get('2pt_passing_conversion', 0)
 
     # Rushing
-    if 'rushing_yards' in df.columns:
-        df['fantasy_points'] += (df['rushing_yards'] / 10) * SCORING_RULES.get('every_10_rushing_yards', 0)
-    if 'rushing_tds' in df.columns:
-        df['fantasy_points'] += df['rushing_tds'] * SCORING_RULES.get('td_rush', 0)
-    if 'rushing_2pt_conversions' in df.columns:
-        df['fantasy_points'] += df['rushing_2pt_conversions'] * SCORING_RULES.get('2pt_rushing_conversion', 0)
+    df['fantasy_points'] += (get_col('rushing_yards') / 10) * SCORING_RULES.get('every_10_rushing_yards', 0)
+    df['fantasy_points'] += get_col('rushing_tds') * SCORING_RULES.get('td_rush', 0)
+    df['fantasy_points'] += get_col('rushing_2pt_conversions') * SCORING_RULES.get('2pt_rushing_conversion', 0)
 
     # Receiving
-    if 'receiving_yards' in df.columns:
-        df['fantasy_points'] += (df['receiving_yards'] / 10) * SCORING_RULES.get('every_10_receiving_yards', 0)
-    if 'receiving_tds' in df.columns:
-        df['fantasy_points'] += df['receiving_tds'] * SCORING_RULES.get('td_reception', 0)
-    if 'receptions' in df.columns:
-        df['fantasy_points'] += (df['receptions'] / 5) * SCORING_RULES.get('every_5_receptions', 0)
-    if 'receiving_2pt_conversions' in df.columns:
-        df['fantasy_points'] += df['receiving_2pt_conversions'] * SCORING_RULES.get('2pt_receiving_conversion', 0)
+    df['fantasy_points'] += (get_col('receiving_yards') / 10) * SCORING_RULES.get('every_10_receiving_yards', 0)
+    df['fantasy_points'] += get_col('receiving_tds') * SCORING_RULES.get('td_reception', 0)
+    df['fantasy_points'] += get_col('receptions') * SCORING_RULES.get('every_5_receptions', 0)
+    df['fantasy_points'] += get_col('receiving_2pt_conversions') * SCORING_RULES.get('2pt_receiving_conversion', 0)
 
     # Offensive Bonuses
     # Passing Bonuses
     if 'passing_td_yards' in df.columns:
-        df.loc[df['passing_td_yards'] >= 50, 'fantasy_points'] += SCORING_RULES.get('50+_yard_td_pass_bonus', 0)
-        df.loc[df['passing_td_yards'] >= 40, 'fantasy_points'] += SCORING_RULES.get('40+_yard_td_pass_bonus', 0)
+        df.loc[get_col('passing_td_yards') >= 50, 'fantasy_points'] += SCORING_RULES.get('50+_yard_td_pass_bonus', 0)
+        df.loc[get_col('passing_td_yards') >= 40, 'fantasy_points'] += SCORING_RULES.get('40+_yard_td_pass_bonus', 0)
     if 'passing_yards' in df.columns:
-        df.loc[(df['passing_yards'] >= 300) & (df['passing_yards'] < 400), 'fantasy_points'] += SCORING_RULES.get('300_399_yard_passing_game', 0)
-        df.loc[df['passing_yards'] >= 400, 'fantasy_points'] += SCORING_RULES.get('400+_yard_passing_game', 0)
+        df.loc[(get_col('passing_yards') >= 300) & (get_col('passing_yards') < 400), 'fantasy_points'] += SCORING_RULES.get('300_399_yard_passing_game', 0)
+        df.loc[get_col('passing_yards') >= 400, 'fantasy_points'] += SCORING_RULES.get('400+_yard_passing_game', 0)
 
     # Rushing Bonuses
     if 'rushing_td_yards' in df.columns:
-        df.loc[df['rushing_td_yards'] >= 50, 'fantasy_points'] += SCORING_RULES.get('50+_yard_td_rush_bonus', 0)
-        df.loc[df['rushing_td_yards'] >= 40, 'fantasy_points'] += SCORING_RULES.get('40+_yard_td_rush_bonus', 0)
+        df.loc[get_col('rushing_td_yards') >= 50, 'fantasy_points'] += SCORING_RULES.get('50+_yard_td_rush_bonus', 0)
+        df.loc[get_col('rushing_td_yards') >= 40, 'fantasy_points'] += SCORING_RULES.get('40+_yard_td_rush_bonus', 0)
     if 'rushing_yards' in df.columns:
-        df.loc[(df['rushing_yards'] >= 100) & (df['rushing_yards'] < 200), 'fantasy_points'] += SCORING_RULES.get('100_199_yard_rushing_game', 0)
-        df.loc[df['rushing_yards'] >= 200, 'fantasy_points'] += SCORING_RULES.get('200+_yard_rushing_game', 0)
+        df.loc[(get_col('rushing_yards') >= 100) & (get_col('rushing_yards') < 200), 'fantasy_points'] += SCORING_RULES.get('100_199_yard_rushing_game', 0)
+        df.loc[get_col('rushing_yards') >= 200, 'fantasy_points'] += SCORING_RULES.get('200+_yard_rushing_game', 0)
 
     # Receiving Bonuses
     if 'receiving_td_yards' in df.columns:
-        df.loc[df['receiving_td_yards'] >= 50, 'fantasy_points'] += SCORING_RULES.get('50+_yard_td_rec_bonus', 0)
-        df.loc[df['receiving_td_yards'] >= 40, 'fantasy_points'] += SCORING_RULES.get('40+_yard_td_rec_bonus', 0)
+        df.loc[get_col('receiving_td_yards') >= 50, 'fantasy_points'] += SCORING_RULES.get('50+_yard_td_rec_bonus', 0)
+        df.loc[get_col('receiving_td_yards') >= 40, 'fantasy_points'] += SCORING_RULES.get('40+_yard_td_rec_bonus', 0)
     if 'receiving_yards' in df.columns:
-        df.loc[(df['receiving_yards'] >= 100) & (df['receiving_yards'] < 200), 'fantasy_points'] += SCORING_RULES.get('100_199_yard_receiving_game', 0)
-        df.loc[df['receiving_yards'] >= 200, 'fantasy_points'] += SCORING_RULES.get('200+_yard_receiving_game', 0)
+        df.loc[(get_col('receiving_yards') >= 100) & (get_col('receiving_yards') < 200), 'fantasy_points'] += SCORING_RULES.get('100_199_yard_receiving_game', 0)
+        df.loc[get_col('receiving_yards') >= 200, 'fantasy_points'] += SCORING_RULES.get('200+_yard_receiving_game', 0)
 
     # Fumbles
-    fumbles_lost = 0
-    if 'rushing_fumbles_lost' in df.columns:
-        fumbles_lost += df['rushing_fumbles_lost']
-    if 'receiving_fumbles_lost' in df.columns:
-        fumbles_lost += df['receiving_fumbles_lost']
+    fumbles_lost = get_col('rushing_fumbles_lost') + get_col('receiving_fumbles_lost')
     df['fantasy_points'] += fumbles_lost * SCORING_RULES.get('total_fumbles_lost', 0)
 
     # Special Teams (from nfl_data_py)
-    if 'special_teams_tds' in df.columns:
-        df['fantasy_points'] += df['special_teams_tds'] * SCORING_RULES.get('kickoff_return_td', 0)
-    if '2pt_return' in df.columns:
-        df['fantasy_points'] += df['2pt_return'] * SCORING_RULES.get('2pt_return', 0)
+    df['fantasy_points'] += get_col('special_teams_tds') * SCORING_RULES.get('kickoff_return_td', 0)
+    df['fantasy_points'] += get_col('2pt_return') * SCORING_RULES.get('2pt_return', 0)
 
     # Kicking Stats (from espn_api)
     if 'position' in df.columns and 'K' in df['position'].unique():
         k_df = df[df['position'] == 'K']
-        if 'madeFieldGoalsFrom50Plus' in k_df.columns:
-            df.loc[k_df.index, 'fantasy_points'] += k_df['madeFieldGoalsFrom50Plus'] * SCORING_RULES.get('fg_made_(50_59_yards)', 0) # Assuming 50+ is 50-59
-        if 'madeFieldGoalsFrom40To49' in k_df.columns:
-            df.loc[k_df.index, 'fantasy_points'] += k_df['madeFieldGoalsFrom40To49'] * SCORING_RULES.get('fg_made_(40_49_yards)', 0)
-        if 'madeFieldGoalsFromUnder40' in k_df.columns:
-            df.loc[k_df.index, 'fantasy_points'] += k_df['madeFieldGoalsFromUnder40'] * SCORING_RULES.get('fg_made_(0_39_yards)', 0)
-        if 'missedFieldGoals' in k_df.columns:
-            df.loc[k_df.index, 'fantasy_points'] += k_df['missedFieldGoals'] * SCORING_RULES.get('fg_missed_(0_39_yards)', 0) # Assuming all missed FGs are 0-39
-        if 'madeExtraPoints' in k_df.columns:
-            df.loc[k_df.index, 'fantasy_points'] += k_df['madeExtraPoints'] * SCORING_RULES.get('each_pat_made', 0)
-        if 'missedExtraPoints' in k_df.columns:
-            df.loc[k_df.index, 'fantasy_points'] += k_df['missedExtraPoints'] * SCORING_RULES.get('each_pat_missed', 0)
+        df.loc[k_df.index, 'fantasy_points'] += get_col('madeFieldGoalsFrom50Plus') * SCORING_RULES.get('fg_made_(50_59_yards)', 0)
+        df.loc[k_df.index, 'fantasy_points'] += get_col('madeFieldGoalsFrom40To49') * SCORING_RULES.get('fg_made_(40_49_yards)', 0)
+        df.loc[k_df.index, 'fantasy_points'] += get_col('madeFieldGoalsFromUnder40') * SCORING_RULES.get('fg_made_(0_39_yards)', 0)
+        df.loc[k_df.index, 'fantasy_points'] += get_col('missedFieldGoals') * SCORING_RULES.get('fg_missed_(0_39_yards)', 0)
+        df.loc[k_df.index, 'fantasy_points'] += get_col('madeExtraPoints') * SCORING_RULES.get('each_pat_made', 0)
+        df.loc[k_df.index, 'fantasy_points'] += get_col('missedExtraPoints') * SCORING_RULES.get('each_pat_missed', 0)
 
     # D/ST Stats (from espn_api)
     if 'position' in df.columns and 'DST' in df['position'].unique():
         dst_df = df[df['position'] == 'DST']
-        if 'defensiveSacks' in dst_df.columns:
-            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensiveSacks'] * SCORING_RULES.get('1_2_sack', 0) # Assuming 1 sack is 1 point
-        if 'defensiveInterceptions' in dst_df.columns:
-            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensiveInterceptions'] * SCORING_RULES.get('each_interception', 0)
-        if 'defensiveFumbles' in dst_df.columns:
-            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensiveFumbles'] * SCORING_RULES.get('each_fumble_recovered', 0)
-        if 'defensiveBlockedKicks' in dst_df.columns:
-            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensiveBlockedKicks'] * SCORING_RULES.get('blocked_punt,_pat_or_fg', 0)
-        if 'defensiveTouchdowns' in dst_df.columns:
-            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensiveTouchdowns'] * SCORING_RULES.get('defensive_touchdowns', 0) # Assuming a generic defensive TD rule
-        if 'defensiveForcedFumbles' in dst_df.columns:
-            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensiveForcedFumbles'] * SCORING_RULES.get('each_fumble_forced', 0)
-        if 'defensiveAssistedTackles' in dst_df.columns:
-            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensiveAssistedTackles'] * SCORING_RULES.get('assisted_tackles', 0)
-        if 'defensiveSoloTackles' in dst_df.columns:
-            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensiveSoloTackles'] * SCORING_RULES.get('solo_tackles', 0)
-        if 'defensivePassesDefensed' in dst_df.columns:
-            df.loc[dst_df.index, 'fantasy_points'] += dst_df['defensivePassesDefensed'] * SCORING_RULES.get('passes_defensed', 0)
+        df.loc[dst_df.index, 'fantasy_points'] += get_col('defensiveSacks') * SCORING_RULES.get('1_2_sack', 0)
+        df.loc[dst_df.index, 'fantasy_points'] += get_col('defensiveInterceptions') * SCORING_RULES.get('each_interception', 0)
+        df.loc[dst_df.index, 'fantasy_points'] += get_col('defensiveFumbles') * SCORING_RULES.get('each_fumble_recovered', 0)
+        df.loc[dst_df.index, 'fantasy_points'] += get_col('defensiveBlockedKicks') * SCORING_RULES.get('blocked_punt,_pat_or_fg', 0)
+        df.loc[dst_df.index, 'fantasy_points'] += get_col('defensiveTouchdowns') * SCORING_RULES.get('defensive_touchdowns', 0)
+        df.loc[dst_df.index, 'fantasy_points'] += get_col('defensiveForcedFumbles') * SCORING_RULES.get('each_fumble_forced', 0)
+        df.loc[dst_df.index, 'fantasy_points'] += get_col('defensiveAssistedTackles') * SCORING_RULES.get('assisted_tackles', 0)
+        df.loc[dst_df.index, 'fantasy_points'] += get_col('defensiveSoloTackles') * SCORING_RULES.get('solo_tackles', 0)
+        df.loc[dst_df.index, 'fantasy_points'] += get_col('defensivePassesDefensed') * SCORING_RULES.get('passes_defensed', 0)
         if 'defensivePointsAllowed' in dst_df.columns:
             # Apply points allowed scoring based on ranges
             def apply_points_allowed_scoring_dst(row):
@@ -326,8 +535,8 @@ def calculate_fantasy_points(df):
                     points += SCORING_RULES.get('7_13_points_allowed', 0)
                 elif 14 <= pa <= 17:
                     points += SCORING_RULES.get('14_17_points_allowed', 0)
-                elif 18 <= pa <= 21: # This range is not in config.yaml, but present in ESPN data
-                    pass # No points for this range
+                elif 18 <= pa <= 21:
+                    pass
                 elif 22 <= pa <= 27:
                     points += SCORING_RULES.get('22_27_points_allowed', 0)
                 elif 28 <= pa <= 34:
@@ -352,8 +561,8 @@ def calculate_fantasy_points(df):
                     points += SCORING_RULES.get('200_299_total_yards_allowed', 0)
                 elif 300 <= tya <= 349:
                     points += SCORING_RULES.get('300_349_total_yards_allowed', 0)
-                elif 350 <= tya <= 399: # This range is not in config.yaml, but present in ESPN data
-                    pass # No points for this range
+                elif 350 <= tya <= 399:
+                    pass
                 elif 400 <= tya <= 449:
                     points += SCORING_RULES.get('400_449_total_yards_allowed', 0)
                 elif 450 <= tya <= 499:
@@ -368,62 +577,88 @@ def calculate_fantasy_points(df):
     return df
 
 
-def get_advanced_draft_recommendations(df):
+def get_advanced_draft_recommendations(df: pd.DataFrame) -> pd.DataFrame:
     """
     Generates advanced draft recommendations based on VOR and consistency.
     Assumes 'fantasy_points' and 'position' columns exist.
+    
+    Args:
+        df: DataFrame with player statistics and fantasy points.
+        
+    Returns:
+        DataFrame with VOR and consistency metrics.
+        
+    Raises:
+        DataValidationError: If required columns are missing or data is invalid.
     """
-    # This function needs player name normalization if it's going to be used for team analysis
-    # However, for general draft recommendations, it's fine.
+    if df.empty:
+        logger.warning("Input DataFrame for get_advanced_draft_recommendations is empty.")
+        return pd.DataFrame()
+
+    required_cols = ['fantasy_points', 'position', 'player_name', 'week']
+    missing_cols = [col for col in required_cols if col not in df.columns]
+    if missing_cols:
+        raise DataValidationError(
+            f"Missing required columns for draft recommendations: {missing_cols}",
+            field_name="player_stats_columns",
+            expected_type=f"columns: {required_cols}",
+            actual_value=f"missing: {missing_cols}"
+        )
+
     recommendations = []
+    num_teams = CONFIG.get('league_settings', {}).get('number_of_teams', 12)
+    roster_settings = CONFIG.get('roster_settings', {})
+
     for position in df['position'].unique():
         pos_df = df[df['position'] == position].copy()
-        if not pos_df.empty:
-            # Calculate VOR (Value Over Replacement)
-            # Simple VOR: difference from the average of the top N players (replacement level)
-            # N can be adjusted based on league size and roster settings
-            # For now, let's assume top 12 for QB, TE, K, D/ST, top 24 for RB/WR
-            num_teams = CONFIG.get('league_settings', {}).get('number_of_teams', 12)
-            roster_settings = CONFIG.get('roster_settings', {})
+        if pos_df.empty:
+            continue
 
-            if position == 'QB':
-                replacement_level_count = num_teams * roster_settings.get('QB', 1)
-            elif position == 'RB':
-                replacement_level_count = num_teams * roster_settings.get('RB', 2)
-            elif position == 'WR':
-                replacement_level_count = num_teams * roster_settings.get('WR', 2)
-            elif position == 'TE':
-                replacement_level_count = num_teams * roster_settings.get('TE', 1)
-            elif position == 'K':
-                replacement_level_count = num_teams * roster_settings.get('K', 1)
-            elif position == 'DST':
-                replacement_level_count = num_teams * roster_settings.get('D_ST', 1)
-            else:
-                replacement_level_count = num_teams # Default for other positions
+        replacement_level_count = 0
+        if position == 'QB':
+            replacement_level_count = num_teams * roster_settings.get('QB', 1)
+        elif position == 'RB':
+            replacement_level_count = num_teams * roster_settings.get('RB', 2)
+        elif position == 'WR':
+            replacement_level_count = num_teams * roster_settings.get('WR', 2)
+        elif position == 'TE':
+            replacement_level_count = num_teams * roster_settings.get('TE', 1)
+        elif position == 'K':
+            replacement_level_count = num_teams * roster_settings.get('K', 1)
+        elif position == 'DST':
+            replacement_level_count = num_teams * roster_settings.get('D_ST', 1)
+        else:
+            replacement_level_count = num_teams
 
-            replacement_level_players = pos_df.nlargest(replacement_level_count, 'fantasy_points')
-
-            if not replacement_level_players.empty:
-                replacement_level_avg = replacement_level_players['fantasy_points'].mean()
-                pos_df['vor'] = pos_df['fantasy_points'] - replacement_level_avg
-            else:
-                pos_df['vor'] = 0 # No replacement level to compare against
-
-            # Calculate consistency (standard deviation of weekly points)
-            # Group by player and calculate standard deviation of fantasy_points
-            player_weekly_points = pos_df.groupby(['player_name', 'week'])['fantasy_points'].sum().reset_index()
-            consistency_df = player_weekly_points.groupby('player_name')['fantasy_points'].std().reset_index()
-            consistency_df.rename(columns={'fantasy_points': 'consistency_std_dev'}, inplace=True)
-            pos_df = pd.merge(pos_df, consistency_df, on='player_name', how='left')
-            pos_df['consistency_std_dev'] = pos_df['consistency_std_dev'].fillna(0)  # Fill NaN for players with only one week of data
-
+        if replacement_level_count == 0:
+            logger.warning(f"Replacement level count is 0 for position {position}, skipping VOR calculation.")
+            pos_df['vor'] = 0.0
+            pos_df['consistency_std_dev'] = 0.0
             recommendations.append(pos_df)
+            continue
+
+        replacement_level_players = pos_df.nlargest(replacement_level_count, 'fantasy_points')
+
+        if not replacement_level_players.empty:
+            replacement_level_avg = replacement_level_players['fantasy_points'].mean()
+            pos_df['vor'] = pos_df['fantasy_points'] - replacement_level_avg
+        else:
+            pos_df['vor'] = 0.0
+
+        player_weekly_points = pos_df.groupby(['player_name', 'week'])['fantasy_points'].sum().reset_index()
+        consistency_df = player_weekly_points.groupby('player_name')['fantasy_points'].std().reset_index()
+        consistency_df.rename(columns={'fantasy_points': 'consistency_std_dev'}, inplace=True)
+        pos_df = pd.merge(pos_df, consistency_df, on='player_name', how='left')
+        pos_df['consistency_std_dev'] = pos_df['consistency_std_dev'].fillna(0.0)
+
+        recommendations.append(pos_df)
 
     if recommendations:
         return pd.concat(recommendations).sort_values(by='vor', ascending=False)
     return pd.DataFrame()
 
-def analyze_team_needs(team_roster_df, all_players_df):
+
+def analyze_team_needs(team_roster_df: pd.DataFrame, all_players_df: pd.DataFrame) -> tuple[str, pd.DataFrame]:
     """
     Analyzes the team's roster to identify positional needs by comparing VOR to the league average.
 
@@ -432,18 +667,48 @@ def analyze_team_needs(team_roster_df, all_players_df):
         all_players_df (pd.DataFrame): DataFrame with all players and their stats (including VOR).
 
     Returns:
-        str: A markdown-formatted string with the team analysis.
+        tuple[str, pd.DataFrame]: A markdown-formatted string with the team analysis and a DataFrame
+                                   with positional breakdown.
+                                   
+    Raises:
+        DataValidationError: If input DataFrames are missing required columns or data is invalid.
     """
     if team_roster_df.empty:
-        # Return an empty DataFrame for positional_breakdown_df if team_roster_df is empty
+        logger.warning("Input team_roster_df for analyze_team_needs is empty.")
         return ("""### Team Analysis
 
 Could not analyze your team because no players from your roster were found in the stats data.
 """, pd.DataFrame())
 
+    required_cols_team = ['player_name', 'position', 'vor']
+    missing_cols_team = [col for col in required_cols_team if col not in team_roster_df.columns]
+    if missing_cols_team:
+        raise DataValidationError(
+            f"Missing required columns in team_roster_df for team needs analysis: {missing_cols_team}",
+            field_name="team_roster_df_columns",
+            expected_type=f"columns: {required_cols_team}",
+            actual_value=f"missing: {missing_cols_team}"
+        )
+
+    required_cols_all = ['position', 'vor']
+    missing_cols_all = [col for col in required_cols_all if col not in all_players_df.columns]
+    if missing_cols_all:
+        raise DataValidationError(
+            f"Missing required columns in all_players_df for team needs analysis: {missing_cols_all}",
+            field_name="all_players_df_columns",
+            expected_type=f"columns: {required_cols_all}",
+            actual_value=f"missing: {missing_cols_all}"
+        )
+
     # Calculate the average VOR for each position in the league for top-tier players
-    # Consider players with VOR > 0 to represent above-replacement level players
     league_players = all_players_df[all_players_df['vor'] > 0]
+    if league_players.empty:
+        logger.warning("No top-tier players found in all_players_df for league average VOR calculation.")
+        return ("""### Team Analysis
+
+Could not analyze league average VOR due to insufficient data.
+""", pd.DataFrame())
+
     league_avg_vor = league_players.groupby('position')['vor'].mean().reset_index()
     league_avg_vor.rename(columns={'vor': 'league_avg_vor'}, inplace=True)
 
@@ -485,37 +750,95 @@ This analysis compares your team's Value Over Replacement (VOR) at each position
 
     return analysis_str, display_df
 
-def check_bye_week_conflicts(df):
+
+def check_bye_week_conflicts(df: pd.DataFrame) -> pd.DataFrame:
     """
     Checks for bye week conflicts among highly-ranked players.
     Assumes 'bye_week' and 'fantasy_points' columns exist.
+    
+    Args:
+        df: DataFrame with player statistics including 'bye_week' and 'fantasy_points'.
+        
+    Returns:
+        DataFrame with bye week conflicts.
+        
+    Raises:
+        DataValidationError: If required columns are missing.
     """
-    # Consider top N players for conflict checking
-    top_players = df.nlargest(50, 'fantasy_points')  # Adjust N as needed
+    if df.empty:
+        logger.warning("Input DataFrame for check_bye_week_conflicts is empty.")
+        return pd.DataFrame()
+
+    required_cols = ['bye_week', 'fantasy_points', 'player_name']
+    missing_cols = [col for col in required_cols if col not in df.columns]
+    if missing_cols:
+        raise DataValidationError(
+            f"Missing required columns for bye week conflict check: {missing_cols}",
+            field_name="player_stats_columns",
+            expected_type=f"columns: {required_cols}",
+            actual_value=f"missing: {missing_cols}"
+        )
+
+    top_players = df.nlargest(50, 'fantasy_points')
+
+    if top_players.empty:
+        logger.warning("No top players found for bye week conflict check.")
+        return pd.DataFrame()
 
     bye_conflicts = top_players.groupby('bye_week').agg(player_count=('player_name', 'count')).reset_index()
-    # Filter for weeks with more than a certain number of top players on bye
-    # Threshold can be adjusted based on roster size and league settings
     conflict_threshold = CONFIG.get('analysis_settings', {}).get('bye_week_conflict_threshold', 3)
     conflicts_df = bye_conflicts[bye_conflicts['player_count'] >= conflict_threshold]
 
     return conflicts_df
 
-def get_trade_recommendations(df, team_roster):
+
+def get_trade_recommendations(df: pd.DataFrame, team_roster: list) -> pd.DataFrame:
     """
     Suggests potential trade targets based on player value and consistency.
     Filters out players already on the team roster.
+    
+    Args:
+        df: DataFrame with player statistics and VOR/consistency metrics.
+        team_roster: List of player names on the user's team.
+        
+    Returns:
+        DataFrame with trade recommendations.
+        
+    Raises:
+        DataValidationError: If input DataFrame is missing required columns.
     """
-    # Filter out players already on my team
+    if df.empty:
+        logger.warning("Input DataFrame for get_trade_recommendations is empty.")
+        return pd.DataFrame()
+
+    required_cols = ['player_name', 'vor', 'consistency_std_dev']
+    missing_cols = [col for col in required_cols if col not in df.columns]
+    if missing_cols:
+        raise DataValidationError(
+            f"Missing required columns for trade recommendations: {missing_cols}",
+            field_name="player_stats_columns",
+            expected_type=f"columns: {required_cols}",
+            actual_value=f"missing: {missing_cols}"
+        )
+
     available_players = df[~df['player_name'].isin(team_roster)].copy()
 
-    # Sort by fantasy points or VOR (if calculated) and consistency
-    # Prioritize high fantasy points/VOR and good consistency (low std dev)
-    if 'vor' in available_players.columns:
+    if available_players.empty:
+        logger.warning("No available players for trade recommendations after filtering team roster.")
+        return pd.DataFrame()
+
+    if 'vor' in available_players.columns and 'consistency_std_dev' in available_players.columns:
         trade_targets = available_players.sort_values(by=['vor', 'consistency_std_dev'], ascending=[False, True])
     else:
-        trade_targets = available_players.sort_values(by=['fantasy_points', 'consistency_std_dev'], ascending=[False, True])
+        logger.warning("VOR or consistency_std_dev not available for sorting trade targets, falling back to fantasy_points.")
+        if 'fantasy_points' not in available_players.columns:
+            raise DataValidationError(
+                "Neither VOR, consistency_std_dev, nor fantasy_points available for sorting trade targets.",
+                field_name="player_stats_columns",
+                expected_type="at least one of VOR, consistency_std_dev, fantasy_points",
+                actual_value="none available"
+            )
+        trade_targets = available_players.sort_values(by=['fantasy_points'], ascending=[False])
 
-    # Return top N trade targets
     num_trade_targets = CONFIG.get('analysis_settings', {}).get('num_trade_targets', 10)
     return trade_targets.head(num_trade_targets)
