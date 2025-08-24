@@ -48,8 +48,24 @@ class FantasyFootballError(Exception):
         return msg
 
 
-class ConfigurationError(FantasyFootballError):
-    """Raised when there are configuration-related errors."""
+class ConfigurationError(FantasyFootballAIAgentError):
+    """Exception raised for errors in configuration settings."""
+    pass
+
+
+class DataProcessingError(FantasyFootballAIAgentError):
+    """Exception raised for errors during data processing."""
+    pass
+
+
+class NetworkError(FantasyFootballAIAgentError):
+    """Exception raised for network-related errors."""
+    pass
+
+
+class FileOperationError(FantasyFootballAIAgentError):
+    """Exception raised for errors during file operations."""
+    pass
     
     def __init__(
         self,

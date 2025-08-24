@@ -14,6 +14,10 @@
 import markdown
 import webbrowser
 import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+from fantasy_ai.errors import FileOperationError
 
 def render_markdown_to_html(markdown_file, output_html_file):
     """
@@ -22,8 +26,10 @@ def render_markdown_to_html(markdown_file, output_html_file):
     try:
         with open(markdown_file, 'r', encoding='utf-8') as f:
             markdown_content = f.read()
+    except IOError as e:
+        raise FileOperationError(f"Could not read Markdown file '{markdown_file}': {e}") from e
 
-        html_content = f"""<!DOCTYPE html>
+    html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -44,26 +50,35 @@ def render_markdown_to_html(markdown_file, output_html_file):
 </body>
 </html>"""
 
+    try:
         with open(output_html_file, 'w', encoding='utf-8') as f:
             f.write(html_content)
+    except IOError as e:
+        raise FileOperationError(f"Could not write HTML file '{output_html_file}': {e}") from e
 
-        print(f"Successfully rendered '{markdown_file}' to '{output_html_file}'")
-        return True
-    except Exception as e:
-        print(f"Error rendering Markdown to HTML: {e}")
-        return False
+    print(f"Successfully rendered '{markdown_file}' to '{output_html_file}'")
+    return True
 
-if __name__ == "__main__":
+def main():
     report_markdown_file = "reports/report.md"
     report_html_file = "reports/report.html"
 
     # Ensure the reports directory exists
     output_dir = os.path.dirname(report_html_file)
     if output_dir and not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+        try:
+            os.makedirs(output_dir)
+        except OSError as e:
+            raise FileOperationError(f"Could not create directory '{output_dir}': {e}") from e
 
     if os.path.exists(report_markdown_file):
-        if render_markdown_to_html(report_markdown_file, report_html_file):
-            webbrowser.open_new_tab(os.path.abspath(report_html_file))
+        try:
+            if render_markdown_to_html(report_markdown_file, report_html_file):
+                webbrowser.open_new_tab(os.path.abspath(report_html_file))
+        except FileOperationError as e:
+            print(f"Error during report rendering: {e}")
     else:
         print(f"Error: Markdown report file not found at '{report_markdown_file}'. Please run 'task report' first.")
+
+if __name__ == "__main__":
+    main()
