@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from fantasy_ai.errors import (
     APIError, AuthenticationError, ConfigurationError, 
-    FileIOError, DataValidationError, wrap_exception
+    FileOperationError, DataValidationError, wrap_exception
 )
 from fantasy_ai.utils.retry import retry
 from fantasy_ai.utils.logging import setup_logging, get_logger
@@ -98,7 +98,7 @@ def load_config():
         
     Raises:
         ConfigurationError: If config file cannot be read or parsed
-        FileIOError: If file cannot be accessed
+        FileOperationError: If file cannot be accessed
     """
     try:
         logger.debug(f"Loading configuration from {CONFIG_FILE}")
@@ -127,7 +127,7 @@ def load_config():
             original_error=e
         )
     except PermissionError as e:
-        raise FileIOError(
+        raise FileOperationError(
             f"Permission denied reading configuration file: {CONFIG_FILE}",
             file_path=CONFIG_FILE,
             operation="read",
@@ -149,7 +149,7 @@ def save_config(config):
         config: Configuration dictionary to save
         
     Raises:
-        FileIOError: If file cannot be written
+        FileOperationError: If file cannot be written
         DataValidationError: If config data is invalid
     """
     if not isinstance(config, dict):
@@ -168,7 +168,7 @@ def save_config(config):
         logger.info(f"Configuration saved successfully to {CONFIG_FILE}")
         
     except PermissionError as e:
-        raise FileIOError(
+        raise FileOperationError(
             f"Permission denied writing to configuration file: {CONFIG_FILE}",
             file_path=CONFIG_FILE,
             operation="write",
@@ -176,7 +176,7 @@ def save_config(config):
         )
     except Exception as e:
         raise wrap_exception(
-            e, FileIOError,
+            e, FileOperationError,
             f"Failed to save configuration to {CONFIG_FILE}",
             file_path=CONFIG_FILE,
             operation="write"
@@ -443,7 +443,7 @@ def identify_my_team():
         print("- Check your internet connection")
         print("- Verify the league exists for the specified year")
         return 1
-    except (FileIOError, DataValidationError) as e:
+    except (FileOperationError, DataValidationError) as e:
         logger.error(f"Data/File error: {e.get_detailed_message()}")
         print(f"\n❌ Error: {e}")
         return 1
