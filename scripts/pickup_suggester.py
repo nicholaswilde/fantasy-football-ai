@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from fantasy_ai.errors import (
     APIError, AuthenticationError, ConfigurationError, 
-    FileIOError, DataValidationError, wrap_exception
+    FileOperationError, DataValidationError, wrap_exception
 )
 from fantasy_ai.utils.logging import setup_logging, get_logger
 
@@ -87,7 +87,7 @@ def load_available_players(file_path: str) -> pd.DataFrame:
         DataFrame with available players data
         
     Raises:
-        FileIOError: If file cannot be read
+        FileOperationError: If file cannot be read
         DataValidationError: If data format is invalid
     """
     try:
@@ -127,7 +127,7 @@ def load_available_players(file_path: str) -> pd.DataFrame:
             original_error=e
         )
     except PermissionError as e:
-        raise FileIOError(
+        raise FileOperationError(
             f"Permission denied reading available players file: {file_path}",
             file_path=file_path,
             operation="read",
@@ -135,7 +135,7 @@ def load_available_players(file_path: str) -> pd.DataFrame:
         )
     except Exception as e:
         raise wrap_exception(
-            e, FileIOError,
+            e, FileOperationError,
             f"Failed to load available players from {file_path}",
             file_path=file_path,
             operation="read"
@@ -153,14 +153,14 @@ def load_player_stats(file_path: str) -> pd.DataFrame:
         DataFrame with player stats data
         
     Raises:
-        FileIOError: If file cannot be read
+        FileOperationError: If file cannot be read
         DataValidationError: If data format is invalid
     """
     try:
         logger.debug(f"Loading player stats from {file_path}")
         
         if not os.path.exists(file_path):
-            raise FileIOError(
+            raise FileOperationError(
                 f"Player stats file not found: {file_path}. Please run 'task download_stats' first.",
                 file_path=file_path,
                 operation="read"
@@ -190,7 +190,7 @@ def load_player_stats(file_path: str) -> pd.DataFrame:
         logger.info(f"Successfully loaded {len(df)} player stat records")
         return df
         
-    except (DataValidationError, FileIOError):
+    except (DataValidationError, FileOperationError):
         raise  # Re-raise our custom exceptions
     except pd.errors.EmptyDataError as e:
         raise DataValidationError(
@@ -209,7 +209,7 @@ def load_player_stats(file_path: str) -> pd.DataFrame:
             original_error=e
         )
     except PermissionError as e:
-        raise FileIOError(
+        raise FileOperationError(
             f"Permission denied reading player stats file: {file_path}",
             file_path=file_path,
             operation="read",
@@ -217,7 +217,7 @@ def load_player_stats(file_path: str) -> pd.DataFrame:
         )
     except Exception as e:
         raise wrap_exception(
-            e, FileIOError,
+            e, FileOperationError,
             f"Failed to load player stats from {file_path}",
             file_path=file_path,
             operation="read"
@@ -235,7 +235,7 @@ def load_my_team(file_path: str) -> dict:
         Dictionary with team roster by position
         
     Raises:
-        FileIOError: If file cannot be read
+        FileOperationError: If file cannot be read
         DataValidationError: If file format is invalid
     """
     my_team = {
@@ -284,7 +284,7 @@ def load_my_team(file_path: str) -> dict:
             original_error=e
         )
     except PermissionError as e:
-        raise FileIOError(
+        raise FileOperationError(
             f"Permission denied reading my team file: {file_path}",
             file_path=file_path,
             operation="read",
@@ -292,7 +292,7 @@ def load_my_team(file_path: str) -> dict:
         )
     except Exception as e:
         raise wrap_exception(
-            e, FileIOError,
+            e, FileOperationError,
             f"Failed to load my team from {file_path}",
             file_path=file_path,
             operation="read"
@@ -372,7 +372,8 @@ def identify_team_needs(my_team_roster, config=None):
     return needs
 
 def recommend_pickups(available_players_df, player_value_df, my_team_roster):
-    """Generates pickup recommendations."""
+    """
+    Generates pickup recommendations."""
     if available_players_df.empty or player_value_df.empty:
         return pd.DataFrame()
 
@@ -646,7 +647,7 @@ def suggest_pickups() -> int:
         print("- Run 'task init' to create configuration file")
         print("- Check config.yaml for valid settings")
         return 1
-    except (FileIOError, DataValidationError) as e:
+    except (FileOperationError, DataValidationError) as e:
         logger.error(f"Data error: {e.get_detailed_message()}")
         print(f"\n❌ Error: {e}")
         print("\nTroubleshooting:")
@@ -671,4 +672,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

@@ -66,6 +66,16 @@ class NetworkError(FantasyFootballAIAgentError):
 class FileOperationError(FantasyFootballAIAgentError):
     """Exception raised for errors during file operations."""
     pass
+
+
+class APIError(FantasyFootballAIAgentError):
+    """Exception raised for errors during API calls."""
+    pass
+
+
+class AuthenticationError(FantasyFootballAIAgentError):
+    """Exception raised for authentication-related errors."""
+    pass
     
     def __init__(
         self,
