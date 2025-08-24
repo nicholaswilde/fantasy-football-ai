@@ -33,6 +33,7 @@ from fantasy_ai.errors import (
     wrap_exception
 )
 from fantasy_ai.utils.logging import setup_logging, get_logger
+from fantasy_ai.utils.retry import retry
 
 # Set up logging
 setup_logging(level='INFO', format_type='console', log_file='logs/analysis.log')
@@ -159,6 +160,11 @@ def configure_llm_api():
         )
 
 
+@retry(
+    max_attempts=3,
+    base_delay=1.0,
+    backoff_factor=2.0
+)
 def ask_llm(question: str) -> str:
     """
     Sends a question to the configured LLM and returns the response with error handling.
@@ -335,56 +341,26 @@ def analyze_fantasy_situation(user_query: str) -> str:
 
     try:
         player_adp_df = pd.read_csv(os.path.join(data_dir, 'player_adp.csv'), low_memory=False)
-    except FileNotFoundError:
-        logger.warning("player_adp.csv not found, proceeding without ADP data.")
-        player_adp_df = pd.DataFrame()
-    except pd.errors.EmptyDataError:
-        logger.warning("player_adp.csv is empty, proceeding without ADP data.")
-        player_adp_df = pd.DataFrame()
-    except pd.errors.ParserError as e:
-        logger.warning(f"Cannot parse player_adp.csv: {e}, proceeding without ADP data.")
-        player_adp_df = pd.DataFrame()
-    except Exception as e:
-        logger.warning(f"Failed to read player_adp.csv: {e}, proceeding without ADP data.")
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError) as e:
+        logger.warning(f"Could not load player_adp.csv: {e}, proceeding without ADP data.")
         player_adp_df = pd.DataFrame()
 
     try:
         player_projections_df = pd.read_csv(os.path.join(data_dir, 'player_projections.csv'), low_memory=False)
-    except FileNotFoundError:
-        logger.warning("player_projections.csv not found, proceeding without projections data.")
-        player_projections_df = pd.DataFrame()
-    except pd.errors.EmptyDataError:
-        logger.warning("player_projections.csv is empty, proceeding without projections data.")
-        player_projections_df = pd.DataFrame()
-    except pd.errors.ParserError as e:
-        logger.warning(f"Cannot parse player_projections.csv: {e}, proceeding without projections data.")
-        player_projections_df = pd.DataFrame()
-    except Exception as e:
-        logger.warning(f"Failed to read player_projections.csv: {e}, proceeding without projections data.")
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError) as e:
+        logger.warning(f"Could not load player_projections.csv: {e}, proceeding without projections data.")
         player_projections_df = pd.DataFrame()
 
     try:
         available_players_df = pd.read_csv(os.path.join(data_dir, 'available_players.csv'), low_memory=False)
-    except FileNotFoundError:
-        logger.warning("available_players.csv not found, proceeding without available players data.")
-        available_players_df = pd.DataFrame()
-    except pd.errors.EmptyDataError:
-        logger.warning("available_players.csv is empty, proceeding without available players data.")
-        available_players_df = pd.DataFrame()
-    except pd.errors.ParserError as e:
-        logger.warning(f"Cannot parse available_players.csv: {e}, proceeding without available players data.")
-        available_players_df = pd.DataFrame()
-    except Exception as e:
-        logger.warning(f"Failed to read available_players.csv: {e}, proceeding without available players data.")
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError) as e:
+        logger.warning(f"Could not load available_players.csv: {e}, proceeding without available players data.")
         available_players_df = pd.DataFrame()
 
     try:
         my_team_roster = get_team_roster()
     except (FileOperationError, DataValidationError) as e:
         logger.warning(f"Failed to load my team roster: {e}, proceeding with empty roster.")
-        my_team_roster = []
-    except Exception as e:
-        logger.warning(f"Unexpected error loading my team roster: {e}, proceeding with empty roster.")
         my_team_roster = []
 
     # 2. Process and format the data for the prompt
@@ -633,66 +609,73 @@ def get_advanced_draft_recommendations(df: pd.DataFrame) -> pd.DataFrame:
         )
 
     recommendations = []
-    num_teams = _CONFIG.get('league_settings', {}).get('number_of_teams', 12)
-    roster_settings = _CONFIG.get('roster_settings', {})
+    try:
+        num_teams = _CONFIG.get('league_settings', {}).get('number_of_teams', 12)
+        roster_settings = _CONFIG.get('roster_settings', {})
 
-    for position in df['position'].unique():
-        pos_df = df[df['position'] == position].copy()
-        if pos_df.empty:
-            continue
+        for position in df['position'].unique():
+            pos_df = df[df['position'] == position].copy()
+            if pos_df.empty:
+                continue
 
-        # Calculate total fantasy points for each player in this position
-        player_total_points = pos_df.groupby('player_name')['fantasy_points'].sum().reset_index()
-        player_total_points.rename(columns={'fantasy_points': 'total_fantasy_points'}, inplace=True)
+            # Calculate total fantasy points for each player in this position
+            player_total_points = pos_df.groupby('player_name')['fantasy_points'].sum().reset_index()
+            player_total_points.rename(columns={'fantasy_points': 'total_fantasy_points'}, inplace=True)
 
-        replacement_level_count = 0
-        if position == 'QB':
-            replacement_level_count = num_teams * roster_settings.get('QB', 1)
-        elif position == 'RB':
-            replacement_level_count = num_teams * roster_settings.get('RB', 2)
-        elif position == 'WR':
-            replacement_level_count = num_teams * roster_settings.get('WR', 2)
-        elif position == 'TE':
-            replacement_level_count = num_teams * roster_settings.get('TE', 1)
-        elif position == 'K':
-            replacement_level_count = num_teams * roster_settings.get('K', 1)
-        elif position == 'DST':
-            replacement_level_count = num_teams * roster_settings.get('D_ST', 1)
-        else:
-            replacement_level_count = num_teams
+            replacement_level_count = 0
+            if position == 'QB':
+                replacement_level_count = num_teams * roster_settings.get('QB', 1)
+            elif position == 'RB':
+                replacement_level_count = num_teams * roster_settings.get('RB', 2)
+            elif position == 'WR':
+                replacement_level_count = num_teams * roster_settings.get('WR', 2)
+            elif position == 'TE':
+                replacement_level_count = num_teams * roster_settings.get('TE', 1)
+            elif position == 'K':
+                replacement_level_count = num_teams * roster_settings.get('K', 1)
+            elif position == 'DST':
+                replacement_level_count = num_teams * roster_settings.get('D_ST', 1)
+            else:
+                replacement_level_count = num_teams
 
-        if replacement_level_count == 0:
-            logger.warning(f"Replacement level count is 0 for position {position}, skipping VOR calculation.")
-            # Create a basic DataFrame for this position with default VOR and consistency
-            temp_rec_df = pos_df[['player_name', 'position']].drop_duplicates().copy()
-            temp_rec_df['vor'] = 0.0
-            temp_rec_df['consistency_std_dev'] = 0.0
-            recommendations.append(temp_rec_df)
-            continue
+            if replacement_level_count == 0:
+                logger.warning(f"Replacement level count is 0 for position {position}, skipping VOR calculation.")
+                # Create a basic DataFrame for this position with default VOR and consistency
+                temp_rec_df = pos_df[['player_name', 'position']].drop_duplicates().copy()
+                temp_rec_df['vor'] = 0.0
+                temp_rec_df['consistency_std_dev'] = 0.0
+                recommendations.append(temp_rec_df)
+                continue
 
-        # Select replacement level players based on total fantasy points
-        replacement_level_players = player_total_points.nlargest(replacement_level_count, 'total_fantasy_points')
+            # Select replacement level players based on total fantasy points
+            replacement_level_players = player_total_points.nlargest(replacement_level_count, 'total_fantasy_points')
 
-        if not replacement_level_players.empty:
-            replacement_level_avg = replacement_level_players['total_fantasy_points'].mean()
-            # Calculate VOR for each player based on their total fantasy points
-            player_total_points['vor'] = player_total_points['total_fantasy_points'] - replacement_level_avg
-        else:
-            player_total_points['vor'] = 0.0
+            if not replacement_level_players.empty:
+                replacement_level_avg = replacement_level_players['total_fantasy_points'].mean()
+                # Calculate VOR for each player based on their total fantasy points
+                player_total_points['vor'] = player_total_points['total_fantasy_points'] - replacement_level_avg
+            else:
+                player_total_points['vor'] = 0.0
 
-        # Calculate consistency (std dev of weekly points) using the original pos_df
-        player_weekly_points = pos_df.groupby(['player_name', 'week'])['fantasy_points'].sum().reset_index()
-        consistency_df = player_weekly_points.groupby('player_name')['fantasy_points'].std().reset_index()
-        consistency_df.rename(columns={'fantasy_points': 'consistency_std_dev'}, inplace=True)
-        consistency_df['consistency_std_dev'] = consistency_df['consistency_std_dev'].fillna(0.0)
+            # Calculate consistency (std dev of weekly points) using the original pos_df
+            player_weekly_points = pos_df.groupby(['player_name', 'week'])['fantasy_points'].sum().reset_index()
+            consistency_df = player_weekly_points.groupby('player_name')['fantasy_points'].std().reset_index()
+            consistency_df.rename(columns={'fantasy_points': 'consistency_std_dev'}, inplace=True)
+            consistency_df['consistency_std_dev'] = consistency_df['consistency_std_dev'].fillna(0.0)
 
-        # Merge VOR and consistency into a single DataFrame for recommendations
-        # Start with player_name and position from pos_df (unique players)
-        rec_df = pos_df[['player_name', 'position']].drop_duplicates().copy()
-        rec_df = pd.merge(rec_df, player_total_points[['player_name', 'vor']], on='player_name', how='left')
-        rec_df = pd.merge(rec_df, consistency_df, on='player_name', how='left')
+            # Merge VOR and consistency into a single DataFrame for recommendations
+            # Start with player_name and position from pos_df (unique players)
+            rec_df = pos_df[['player_name', 'position']].drop_duplicates().copy()
+            rec_df = pd.merge(rec_df, player_total_points[['player_name', 'vor']], on='player_name', how='left')
+            rec_df = pd.merge(rec_df, consistency_df, on='player_name', how='left')
 
-        recommendations.append(rec_df)
+            recommendations.append(rec_df)
+
+    except KeyError as e:
+        raise DataValidationError(
+            f"Missing expected key in configuration or data: {e}",
+            original_error=e
+        )
 
     if recommendations:
         return pd.concat(recommendations).sort_values(by='vor', ascending=False)
@@ -737,51 +720,57 @@ def analyze_team_needs(team_roster_df: pd.DataFrame, all_players_df: pd.DataFram
             expected_type=f"columns: {required_cols_all}",
             actual_value=f"missing: {missing_cols_all}"
         )
+    try:
+        # Calculate the average VOR for each position in the league for top-tier players
+        league_players = all_players_df[all_players_df['vor'] > 0]
+        if league_players.empty:
+            logger.warning("No top-tier players found in all_players_df for league average VOR calculation.")
+            return ("### Team Analysis\n\nCould not analyze league average VOR due to insufficient data.\n", pd.DataFrame())
 
-    # Calculate the average VOR for each position in the league for top-tier players
-    league_players = all_players_df[all_players_df['vor'] > 0]
-    if league_players.empty:
-        logger.warning("No top-tier players found in all_players_df for league average VOR calculation.")
-        return ("### Team Analysis\n\nCould not analyze league average VOR due to insufficient data.\n", pd.DataFrame())
+        league_avg_vor = league_players.groupby('position')['vor'].mean().reset_index()
+        league_avg_vor.rename(columns={'vor': 'league_avg_vor'}, inplace=True)
 
-    league_avg_vor = league_players.groupby('position')['vor'].mean().reset_index()
-    league_avg_vor.rename(columns={'vor': 'league_avg_vor'}, inplace=True)
+        # Calculate the average VOR for the user's team by position
+        team_avg_vor = team_roster_df.groupby('position')['vor'].mean().reset_index()
+        team_avg_vor.rename(columns={'vor': 'my_team_avg_vor'}, inplace=True)
 
-    # Calculate the average VOR for the user's team by position
-    team_avg_vor = team_roster_df.groupby('position')['vor'].mean().reset_index()
-    team_avg_vor.rename(columns={'vor': 'my_team_avg_vor'}, inplace=True)
+        # Merge the two to compare
+        comparison_df = pd.merge(team_avg_vor, league_avg_vor, on='position', how='left').fillna(0)
+        comparison_df['vor_difference'] = comparison_df['my_team_avg_vor'] - comparison_df['league_avg_vor']
+        comparison_df = comparison_df.sort_values(by='vor_difference', ascending=True)
 
-    # Merge the two to compare
-    comparison_df = pd.merge(team_avg_vor, league_avg_vor, on='position', how='left').fillna(0)
-    comparison_df['vor_difference'] = comparison_df['my_team_avg_vor'] - comparison_df['league_avg_vor']
-    comparison_df = comparison_df.sort_values(by='vor_difference', ascending=True)
+        # Build the recommendation string
+        analysis_str = "### Team Strengths and Weaknesses\n\nThis analysis compares your team's Value Over Replacement (VOR) at each position against the league average for top-tier players. A positive difference means your players at that position are, on average, more valuable than the league's top players.\n\n"
 
-    # Build the recommendation string
-    analysis_str = "### Team Strengths and Weaknesses\n\nThis analysis compares your team's Value Over Replacement (VOR) at each position against the league average for top-tier players. A positive difference means your players at that position are, on average, more valuable than the league's top players.\n\n"
+        strongest_pos = comparison_df.nlargest(1, 'vor_difference')
+        if not strongest_pos.empty:
+            pos = strongest_pos.iloc[0]['position']
+            analysis_str += f"**💪 Strongest Position:** Your **{pos}** group is your team's biggest strength.\n\n"
 
-    strongest_pos = comparison_df.nlargest(1, 'vor_difference')
-    if not strongest_pos.empty:
-        pos = strongest_pos.iloc[0]['position']
-        analysis_str += f"**💪 Strongest Position:** Your **{pos}** group is your team's biggest strength.\n\n"
+        weakest_pos = comparison_df.nsmallest(1, 'vor_difference')
+        if not weakest_pos.empty:
+            pos = weakest_pos.iloc[0]['position']
+            analysis_str += f"**🤔 Area for Improvement:** Your **{pos}** group is the most immediate area to upgrade. Consider targeting players at this position.\n\n"
 
-    weakest_pos = comparison_df.nsmallest(1, 'vor_difference')
-    if not weakest_pos.empty:
-        pos = weakest_pos.iloc[0]['position']
-        analysis_str += f"**🤔 Area for Improvement:** Your **{pos}** group is the most immediate area to upgrade. Consider targeting players at this position.\n\n"
+        # Initialize display_df with expected columns
+        display_df = pd.DataFrame(columns=['Position', 'My Team Avg VOR', 'League Avg VOR', 'VOR Difference'])
 
-    # Initialize display_df with expected columns
-    display_df = pd.DataFrame(columns=['Position', 'My Team Avg VOR', 'League Avg VOR', 'VOR Difference'])
+        if not comparison_df.empty:
+            display_df = comparison_df[['position', 'my_team_avg_vor', 'league_avg_vor', 'vor_difference']].copy()
+            display_df.rename(columns={
+                'position': 'Position',
+                'my_team_avg_vor': 'My Team Avg VOR',
+                'league_avg_vor': 'League Avg VOR',
+                'vor_difference': 'VOR Difference'
+            }, inplace=True)
 
-    if not comparison_df.empty:
-        display_df = comparison_df[['position', 'my_team_avg_vor', 'league_avg_vor', 'vor_difference']].copy()
-        display_df.rename(columns={
-            'position': 'Position',
-            'my_team_avg_vor': 'My Team Avg VOR',
-            'league_avg_vor': 'League Avg VOR',
-            'vor_difference': 'VOR Difference'
-        }, inplace=True)
+        return analysis_str, display_df
+    except KeyError as e:
+        raise DataValidationError(
+            f"Missing expected key in DataFrame for team needs analysis: {e}",
+            original_error=e
+        )
 
-    return analysis_str, display_df
 
 
 def check_bye_week_conflicts(df: pd.DataFrame) -> pd.DataFrame:
@@ -811,18 +800,23 @@ def check_bye_week_conflicts(df: pd.DataFrame) -> pd.DataFrame:
             expected_type=f"columns: {required_cols}",
             actual_value=f"missing: {missing_cols}"
         )
+    try:
+        top_players = df.nlargest(50, 'fantasy_points')
 
-    top_players = df.nlargest(50, 'fantasy_points')
+        if top_players.empty:
+            logger.warning("No top players found for bye week conflict check.")
+            return pd.DataFrame()
 
-    if top_players.empty:
-        logger.warning("No top players found for bye week conflict check.")
-        return pd.DataFrame()
+        bye_conflicts = top_players.groupby('bye_week').agg(player_count=('player_name', 'count')).reset_index()
+        conflict_threshold = _CONFIG.get('analysis_settings', {}).get('bye_week_conflict_threshold', 3)
+        conflicts_df = bye_conflicts[bye_conflicts['player_count'] >= conflict_threshold]
 
-    bye_conflicts = top_players.groupby('bye_week').agg(player_count=('player_name', 'count')).reset_index()
-    conflict_threshold = _CONFIG.get('analysis_settings', {}).get('bye_week_conflict_threshold', 3)
-    conflicts_df = bye_conflicts[bye_conflicts['player_count'] >= conflict_threshold]
-
-    return conflicts_df
+        return conflicts_df
+    except KeyError as e:
+        raise DataValidationError(
+            f"Missing expected key in DataFrame for bye week conflict check: {e}",
+            original_error=e
+        )
 
 
 def get_trade_recommendations(df: pd.DataFrame, team_roster: list) -> pd.DataFrame:
@@ -853,32 +847,37 @@ def get_trade_recommendations(df: pd.DataFrame, team_roster: list) -> pd.DataFra
             expected_type=f"columns: {required_cols}",
             actual_value=f"missing: {missing_cols}"
         )
+    try:
+        available_players = df[~df['player_name'].isin(team_roster)].copy()
 
-    available_players = df[~df['player_name'].isin(team_roster)].copy()
+        if available_players.empty:
+            logger.warning("No available players for trade recommendations after filtering team roster.")
+            return pd.DataFrame()
 
-    if available_players.empty:
-        logger.warning("No available players for trade recommendations after filtering team roster.")
-        return pd.DataFrame()
+        if 'vor' in available_players.columns and 'consistency_std_dev' in available_players.columns:
+            trade_targets = available_players.sort_values(by=['vor', 'consistency_std_dev'], ascending=[False, True])
+        else:
+            logger.warning("VOR or consistency_std_dev not available for sorting trade targets, falling back to fantasy_points.")
+            if 'fantasy_points' not in available_players.columns:
+                raise DataValidationError(
+                    "Neither VOR, consistency_std_dev, nor fantasy_points available for sorting trade targets.",
+                    field_name="player_stats_columns",
+                    expected_type="at least one of VOR, consistency_std_dev, fantasy_points",
+                    actual_value="none available"
+                )
+            trade_targets = available_players.sort_values(by=['fantasy_points'], ascending=[False])
 
-    if 'vor' in available_players.columns and 'consistency_std_dev' in available_players.columns:
-        trade_targets = available_players.sort_values(by=['vor', 'consistency_std_dev'], ascending=[False, True])
-    else:
-        logger.warning("VOR or consistency_std_dev not available for sorting trade targets, falling back to fantasy_points.")
-        if 'fantasy_points' not in available_players.columns:
-            raise DataValidationError(
-                "Neither VOR, consistency_std_dev, nor fantasy_points available for sorting trade targets.",
-                field_name="player_stats_columns",
-                expected_type="at least one of VOR, consistency_std_dev, fantasy_points",
-                actual_value="none available"
-            )
-        trade_targets = available_players.sort_values(by=['fantasy_points'], ascending=[False])
+        num_trade_targets = _CONFIG.get('analysis_settings', {}).get('num_trade_targets', 10)
 
-    num_trade_targets = _CONFIG.get('analysis_settings', {}).get('num_trade_targets', 10)
+        # Ensure all necessary columns are present in the returned DataFrame
+        required_display_cols = ['player_name', 'position', 'recent_team', 'vor', 'consistency_std_dev', 'fantasy_points_ppr', 'bye_week']
+        for col in required_display_cols:
+            if col not in trade_targets.columns:
+                trade_targets[col] = None # Add missing columns with None or appropriate default
 
-    # Ensure all necessary columns are present in the returned DataFrame
-    required_display_cols = ['player_name', 'position', 'recent_team', 'vor', 'consistency_std_dev', 'fantasy_points_ppr', 'bye_week']
-    for col in required_display_cols:
-        if col not in trade_targets.columns:
-            trade_targets[col] = None # Add missing columns with None or appropriate default
-
-    return trade_targets[required_display_cols].head(num_trade_targets)
+        return trade_targets[required_display_cols].head(num_trade_targets)
+    except KeyError as e:
+        raise DataValidationError(
+            f"Missing expected key in DataFrame for trade recommendations: {e}",
+            original_error=e
+        )

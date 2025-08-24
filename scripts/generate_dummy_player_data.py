@@ -203,11 +203,6 @@ def main():
     except (ConfigurationError, FileOperationError) as e:
         logger.error(f"Dummy data generation error: {e.get_detailed_message()}")
         print(f"\n❌ Error generating dummy player data: {e}")
-        print("\nTroubleshooting:")
-        if isinstance(e, ConfigurationError):
-            print("- Check config.yaml for valid 'dummy_data_settings'.")
-        elif isinstance(e, FileOperationError):
-            print("- Check file permissions for the 'data/' directory.")
         return 1
     except Exception as e:
         logger.critical(f"An unhandled critical error occurred: {e}", exc_info=True)

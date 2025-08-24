@@ -240,139 +240,79 @@ def main():
     )
     args = parser.parse_args()
 
-    # Initialize analysis globals (config, scoring rules, etc.)
-    analysis.initialize_globals()
+    try:
+        # Initialize analysis globals (config, scoring rules, etc.)
+        analysis.initialize_globals()
 
-    # Ensure the data file exists before running
-    data_file = "data/player_stats.csv"
-    if not os.path.exists(data_file):
-        raise FileOperationError(
-            f"Data file not found at '{data_file}'. Please run 'download_stats.py' first.",
-            file_path=data_file,
-            operation="read"
-        )
+        # Ensure the data file exists before running
+        data_file = "data/player_stats.csv"
+        if not os.path.exists(data_file):
+            raise FileOperationError(
+                f"Data file not found at '{data_file}'. Please run 'download_stats.py' first.",
+                file_path=data_file,
+                operation="read"
+            )
 
-    # Create a dummy roster file if it doesn't exist
-    roster_file = "data/my_team.md"
-    if not os.path.exists(roster_file):
-        try:
+        # Create a dummy roster file if it doesn't exist
+        roster_file = "data/my_team.md"
+        if not os.path.exists(roster_file):
             with open(roster_file, "w") as f:
                 f.write("- Patrick Mahomes\n")
                 f.write("- Tyreek Hill\n")
                 f.write("- Saquon Barkley\n")
                 f.write("- Keenan Allen\n")
                 f.write("- Travis Kelce\n")
-        except IOError as e:
-            raise FileOperationError(
-                f"Could not create dummy roster file '{roster_file}': {e}",
-                file_path=roster_file,
-                operation="write"
-            ) from e
 
-    # Load and process data
-    try:
+        # Load and process data
         stats_df = pd.read_csv(data_file, low_memory=False)
-    except pd.errors.EmptyDataError as e:
-        raise DataValidationError(
-            f"Data file is empty or invalid: {data_file}",
-            field_name="player_stats_file",
-            expected_type="valid CSV with player data",
-            actual_value="empty file",
-            original_error=e
-        )
-    except pd.errors.ParserError as e:
-        raise DataValidationError(
-            f"Cannot parse data file: {data_file}",
-            field_name="player_stats_file",
-            expected_type="valid CSV format",
-            actual_value="malformed CSV",
-            original_error=e
-        )
-    except IOError as e:
-        raise FileOperationError(
-            f"Could not read data file '{data_file}': {e}",
-            file_path=data_file,
-            operation="read",
-            original_error=e
-        ) from e
-    except Exception as e:
-        raise wrap_exception(
-            e, FileOperationError,
-            f"An unexpected error occurred while reading data file {data_file}",
-            file_path=data_file,
-            operation="read"
+
+        stats_with_points = calculate_fantasy_points(stats_df)
+
+        # Add a placeholder bye_week column for demonstration purposes
+        if 'week' in stats_with_points.columns:
+            stats_with_points['bye_week'] = stats_with_points['week'].apply(lambda x: (x % 14) + 4)
+        else:
+            stats_with_points['bye_week'] = 0
+
+        # Get analysis data
+        draft_recs = get_advanced_draft_recommendations(stats_with_points)
+
+        # Merge recent_team into draft_recs
+        draft_recs = pd.merge(draft_recs, stats_with_points[['player_name', 'recent_team']].drop_duplicates(), on='player_name', how='left')
+
+        bye_conflicts = check_bye_week_conflicts(stats_with_points)
+
+        trade_data_combined = pd.merge(
+            draft_recs,
+            stats_with_points[['player_name', 'fantasy_points_ppr', 'bye_week']].drop_duplicates(subset=['player_name']),
+            on='player_name',
+            how='left'
         )
 
-    stats_with_points = calculate_fantasy_points(stats_df)
+        my_team_raw = get_team_roster(roster_file)
+        my_team_normalized = [normalize_player_name(name) for name in my_team_raw]
+        my_team_df = draft_recs[draft_recs['player_name'].isin(my_team_normalized)]
+        team_analysis_str, positional_breakdown_df = analyze_team_needs(my_team_df, draft_recs)
 
-    # Add a placeholder bye_week column for demonstration purposes
-    if 'week' in stats_with_points.columns:
-        stats_with_points['bye_week'] = stats_with_points['week'].apply(lambda x: (x % 14) + 4)
-    else:
-        stats_with_points['bye_week'] = 0
+        trade_recs = get_trade_recommendations(trade_data_combined, team_roster=my_team_normalized)
 
-    # Get analysis data
-    draft_recs = get_advanced_draft_recommendations(stats_with_points)
+        available_players_df = draft_recs[~draft_recs['player_name'].isin(my_team_normalized)]
+        pickup_suggestions = get_pickup_suggestions(available_players_df)
+        sell_high_suggestions, buy_low_suggestions = get_trade_suggestions(stats_with_points)
 
-    # Merge recent_team into draft_recs
-    # Ensure 'player_name' is the common column for merging
-    # Only select 'player_name' and 'recent_team' from stats_with_points to merge
-    draft_recs = pd.merge(draft_recs, stats_with_points[['player_name', 'recent_team']].drop_duplicates(), on='player_name', how='left')
+        last_game_analysis_str = analyze_last_game()
 
-    bye_conflicts = check_bye_week_conflicts(stats_with_points)
+        next_game_analysis_str = analyze_next_game()
 
-    # Combine draft_recs (which has VOR and consistency) with stats_with_points (which has fantasy_points_ppr and bye_week)
-    # Ensure we only keep one row per player for the trade recommendations
-    trade_data_combined = pd.merge(
-        draft_recs,
-        stats_with_points[['player_name', 'fantasy_points_ppr', 'bye_week']].drop_duplicates(subset=['player_name']),
-        on='player_name',
-        how='left'
-    )
-
-    # Get team roster and analysis
-    my_team_raw = get_team_roster(roster_file)
-    my_team_normalized = [normalize_player_name(name) for name in my_team_raw]
-    my_team_df = draft_recs[draft_recs['player_name'].isin(my_team_normalized)]
-    team_analysis_str, positional_breakdown_df = analyze_team_needs(my_team_df, draft_recs)
-
-    # Pass the combined DataFrame to get_trade_recommendations
-    trade_recs = get_trade_recommendations(trade_data_combined, team_roster=my_team_normalized)
-
-    # Get pickup and trade suggestions
-    available_players_df = draft_recs[~draft_recs['player_name'].isin(my_team_normalized)]
-    pickup_suggestions = get_pickup_suggestions(available_players_df)
-    sell_high_suggestions, buy_low_suggestions = get_trade_suggestions(stats_with_points)
-
-    # Run simulated draft
-    # simulated_roster, simulated_draft_order = draft_strategizer.main() # Removed as per user request
-
-    # Analyze last game
-    last_game_analysis_str = analyze_last_game()
-
-    # Analyze next game
-    next_game_analysis_str = analyze_next_game()
-
-    # Generate the report
-    generate_terminal_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, positional_breakdown_df, last_game_analysis_str, next_game_analysis_str, my_team_df)
-
-
-if __name__ == "__main__":
-    try:
-        main()
+        generate_terminal_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, positional_breakdown_df, last_game_analysis_str, next_game_analysis_str, my_team_df)
+        return 0
     except (FileOperationError, DataValidationError) as e:
         logger.error(f"Terminal report error: {e.get_detailed_message()}")
         print(f"\n❌ Error: {e}")
-        print("\nTroubleshooting:")
-        if "player_stats.csv" in str(e):
-            print("- Ensure 'data/player_stats.csv' exists and is accessible.")
-            print("- Run 'task download_stats' to get the latest data.")
-        elif "my_team.md" in str(e):
-            print("- Ensure 'data/my_team.md' exists and is accessible.")
-            print("- Run 'task get_my_team' to set up your team roster.")
-        sys.exit(1)
+        return 1
     except Exception as e:
         logger.critical(f"An unhandled critical error occurred: {e}", exc_info=True)
-        print(f"\n❌ An unexpected critical error occurred: {e}")
+        wrapped_e = wrap_exception(e, DataValidationError, "An unexpected error occurred during terminal report generation.")
+        print(f"\n❌ An unexpected critical error occurred: {wrapped_e}")
         print("Please check the log file for more details.")
-        sys.exit(1)
+        return 1

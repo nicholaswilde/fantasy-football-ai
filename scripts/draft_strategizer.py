@@ -109,68 +109,25 @@ def load_player_data(adp_path: str, projections_path: str) -> pd.DataFrame:
         DataValidationError: If files are malformed.
     """
     logger.info(f"Loading player data from {adp_path} and {projections_path}...")
-    adp_df = pd.DataFrame()
-    projections_df = pd.DataFrame()
-
     try:
         adp_df = pd.read_csv(adp_path, low_memory=False)
-        if adp_df.empty:
-            logger.warning(f"ADP file is empty: {adp_path}. Generating dummy ADP data.")
-            adp_df = pd.DataFrame({
-                'full_name': [f'Player {i}' for i in range(1, 101)],
-                'position': ['QB', 'RB', 'WR', 'TE'] * 25,
-                'adp': range(1, 101)
-            })
-    except FileNotFoundError:
-        logger.warning(f"ADP file not found: {adp_path}. Generating dummy ADP data.")
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError) as e:
+        logger.warning(f"Could not load {adp_path}: {e}. Generating dummy ADP data.")
         adp_df = pd.DataFrame({
             'full_name': [f'Player {i}' for i in range(1, 101)],
             'position': ['QB', 'RB', 'WR', 'TE'] * 25,
             'adp': range(1, 101)
         })
-    except pd.errors.ParserError as e:
-        raise DataValidationError(
-            f"Cannot parse ADP file: {adp_path}",
-            field_name="adp_file",
-            original_error=e
-        )
-    except Exception as e:
-        raise wrap_exception(
-            e, FileOperationError,
-            f"Failed to read ADP file {adp_path}",
-            file_path=adp_path,
-            operation="read"
-        )
 
     try:
         projections_df = pd.read_csv(projections_path, low_memory=False)
-        if projections_df.empty:
-            logger.warning(f"Projections file is empty: {projections_path}. Generating dummy projections data.")
-            projections_df = pd.DataFrame({
-                'full_name': [f'Player {i}' for i in range(1, 101)],
-                'position': ['QB', 'RB', 'WR', 'TE'] * 25,
-                'projected_points': [i * 2.5 for i in range(100, 0, -1)]
-            })
-    except FileNotFoundError:
-        logger.warning(f"Projections file not found: {projections_path}. Generating dummy projections data.")
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError) as e:
+        logger.warning(f"Could not load {projections_path}: {e}. Generating dummy projections data.")
         projections_df = pd.DataFrame({
             'full_name': [f'Player {i}' for i in range(1, 101)],
             'position': ['QB', 'RB', 'WR', 'TE'] * 25,
             'projected_points': [i * 2.5 for i in range(100, 0, -1)]
         })
-    except pd.errors.ParserError as e:
-        raise DataValidationError(
-            f"Cannot parse projections file: {projections_path}",
-            field_name="projections_file",
-            original_error=e
-        )
-    except Exception as e:
-        raise wrap_exception(
-            e, FileOperationError,
-            f"Failed to read projections file {projections_path}",
-            file_path=projections_path,
-            operation="read"
-        )
 
     # Merge dataframes
     player_data = pd.merge(adp_df, projections_df, on='full_name', how='outer')
@@ -373,14 +330,6 @@ def live_draft_assistant() -> int:
     except (FileOperationError, DataValidationError, ConfigurationError) as e:
         logger.error(f"Draft assistant setup error: {e.get_detailed_message()}")
         print(f"\n❌ Error setting up draft assistant: {e}")
-        print("\nTroubleshooting:")
-        if isinstance(e, FileOperationError):
-            print("- Ensure data files (player_adp.csv, player_projections.csv) exist and are accessible.")
-            print("- Run 'task download_adp' and 'task download_projections' to prepare data.")
-        elif isinstance(e, DataValidationError):
-            print("- Check the format and content of your data files.")
-        elif isinstance(e, ConfigurationError):
-            print("- Check config.yaml for valid settings.")
         return 1
     except Exception as e:
         logger.critical(f"An unhandled critical error occurred during draft assistant setup: {e}", exc_info=True)
@@ -482,6 +431,7 @@ def live_draft_assistant() -> int:
     return 0
 
 
+
 def main() -> int:
     """Entry point for the draft strategizer with error handling."""
     try:
@@ -493,14 +443,6 @@ def main() -> int:
     except (FileOperationError, DataValidationError, ConfigurationError) as e:
         logger.error(f"Draft strategizer error: {e.get_detailed_message()}")
         print(f"\n❌ Error during draft strategizer: {e}")
-        print("\nTroubleshooting:")
-        if isinstance(e, FileOperationError):
-            print("- Ensure data files (player_adp.csv, player_projections.csv) exist and are accessible.")
-            print("- Run 'task download_adp' and 'task download_projections' to prepare data.")
-        elif isinstance(e, DataValidationError):
-            print("- Check the format and content of your data files.")
-        elif isinstance(e, ConfigurationError):
-            print("- Check config.yaml for valid settings.")
         return 1
     except Exception as e:
         logger.critical(f"An unhandled critical error occurred: {e}", exc_info=True)

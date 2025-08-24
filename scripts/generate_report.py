@@ -377,71 +377,26 @@ def main():
 
     # Ensure the data file exists before running
     data_file = "data/player_stats.csv"
-    try:
-        if not os.path.exists(data_file):
-            raise FileOperationError(
-                f"Data file not found at '{data_file}'. Please run 'download_stats.py' first.",
-                file_path=data_file,
-                operation="read"
-            )
-    except FileOperationError:
-        raise # Re-raise if it's our custom exception
-    except Exception as e:
-        raise wrap_exception(e, FileOperationError, f"Error checking existence of data file {data_file}")
-
-    # Create a dummy roster file if it doesn't exist
-    roster_file = "data/my_team.md"
-    try:
-        if not os.path.exists(roster_file):
-            with open(roster_file, "w", encoding='utf-8') as f:
-                f.write("- Patrick Mahomes\n")
-                f.write("- Tyreek Hill\n")
-                f.write("- Saquon Barkley\n")
-                f.write("- Keenan Allen\n")
-                f.write("- Travis Kelce\n")
-            logger.info(f"Created dummy roster file: {roster_file}")
-    except IOError as e:
+    if not os.path.exists(data_file):
         raise FileOperationError(
-            f"Could not create dummy roster file '{roster_file}': {e}",
-            file_path=roster_file,
-            operation="write"
-        ) from e
-    except Exception as e:
-        raise wrap_exception(e, FileOperationError, f"Error creating dummy roster file {roster_file}")
-
-    # Load and process data
-    try:
-        stats_df = pd.read_csv(data_file, dtype={'proTeam': object}, low_memory=False)
-    except pd.errors.EmptyDataError as e:
-        raise DataValidationError(
-            f"Data file is empty or invalid: {data_file}",
-            field_name="player_stats_file",
-            expected_type="valid CSV with player data",
-            actual_value="empty file",
-            original_error=e
-        )
-    except pd.errors.ParserError as e:
-        raise DataValidationError(
-            f"Cannot parse data file: {data_file}",
-            field_name="player_stats_file",
-            expected_type="valid CSV format",
-            actual_value="malformed CSV",
-            original_error=e
-        )
-    except IOError as e:
-        raise FileOperationError(
-            f"Could not read data file '{data_file}': {e}",
-            file_path=data_file,
-            operation="read",
-            original_error=e
-        ) from e
-    except Exception as e:
-        raise wrap_exception(
-            e, FileOperationError,
-            f"An unexpected error occurred while reading data file {data_file}",
+            f"Data file not found at '{data_file}'. Please run 'download_stats.py' first.",
             file_path=data_file,
             operation="read"
         )
+
+    # Create a dummy roster file if it doesn't exist
+    roster_file = "data/my_team.md"
+    if not os.path.exists(roster_file):
+        with open(roster_file, "w", encoding='utf-8') as f:
+            f.write("- Patrick Mahomes\n")
+            f.write("- Tyreek Hill\n")
+            f.write("- Saquon Barkley\n")
+            f.write("- Keenan Allen\n")
+            f.write("- Travis Kelce\n")
+        logger.info(f"Created dummy roster file: {roster_file}")
+
+    # Load and process data
+    stats_df = pd.read_csv(data_file, dtype={'proTeam': object}, low_memory=False)
 
     if stats_df.empty:
         raise DataValidationError(
@@ -451,15 +406,7 @@ def main():
             actual_value="empty DataFrame"
         )
 
-    try:
-        stats_with_points = calculate_fantasy_points(stats_df)
-    except DataValidationError as e:
-        raise DataValidationError(
-            f"Error calculating fantasy points: {e}",
-            original_error=e
-        )
-    except Exception as e:
-        raise wrap_exception(e, DataValidationError, f"An unexpected error occurred during fantasy point calculation: {e}")
+    stats_with_points = calculate_fantasy_points(stats_df)
 
     # Add a placeholder bye_week column for demonstration purposes
     if 'week' in stats_with_points.columns:
@@ -468,83 +415,30 @@ def main():
         stats_with_points['bye_week'] = 0
 
     # Get analysis data
-    try:
-        draft_recs = get_advanced_draft_recommendations(stats_with_points)
-    except DataValidationError as e:
-        raise DataValidationError(
-            f"Error getting draft recommendations: {e}",
-            original_error=e
-        )
-    except Exception as e:
-        raise wrap_exception(e, DataValidationError, f"An unexpected error occurred during draft recommendations: {e}")
+    draft_recs = get_advanced_draft_recommendations(stats_with_points)
 
     # Merge recent_team into draft_recs
     # Ensure 'player_name' is the common column for merging
     # Only select 'player_name' and 'recent_team' from stats_with_points to merge
     draft_recs = pd.merge(draft_recs, stats_with_points[['player_name', 'recent_team']].drop_duplicates(), on='player_name', how='left')
 
-    try:
-        bye_conflicts = check_bye_week_conflicts(stats_with_points)
-    except DataValidationError as e:
-        raise DataValidationError(
-            f"Error checking bye week conflicts: {e}",
-            original_error=e
-        )
-    except Exception as e:
-        raise wrap_exception(e, DataValidationError, f"An unexpected error occurred during bye week conflict check: {e}")
+    bye_conflicts = check_bye_week_conflicts(stats_with_points)
 
     # Get team roster and analysis
-    try:
-        my_team_raw = get_team_roster(roster_file)
-    except (FileOperationError, DataValidationError) as e:
-        raise wrap_exception(e, FileOperationError, f"Error getting team roster: {e}")
-    except Exception as e:
-        raise wrap_exception(e, FileOperationError, f"An unexpected error occurred getting team roster: {e}")
+    my_team_raw = get_team_roster(roster_file)
 
     my_team_normalized = [normalize_player_name(name) for name in my_team_raw]
     my_team_df = draft_recs[draft_recs['player_name'].isin(my_team_normalized)]
     
-    try:
-        team_analysis_str, positional_breakdown_df = analyze_team_needs(my_team_df, draft_recs)
-    except DataValidationError as e:
-        raise DataValidationError(
-            f"Error analyzing team needs: {e}",
-            original_error=e
-        )
-    except Exception as e:
-        raise wrap_exception(e, DataValidationError, f"An unexpected error occurred during team needs analysis: {e}")
+    team_analysis_str, positional_breakdown_df = analyze_team_needs(my_team_df, draft_recs)
 
-    try:
-        trade_recs = get_trade_recommendations(draft_recs, team_roster=my_team_normalized)
-    except DataValidationError as e:
-        raise DataValidationError(
-            f"Error getting trade recommendations: {e}",
-            original_error=e
-        )
-    except Exception as e:
-        raise wrap_exception(e, DataValidationError, f"An unexpected error occurred during trade recommendations: {e}")
+    trade_recs = get_trade_recommendations(draft_recs, team_roster=my_team_normalized)
 
     # Get pickup and trade suggestions
     available_players_df = draft_recs[~draft_recs['player_name'].isin(my_team_normalized)]
-    try:
-        pickup_suggestions = get_pickup_suggestions(available_players_df)
-    except DataValidationError as e:
-        raise DataValidationError(
-            f"Error getting pickup suggestions: {e}",
-            original_error=e
-        )
-    except Exception as e:
-        raise wrap_exception(e, DataValidationError, f"An unexpected error occurred during pickup suggestions: {e}")
+    pickup_suggestions = get_pickup_suggestions(available_players_df)
 
-    try:
-        sell_high_suggestions, buy_low_suggestions = get_trade_suggestions(stats_with_points)
-    except DataValidationError as e:
-        raise DataValidationError(
-            f"Error getting sell-high/buy-low suggestions: {e}",
-            original_error=e
-        )
-    except Exception as e:
-        raise wrap_exception(e, DataValidationError, f"An unexpected error occurred during sell-high/buy-low suggestions: {e}")
+    sell_high_suggestions, buy_low_suggestions = get_trade_suggestions(stats_with_points)
 
     # Run simulated draft (using dummy data for non-interactive report generation)
     simulated_roster = {
@@ -559,43 +453,21 @@ def main():
     ]
 
     # Roster comparison
-    try:
-        roster_comparison_table, roster_mismatch_table = compare_roster_positions("config.yaml", roster_file)
-    except (FileOperationError, DataValidationError, ConfigurationError) as e:
-        raise wrap_exception(e, ConfigurationError, f"Error comparing roster positions: {e}")
-    except Exception as e:
-        raise wrap_exception(e, ConfigurationError, f"An unexpected error occurred during roster comparison: {e}")
+    roster_comparison_table, roster_mismatch_table = compare_roster_positions("config.yaml", roster_file)
 
     # Analyze last game
-    try:
-        last_game_analysis_str = analyze_last_game()
-    except (ConfigurationError, FileOperationError, DataValidationError, APIError, AuthenticationError, NetworkError) as e:
-        raise wrap_exception(e, APIError, f"Error analyzing last game: {e}")
-    except Exception as e:
-        raise wrap_exception(e, APIError, f"An unexpected error occurred during last game analysis: {e}")
+    last_game_analysis_str = analyze_last_game()
 
     # Analyze next game
-    try:
-        next_game_analysis_str = analyze_next_game()
-    except (ConfigurationError, FileOperationError, DataValidationError, APIError, AuthenticationError, NetworkError) as e:
-        raise wrap_exception(e, APIError, f"Error analyzing next game: {e}")
-    except Exception as e:
-        raise wrap_exception(e, APIError, f"An unexpected error occurred during next game analysis: {e}")
+    next_game_analysis_str = analyze_next_game()
 
     # Generate the report
-    try:
-        # Convert output_dir to an absolute path
-        absolute_output_dir = os.path.abspath(args.output_dir)
-        generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, absolute_output_dir, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df)
-        print("✓ Report generated successfully!")
-        return 0
-    except FileOperationError as e:
-        raise FileOperationError(
-            f"Error generating markdown report: {e}",
-            original_error=e
-        )
-    except Exception as e:
-        raise wrap_exception(e, FileOperationError, f"An unexpected error occurred during markdown report generation: {e}")
+    # Convert output_dir to an absolute path
+    absolute_output_dir = os.path.abspath(args.output_dir)
+    generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, absolute_output_dir, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df)
+    print("✓ Report generated successfully!")
+    return 0
+
 
 
 if __name__ == "__main__":

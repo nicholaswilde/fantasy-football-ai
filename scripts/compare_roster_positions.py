@@ -185,13 +185,6 @@ def main():
     except (ConfigurationError, FileOperationError, DataValidationError) as e:
         logger.error(f"Roster comparison error: {e.get_detailed_message()}")
         print(f"\n❌ Error during roster comparison: {e}")
-        print("\nTroubleshooting:")
-        if isinstance(e, ConfigurationError):
-            print("- Check config.yaml for valid 'roster_settings'.")
-        elif isinstance(e, FileOperationError):
-            print("- Ensure config.yaml and data/my_team.md exist and are accessible.")
-        elif isinstance(e, DataValidationError):
-            print("- Check the format and content of data/my_team.md.")
         return 1
     except Exception as e:
         logger.critical(f"An unhandled critical error occurred: {e}", exc_info=True)

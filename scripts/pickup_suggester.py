@@ -555,25 +555,11 @@ def suggest_pickups() -> int:
         
         # Step 3: Calculate player values
         logger.info("Step 3: Calculating player values")
-        try:
-            player_value = calculate_player_value(player_stats.copy())
-        except Exception as e:
-            raise wrap_exception(
-                e, DataValidationError,
-                "Failed to calculate player values from stats data",
-                field_name="player_value_calculation"
-            )
+        player_value = calculate_player_value(player_stats.copy())
         
         # Step 4: Generate pickup recommendations
         logger.info("Step 4: Generating pickup recommendations")
-        try:
-            recommendations_df = recommend_pickups(available_players, player_value, my_team)
-        except Exception as e:
-            raise wrap_exception(
-                e, DataValidationError,
-                "Failed to generate pickup recommendations",
-                field_name="pickup_recommendations"
-            )
+        recommendations_df = recommend_pickups(available_players, player_value, my_team)
         
         # Step 5: Display general recommendations
         logger.info("Step 5: Displaying general recommendations")
@@ -594,11 +580,7 @@ def suggest_pickups() -> int:
         
         # Step 6: Find and display waiver gems
         logger.info("Step 6: Finding waiver wire gems")
-        try:
-            waiver_gems_df = find_waiver_gems(player_stats.copy(), my_team)
-        except Exception as e:
-            logger.warning(f"Error finding waiver gems: {e}")
-            waiver_gems_df = pd.DataFrame()
+        waiver_gems_df = find_waiver_gems(player_stats.copy(), my_team)
         
         print("\n--- Waiver Wire Gems (High Usage, Underperforming) ---")
         if not waiver_gems_df.empty:
@@ -640,28 +622,14 @@ def suggest_pickups() -> int:
         logger.info("Process interrupted by user")
         print("\nProcess interrupted by user.")
         return 130
-    except ConfigurationError as e:
-        logger.error(f"Configuration error: {e.get_detailed_message()}")
-        print(f"\n❌ Configuration Error: {e}")
-        print("\nTroubleshooting:")
-        print("- Run 'task init' to create configuration file")
-        print("- Check config.yaml for valid settings")
-        return 1
-    except (FileOperationError, DataValidationError) as e:
-        logger.error(f"Data error: {e.get_detailed_message()}")
-        print(f"\n❌ Error: {e}")
-        print("\nTroubleshooting:")
-        if "player_stats" in str(e):
-            print("- Run 'task download_stats' to download player statistics")
-        if "my_team" in str(e):
-            print("- Run 'task get_my_team' to fetch your team roster")
-        if "available_players" in str(e):
-            print("- Run 'task get_available_players' to get available players list")
+    except (ConfigurationError, FileOperationError, DataValidationError) as e:
+        logger.error(f"Pickup suggestion error: {e.get_detailed_message()}")
+        print(f"\n❌ Error during pickup suggestion: {e}")
         return 1
     except Exception as e:
-        logger.error(f"Unexpected error: {e}", exc_info=True)
-        print(f"\n❌ Unexpected error occurred: {e}")
-        print("Check the log file for more details.")
+        logger.critical(f"An unhandled critical error occurred: {e}", exc_info=True)
+        print(f"\n❌ An unexpected critical error occurred: {e}")
+        print("Please check the log file for more details.")
         return 1
 
 

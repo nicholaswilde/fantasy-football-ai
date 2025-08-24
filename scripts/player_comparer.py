@@ -149,66 +149,29 @@ def compare_players(player_names: list) -> str:
             operation="read",
             original_error=e
         )
-    except pd.errors.EmptyDataError as e:
+    except (pd.errors.EmptyDataError, pd.errors.ParserError) as e:
         raise DataValidationError(
             f"Player stats file is empty or invalid: {PLAYER_STATS_FILE}",
             field_name="player_stats_file",
-            expected_type="valid CSV with player data",
-            actual_value="empty file",
             original_error=e
-        )
-    except pd.errors.ParserError as e:
-        raise DataValidationError(
-            f"Cannot parse player stats file: {PLAYER_STATS_FILE}",
-            field_name="player_stats_file",
-            expected_type="valid CSV format",
-            actual_value="malformed CSV",
-            original_error=e
-        )
-    except Exception as e:
-        raise wrap_exception(
-            e, FileOperationError,
-            f"Failed to read player stats file {PLAYER_STATS_FILE}",
-            file_path=PLAYER_STATS_FILE,
-            operation="read"
         )
 
     if player_stats_df.empty:
         raise DataValidationError(
             "Player stats DataFrame is empty after loading. Cannot proceed with comparison.",
-            field_name="player_stats_df",
-            expected_type="non-empty DataFrame",
-            actual_value="empty DataFrame"
+            field_name="player_stats_df"
         )
 
     try:
         player_adp_df = pd.read_csv(PLAYER_ADP_FILE, low_memory=False)
-    except FileNotFoundError:
-        logger.warning("Player ADP file not found, proceeding without ADP data.")
-        player_adp_df = pd.DataFrame()
-    except pd.errors.EmptyDataError:
-        logger.warning("Player ADP file is empty, proceeding without ADP data.")
-        player_adp_df = pd.DataFrame()
-    except pd.errors.ParserError as e:
-        logger.warning(f"Cannot parse player ADP file: {e}, proceeding without ADP data.")
-        player_adp_df = pd.DataFrame()
-    except Exception as e:
-        logger.warning(f"Failed to read player ADP file: {e}, proceeding without ADP data.")
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
+        logger.warning("Player ADP file not found or is invalid, proceeding without ADP data.")
         player_adp_df = pd.DataFrame()
 
     try:
         player_projections_df = pd.read_csv(PLAYER_PROJECTIONS_FILE, low_memory=False)
-    except FileNotFoundError:
-        logger.warning("Player projections file not found, proceeding without projections data.")
-        player_projections_df = pd.DataFrame()
-    except pd.errors.EmptyDataError:
-        logger.warning("Player projections file is empty, proceeding without projections data.")
-        player_projections_df = pd.DataFrame()
-    except pd.errors.ParserError as e:
-        logger.warning(f"Cannot parse player projections file: {e}, proceeding without projections data.")
-        player_projections_df = pd.DataFrame()
-    except Exception as e:
-        logger.warning(f"Failed to read player projections file: {e}, proceeding without projections data.")
+    except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError):
+        logger.warning("Player projections file not found or is invalid, proceeding without projections data.")
         player_projections_df = pd.DataFrame()
 
     # Filter for the current league year
@@ -217,25 +180,12 @@ def compare_players(player_names: list) -> str:
     if current_year_stats.empty:
         raise DataValidationError(
             f"No player stats found for the year {league_year}. Please ensure data is available for this season.",
-            field_name="current_year_stats",
-            expected_type="non-empty DataFrame",
-            actual_value="empty DataFrame"
+            field_name="current_year_stats"
         )
 
     # Calculate fantasy points, VOR, and consistency for weekly data first
-    try:
-        current_year_stats = calculate_fantasy_points(current_year_stats)
-        current_year_stats = get_advanced_draft_recommendations(current_year_stats)
-    except DataValidationError as e:
-        raise DataValidationError(
-            f"Error calculating fantasy points or draft recommendations: {e}",
-            original_error=e
-        )
-    except Exception as e:
-        raise wrap_exception(
-            e, DataValidationError,
-            f"An unexpected error occurred during fantasy point or draft recommendation calculation: {e}"
-        )
+    current_year_stats = calculate_fantasy_points(current_year_stats)
+    current_year_stats = get_advanced_draft_recommendations(current_year_stats)
 
     # Aggregate weekly stats to season totals for comparison
     aggregated_stats = current_year_stats.groupby(['player_name', 'position']).agg(
@@ -315,14 +265,6 @@ def main():
         except (ConfigurationError, FileOperationError, DataValidationError) as e:
             logger.error(f"Player comparison error: {e.get_detailed_message()}")
             print(f"\n❌ Error during player comparison: {e}")
-            print("\nTroubleshooting:")
-            if isinstance(e, ConfigurationError):
-                print("- Check config.yaml for valid settings, especially 'league_settings.year'.")
-            elif isinstance(e, FileOperationError):
-                print("- Ensure data files (player_stats.csv, player_adp.csv, player_projections.csv) exist and are accessible.")
-                print("- Run 'task download_stats', 'task download_adp', 'task download_projections' to prepare data.")
-            elif isinstance(e, DataValidationError):
-                print("- Check the format and content of your data files.")
             return 1
         except Exception as e:
             logger.critical(f"An unhandled critical error occurred: {e}", exc_info=True)

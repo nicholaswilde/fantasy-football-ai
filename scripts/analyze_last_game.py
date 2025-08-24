@@ -31,6 +31,7 @@ from fantasy_ai.errors import (
     wrap_exception
 )
 from fantasy_ai.utils.logging import setup_logging, get_logger
+from fantasy_ai.utils.retry import retry
 
 # Set up logging
 setup_logging(level='INFO', format_type='console', log_file='logs/analyze_last_game.log')
@@ -254,58 +255,61 @@ def analyze_last_game() -> str:
             expected_type="non-empty DataFrame",
             actual_value="empty DataFrame"
         )
+    try:
+        my_team_players_raw = get_my_team_roster(MY_TEAM_FILE)
+        if not my_team_players_raw:
+            raise DataValidationError(
+                f"No players found in {MY_TEAM_FILE}. Please ensure your team roster is correctly set up.",
+                field_name="my_team_roster",
+                expected_type="non-empty list",
+                actual_value="empty list"
+            )
 
-    my_team_players_raw = get_my_team_roster(MY_TEAM_FILE)
-    if not my_team_players_raw:
-        raise DataValidationError(
-            f"No players found in {MY_TEAM_FILE}. Please ensure your team roster is correctly set up.",
-            field_name="my_team_roster",
-            expected_type="non-empty list",
-            actual_value="empty list"
-        )
+        my_team_players_normalized = [normalize_player_name(p) for p in my_team_players_raw]
 
-    my_team_players_normalized = [normalize_player_name(p) for p in my_team_players_raw]
+        current_year_stats = player_stats_df[player_stats_df['season'] == league_year]
 
-    current_year_stats = player_stats_df[player_stats_df['season'] == league_year]
+        if current_year_stats.empty:
+            raise DataValidationError(
+                f"No player stats found for the year {league_year}. Please ensure data is available for this season.",
+                field_name="current_year_stats",
+                expected_type="non-empty DataFrame",
+                actual_value="empty DataFrame"
+            )
 
-    if current_year_stats.empty:
-        raise DataValidationError(
-            f"No player stats found for the year {league_year}. Please ensure data is available for this season.",
-            field_name="current_year_stats",
-            expected_type="non-empty DataFrame",
-            actual_value="empty DataFrame"
-        )
+        last_week = current_year_stats['week'].max()
+        if pd.isna(last_week):
+            raise DataValidationError(
+                f"No weekly data found for the year {league_year}. Cannot determine last week.",
+                field_name="last_week",
+                expected_type="numeric week value",
+                actual_value="NaN"
+            )
 
-    last_week = current_year_stats['week'].max()
-    if pd.isna(last_week):
-        raise DataValidationError(
-            f"No weekly data found for the year {league_year}. Cannot determine last week.",
-            field_name="last_week",
-            expected_type="numeric week value",
-            actual_value="NaN"
-        )
+        logger.info(f"Analyzing performance for Week {int(last_week)} of the {league_year} season...")
 
-    logger.info(f"Analyzing performance for Week {int(last_week)} of the {league_year} season...")
+        last_week_stats = current_year_stats[current_year_stats['week'] == last_week]
+        if last_week_stats.empty:
+            raise DataValidationError(
+                f"No stats found for Week {int(last_week)} of the {league_year} season.",
+                field_name="last_week_stats",
+                expected_type="non-empty DataFrame",
+                actual_value="empty DataFrame"
+            )
 
-    last_week_stats = current_year_stats[current_year_stats['week'] == last_week]
-    if last_week_stats.empty:
-        raise DataValidationError(
-            f"No stats found for Week {int(last_week)} of the {league_year} season.",
-            field_name="last_week_stats",
-            expected_type="non-empty DataFrame",
-            actual_value="empty DataFrame"
-        )
+        my_team_last_week_stats = last_week_stats[last_week_stats['player_name'].isin(my_team_players_normalized)]
+        if my_team_last_week_stats.empty:
+            logger.warning(f"No stats found for your team players in Week {int(last_week)}.")
+            # Attempt to calculate fantasy points even if some players are missing stats
+            my_team_total_points = 0.0
+        else:
+            my_team_last_week_stats = calculate_fantasy_points(my_team_last_week_stats.copy())
+            my_team_total_points = my_team_last_week_stats['fantasy_points'].sum()
 
-    my_team_last_week_stats = last_week_stats[last_week_stats['player_name'].isin(my_team_players_normalized)]
-    if my_team_last_week_stats.empty:
-        logger.warning(f"No stats found for your team players in Week {int(last_week)}.")
-        # Attempt to calculate fantasy points even if some players are missing stats
-        my_team_total_points = 0.0
-    else:
-        my_team_last_week_stats = calculate_fantasy_points(my_team_last_week_stats.copy())
-        my_team_total_points = my_team_last_week_stats['fantasy_points'].sum()
-
-    logger.info(f"Your team scored {my_team_total_points:.2f} points in Week {int(last_week)}.")
+        logger.info(f"Your team scored {my_team_total_points:.2f} points in Week {int(last_week)}.")
+    except (FileOperationError, DataValidationError) as e:
+        logger.error(f"Error processing team data: {e.get_detailed_message()}")
+        raise
 
     league_settings_str = yaml.dump(league_settings, default_flow_style=False)
     roster_settings_str = yaml.dump(roster_settings, default_flow_style=False)
@@ -375,20 +379,6 @@ def main():
     except (ConfigurationError, FileOperationError, DataValidationError, APIError, AuthenticationError, NetworkError) as e:
         logger.error(f"Last game analysis error: {e.get_detailed_message()}")
         print(f"\n❌ Error during last game analysis: {e}")
-        print("\nTroubleshooting:")
-        if isinstance(e, ConfigurationError):
-            print("- Check config.yaml for valid settings, especially 'league_settings.year'.")
-        elif isinstance(e, FileOperationError):
-            print("- Ensure data files (player_stats.csv, my_team.md) exist and are accessible.")
-            print("- Run 'task download_stats' and 'task get_my_team' to prepare data.")
-        elif isinstance(e, DataValidationError):
-            print("- Check the format and content of your data files.")
-        elif isinstance(e, AuthenticationError):
-            print("- Verify your LLM API key is correctly set in your .env file.")
-        elif isinstance(e, NetworkError):
-            print("- Check your internet connection.")
-        elif isinstance(e, APIError):
-            print("- There might be an issue with the LLM service. Try again later.")
         return 1
     except Exception as e:
         logger.critical(f"An unhandled critical error occurred: {e}", exc_info=True)
