@@ -18,8 +18,8 @@ from tabulate import tabulate
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from fantasy_ai.errors import (
-    APIError, AuthenticationError, ConfigurationError, 
-    FileIOError, DataValidationError, wrap_exception
+    APIError, AuthenticationError, ConfigurationError,
+    FileOperationError, DataValidationError, wrap_exception
 )
 from fantasy_ai.utils.retry import retry
 from fantasy_ai.utils.logging import setup_logging, get_logger
@@ -372,13 +372,13 @@ def safe_create_directory(directory: str) -> None:
         directory: Directory path to create
         
     Raises:
-        FileIOError: If directory cannot be created
+        FileOperationError: If directory cannot be created
     """
     try:
         os.makedirs(directory, exist_ok=True)
         logger.debug(f"Directory ensured: {directory}")
     except PermissionError as e:
-        raise FileIOError(
+        raise FileOperationError(
             f"Permission denied creating directory: {directory}",
             file_path=directory,
             operation="create_directory",
@@ -386,7 +386,7 @@ def safe_create_directory(directory: str) -> None:
         )
     except Exception as e:
         raise wrap_exception(
-            e, FileIOError,
+            e, FileOperationError,
             f"Failed to create directory: {directory}",
             file_path=directory,
             operation="create_directory"
@@ -402,7 +402,7 @@ def save_roster_to_markdown(roster_data: list, team_name: str) -> None:
         team_name: Name of the team
         
     Raises:
-        FileIOError: If file cannot be written
+        FileOperationError: If file cannot be written
     """
     # Ensure data directory exists
     data_dir = 'data'
@@ -422,7 +422,8 @@ def save_roster_to_markdown(roster_data: list, team_name: str) -> None:
         now = datetime.now()
         dt_string = now.strftime("%Y-%m-%d %H:%M:%S")
         
-        content = f"""<!-- Last updated: {dt_string} -->
+        content = f"""
+<!-- Last updated: {dt_string} -->
 # My Team: {team_name}
 
 {markdown_table}
@@ -436,14 +437,14 @@ def save_roster_to_markdown(roster_data: list, team_name: str) -> None:
             logger.info(f"Successfully saved roster to {file_path}")
             
         except PermissionError as e:
-            raise FileIOError(
+            raise FileOperationError(
                 f"Permission denied writing to {file_path}",
                 file_path=file_path,
                 operation="write",
                 original_error=e
             )
         except UnicodeEncodeError as e:
-            raise FileIOError(
+            raise FileOperationError(
                 f"Unicode encoding error writing to {file_path}",
                 file_path=file_path,
                 operation="write",
@@ -451,17 +452,17 @@ def save_roster_to_markdown(roster_data: list, team_name: str) -> None:
             )
         except Exception as e:
             raise wrap_exception(
-                e, FileIOError,
+                e, FileOperationError,
                 f"Failed to write roster file to {file_path}",
                 file_path=file_path,
                 operation="write"
             )
             
-    except FileIOError:
+    except FileOperationError:
         raise  # Re-raise our file IO errors
     except Exception as e:
         raise wrap_exception(
-            e, FileIOError,
+            e, FileOperationError,
             "Unexpected error saving roster to markdown"
         )
 
@@ -552,7 +553,7 @@ def get_my_team() -> int:
         logger.error(f"API/Data error: {e.get_detailed_message()}")
         print(f"\n❌ Error: {e}")
         return 1
-    except FileIOError as e:
+    except FileOperationError as e:
         logger.error(f"File I/O error: {e.get_detailed_message()}")
         print(f"\n❌ File Error: {e}")
         print("\nTroubleshooting:")
