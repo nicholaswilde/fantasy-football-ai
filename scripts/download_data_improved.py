@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from fantasy_ai.errors import (
     NetworkError, APIError, AuthenticationError, ConfigurationError,
-    FileIOError, DataValidationError, wrap_exception
+    FileOperationError as FileIOError, DataValidationError, wrap_exception
 )
 from fantasy_ai.utils.retry import retry
 from fantasy_ai.utils.logging import setup_logging, get_logger
@@ -224,42 +224,31 @@ def fetch_player_projections() -> pd.DataFrame:
         logger.debug(f"Creating ESPN League instance for league {league_id}, year {year}")
         league = League(league_id=league_id, year=year, espn_s2=espn_s2, swid=swid)
         
-        projections_data = []
-        processed_players = 0
+        projections_data = {}
         
-        # Iterate through all teams in the league
-        for team_idx, team in enumerate(league.teams):
-            logger.debug(f"Processing team {team_idx + 1}/{len(league.teams)}: {team.team_name}")
+        # Fetch projections for the first 17 weeks
+        for week in range(1, 18):
+            logger.debug(f"Fetching projections for week {week}")
+            box_scores = league.box_scores(week=week)
             
-            for player in team.roster:
-                try:
-                    # Extract projected points with fallback
+            for box_score in box_scores:
+                lineup = getattr(box_score, 'home_lineup', []) + getattr(box_score, 'away_lineup', [])
+                for player in lineup:
+                    if player.name not in projections_data:
+                        projections_data[player.name] = {
+                            'full_name': player.name,
+                            'position': getattr(player, 'position', 'UNKNOWN'),
+                            'projected_points': 0.0
+                        }
+                    
+                    # Sum up projected points across all weeks
                     projected_points = 0.0
-                    
-                    if hasattr(player, 'stats') and player.stats and 0 in player.stats:
-                        if 'projected_points' in player.stats[0]:
-                            projected_points = player.stats[0]['projected_points']
-                    elif hasattr(player, 'projected_points_total'):
-                        projected_points = player.projected_points_total
-                    
-                    # Validate player data
-                    if not player.name:
-                        logger.warning(f"Player with empty name found, skipping")
-                        continue
-                    
-                    projections_data.append({
-                        'full_name': player.name,
-                        'position': getattr(player, 'position', 'UNKNOWN'),
-                        'projected_points': projected_points
-                    })
-                    processed_players += 1
-                    
-                except Exception as e:
-                    logger.warning(f"Error processing player {getattr(player, 'name', 'Unknown')}: {e}")
-                    continue
-        
-        logger.info(f"Successfully processed projections for {processed_players} players")
-        return pd.DataFrame(projections_data)
+                    if hasattr(player, 'points'):
+                        projected_points = player.points
+                    projections_data[player.name]['projected_points'] += projected_points
+
+        logger.info(f"Successfully processed projections for {len(projections_data)} players")
+        return pd.DataFrame(list(projections_data.values()))
         
     except Exception as e:
         # Check if it's an authentication error

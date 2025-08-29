@@ -205,6 +205,9 @@ class FileOperationError(FantasyFootballAIAgentError):
         self.file_path = file_path
         self.operation = operation
 
+# For backward compatibility
+FileIOError = FileOperationError
+
 
 class APIError(FantasyFootballAIAgentError):
     """Raised when external API calls fail."""

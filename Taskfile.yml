@@ -123,6 +123,12 @@ tasks:
       - |
         {{ .SOURCE }} && python3 scripts/generate_report.py
 
+  generate_draft_report_2025:
+    desc: Generate a draft report for the 2025 season
+    cmds:
+      - |
+        {{ .SOURCE }} && python3 scripts/generate_draft_report_2025.py
+
   generate_terminal_report:
     desc: Output the analysis report to the terminal
     cmds:
