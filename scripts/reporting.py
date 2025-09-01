@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 ################################################################################
 #
-# Script Name: generate_report.py
+# Script Name: reporting.py
 # ----------------
-# Generates a comprehensive fantasy football analysis report in Markdown format.
+# Generates a comprehensive fantasy football analysis report in Markdown, terminal, or HTML format.
 #
 # @author Nicholas Wilde, 0xb299a622
 # @date 2025-08-20
-# @version 0.2.0
+# @version 0.3.0
 #
 ################################################################################
 
@@ -16,9 +16,13 @@ import os
 import sys
 from datetime import datetime
 import argparse
+from tabulate import tabulate
+import markdown
+import webbrowser
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
 from fantasy_ai.errors import (
     FileOperationError,
@@ -32,23 +36,20 @@ from fantasy_ai.errors import (
 from fantasy_ai.utils.logging import setup_logging, get_logger
 
 # Set up logging
-setup_logging(level='INFO', format_type='console', log_file='logs/generate_report.log')
+setup_logging(level='INFO', format_type='console', log_file='logs/reporting.log')
 logger = get_logger(__name__)
 
 # Assume the analysis.py script is in the same directory and can be imported
-from analysis import (
+from scripts.analysis import (
     get_advanced_draft_recommendations,
     check_bye_week_conflicts,
     get_trade_recommendations,
     calculate_fantasy_points,
-    get_team_roster,
     analyze_team_needs
 )
-import analysis
-import draft_strategizer # Import the draft_strategizer script
-from compare_roster_positions import compare_roster_positions
-from analyze_last_game import analyze_last_game
-from analyze_next_game import analyze_next_game
+from scripts.data_manager import get_team_roster
+from scripts.analyze_game import analyze_game
+from scripts.utils import load_config
 
 # Helper function to normalize player names, e.g., 'Patrick Mahomes' to 'P.Mahomes'
 def normalize_player_name(name):
@@ -366,108 +367,151 @@ tags:
 def main():
     parser = argparse.ArgumentParser(description="Generate a fantasy football analysis report.")
     parser.add_argument(
+        "report_type",
+        choices=["markdown", "terminal", "html"],
+        help="The type of report to generate.",
+        nargs='?',
+        default="terminal"
+    )
+    parser.add_argument(
         "--output-dir",
         default="docs/reports/posts",
         help="The directory to save the report in."
     )
     args = parser.parse_args()
 
-    # Initialize analysis globals (config, scoring rules, etc.)
-    analysis.initialize_globals()
+    try:
+        # Initialize analysis globals (config, scoring rules, etc.)
+        config = load_config()
+        analysis_globals = {
+            '_CONFIG': config,
+            '_SCORING_RULES': config.get('scoring_rules', {})
+        }
 
-    # Ensure the data file exists before running
-    data_file = "data/player_stats.csv"
-    if not os.path.exists(data_file):
-        raise FileOperationError(
-            f"Data file not found at '{data_file}'. Please run 'download_stats.py' first.",
-            file_path=data_file,
-            operation="read"
-        )
+        # Ensure the data file exists before running
+        data_file = config.get('file_paths', {}).get('player_stats', 'data/player_stats.csv')
+        if not os.path.exists(data_file):
+            raise FileOperationError(
+                f"Data file not found at '{data_file}'. Please run 'task download stats' first.",
+                file_path=data_file,
+                operation="read"
+            )
 
-    # Create a dummy roster file if it doesn't exist
-    roster_file = "data/my_team.md"
-    if not os.path.exists(roster_file):
-        with open(roster_file, "w", encoding='utf-8') as f:
-            f.write("- Patrick Mahomes\n")
-            f.write("- Tyreek Hill\n")
-            f.write("- Saquon Barkley\n")
-            f.write("- Keenan Allen\n")
-            f.write("- Travis Kelce\n")
-        logger.info(f"Created dummy roster file: {roster_file}")
+        # Create a dummy roster file if it doesn't exist
+        roster_file = config.get('file_paths', {}).get('my_team', 'data/my_team.md')
+        if not os.path.exists(roster_file):
+            with open(roster_file, "w", encoding='utf-8') as f:
+                f.write("- Patrick Mahomes\n")
+                f.write("- Tyreek Hill\n")
+                f.write("- Saquon Barkley\n")
+                f.write("- Keenan Allen\n")
+                f.write("- Travis Kelce\n")
+            logger.info(f"Created dummy roster file: {roster_file}")
 
-    # Load and process data
-    stats_df = pd.read_csv(data_file, dtype={'proTeam': object}, low_memory=False)
+        # Load and process data
+        stats_df = pd.read_csv(data_file, dtype={'proTeam': object}, low_memory=False)
 
-    if stats_df.empty:
-        raise DataValidationError(
-            "Player stats DataFrame is empty after loading. Cannot proceed with analysis.",
-            field_name="player_stats_df",
-            expected_type="non-empty DataFrame",
-            actual_value="empty DataFrame"
-        )
+        if stats_df.empty:
+            raise DataValidationError(
+                "Player stats DataFrame is empty after loading. Cannot proceed with analysis.",
+                field_name="player_stats_df",
+                expected_type="non-empty DataFrame",
+                actual_value="empty DataFrame"
+            )
 
-    stats_with_points = calculate_fantasy_points(stats_df)
+        stats_with_points = calculate_fantasy_points(stats_df)
 
-    # Add a placeholder bye_week column for demonstration purposes
-    if 'week' in stats_with_points.columns:
-        stats_with_points['bye_week'] = stats_with_points['week'].apply(lambda x: (x % 14) + 4)
-    else:
-        stats_with_points['bye_week'] = 0
+        # Add a placeholder bye_week column for demonstration purposes
+        if 'week' in stats_with_points.columns:
+            stats_with_points['bye_week'] = stats_with_points['week'].apply(lambda x: (x % 14) + 4)
+        else:
+            stats_with_points['bye_week'] = 0
 
-    # Get analysis data
-    draft_recs = get_advanced_draft_recommendations(stats_with_points)
+        # Get analysis data
+        draft_recs = get_advanced_draft_recommendations(stats_with_points)
 
-    # Merge recent_team into draft_recs
-    # Ensure 'player_name' is the common column for merging
-    # Only select 'player_name' and 'recent_team' from stats_with_points to merge
-    draft_recs = pd.merge(draft_recs, stats_with_points[['player_name', 'recent_team']].drop_duplicates(), on='player_name', how='left')
+        # Merge recent_team into draft_recs
+        draft_recs = pd.merge(draft_recs, stats_with_points[['player_name', 'recent_team']].drop_duplicates(), on='player_name', how='left')
 
-    bye_conflicts = check_bye_week_conflicts(stats_with_points)
+        bye_conflicts = check_bye_week_conflicts(stats_with_points)
 
-    # Get team roster and analysis
-    my_team_raw = get_team_roster(roster_file)
+        # Get team roster and analysis
+        my_team_raw = get_team_roster(roster_file)
 
-    my_team_normalized = [normalize_player_name(name) for name in my_team_raw]
-    my_team_df = draft_recs[draft_recs['player_name'].isin(my_team_normalized)]
-    
-    team_analysis_str, positional_breakdown_df = analyze_team_needs(my_team_df, draft_recs)
+        my_team_normalized = [normalize_player_name(name) for name in my_team_raw]
+        my_team_df = draft_recs[draft_recs['player_name'].isin(my_team_normalized)]
+        
+        team_analysis_str, positional_breakdown_df = analyze_team_needs(my_team_df, draft_recs)
 
-    trade_recs = get_trade_recommendations(draft_recs, team_roster=my_team_normalized)
+        trade_recs = get_trade_recommendations(draft_recs, team_roster=my_team_normalized)
 
-    # Get pickup and trade suggestions
-    available_players_df = draft_recs[~draft_recs['player_name'].isin(my_team_normalized)]
-    pickup_suggestions = get_pickup_suggestions(available_players_df)
+        # Get pickup and trade suggestions
+        available_players_df = draft_recs[~draft_recs['player_name'].isin(my_team_normalized)]
+        pickup_suggestions = get_pickup_suggestions(available_players_df)
 
-    sell_high_suggestions, buy_low_suggestions = get_trade_suggestions(stats_with_points)
+        sell_high_suggestions, buy_low_suggestions = get_trade_suggestions(stats_with_points)
 
-    # Run simulated draft (using dummy data for non-interactive report generation)
-    simulated_roster = {
-        'QB': ['Patrick Mahomes'],
-        'RB': ['Christian McCaffrey', 'Jonathan Taylor'],
-        'WR': ['Justin Jefferson', "Ja'Marr Chase"],
-        'TE': ['Travis Kelce']
-    }
-    simulated_draft_order = [
-        'Justin Jefferson', 'Christian McCaffrey', 'Patrick Mahomes', 'Travis Kelce',
-        'Jonathan Taylor', "Ja'Marr Chase", 'Josh Allen', 'Austin Ekeler'
-    ]
+        # Run simulated draft (using dummy data for non-interactive report generation)
+        simulated_roster = {
+            'QB': ['Patrick Mahomes'],
+            'RB': ['Christian McCaffrey', 'Jonathan Taylor'],
+            'WR': ['Justin Jefferson', "Ja'Marr Chase"],
+            'TE': ['Travis Kelce']
+        }
+        simulated_draft_order = [
+            'Justin Jefferson', 'Christian McCaffrey', 'Patrick Mahomes', 'Travis Kelce',
+            'Jonathan Taylor', "Ja'Marr Chase", 'Josh Allen', 'Austin Ekeler'
+        ]
 
-    # Roster comparison
-    roster_comparison_table, roster_mismatch_table = compare_roster_positions("config.yaml", roster_file)
+        # Roster comparison
+        roster_comparison_table, roster_mismatch_table = compare_roster_positions("config.yaml", roster_file)
 
-    # Analyze last game
-    last_game_analysis_str = analyze_last_game()
+        # Analyze last game
+        last_game_analysis_str = analyze_game(game_type="last")
 
-    # Analyze next game
-    next_game_analysis_str = analyze_next_game()
+        # Analyze next game
+        next_game_analysis_str = analyze_game(game_type="next")
 
-    # Generate the report
-    # Convert output_dir to an absolute path
-    absolute_output_dir = os.path.abspath(args.output_dir)
-    generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, absolute_output_dir, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df)
-    print("✓ Report generated successfully!")
-    return 0
+        if args.report_type == "markdown":
+            absolute_output_dir = os.path.abspath(args.output_dir)
+            generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, absolute_output_dir, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df)
+            print("✓ Markdown report generated successfully!")
+        elif args.report_type == "terminal":
+            generate_terminal_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df)
+            print("✓ Terminal report generated successfully!")
+        elif args.report_type == "html":
+            absolute_output_dir = os.path.abspath(args.output_dir)
+            markdown_file = os.path.join(absolute_output_dir, f"{datetime.now().strftime('%Y-%m-%d')}-fantasy-football-analysis.md")
+            html_file = os.path.join(absolute_output_dir, f"{datetime.now().strftime('%Y-%m-%d')}-fantasy-football-analysis.html")
+            generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, absolute_output_dir, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df)
+            render_markdown_to_html(markdown_file, html_file)
+            webbrowser.open_new_tab(os.path.abspath(html_file))
+            print("✓ HTML report generated and opened successfully!")
 
+        return 0
+
+    except (FileOperationError, DataValidationError, ConfigurationError, APIError, AuthenticationError, NetworkError) as e:
+        logger.error(f"Report generation error: {e.get_detailed_message()}")
+        print(f"\n❌ Error generating report: {e}")
+        print("\nTroubleshooting:")
+        if isinstance(e, ConfigurationError):
+            print("- Check config.yaml for valid settings.")
+        elif isinstance(e, FileOperationError):
+            print("- Ensure data files and output directories are accessible.")
+        elif isinstance(e, DataValidationError):
+            print("- Check the format and content of your data files.")
+        elif isinstance(e, AuthenticationError):
+            print("- Verify your API keys and credentials are correctly set.")
+        elif isinstance(e, NetworkError):
+            print("- Check your internet connection.")
+        elif isinstance(e, APIError):
+            print("- There might be an issue with an external API service. Try again later.")
+        sys.exit(1)
+    except Exception as e:
+        logger.critical(f"An unhandled critical error occurred: {e}", exc_info=True)
+        print(f"\n❌ An unexpected critical error occurred: {e}")
+        print("Please check the log file for more details.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

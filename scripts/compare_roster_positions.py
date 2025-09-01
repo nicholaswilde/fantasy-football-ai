@@ -19,15 +19,10 @@ import sys
 import os
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
-from fantasy_ai.errors import (
-    FileOperationError,
-    DataValidationError,
-    ConfigurationError,
-    wrap_exception
-)
-from fantasy_ai.utils.logging import setup_logging, get_logger
+from scripts.utils import load_config
 
 # Set up logging
 setup_logging(level='INFO', format_type='console', log_file='logs/compare_roster_positions.log')

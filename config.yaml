@@ -1,4 +1,3 @@
----
 league_settings:
   league_name: San Cola Cup Covid Years
   number_of_teams: 12
@@ -89,8 +88,5 @@ scoring_rules:
   total_tackles: 0.1
 my_team_id: 8
 llm_settings:
-  provider: "google"
-  model: "gemini-2.5-flash"
-  # provider: "openai"
-  # model: "gpt-3.5-turbo"
-  # openai_request_delay: 1
+  provider: google
+  model: gemini-2.5-flash

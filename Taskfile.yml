@@ -12,17 +12,11 @@ vars:
   SOURCE: 'source venv/bin/activate'
     
 tasks:
-  analyze_last_game:
-    desc: Analyze your last fantasy football game and get improvement suggestions
+  analyze:
+    desc: "Analyze a game. Usage: task analyze -- [last|next]"
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/analyze_last_game.py
-
-  analyze_next_game:
-    desc: Analyze your next fantasy football game and get suggestions to win
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/analyze_next_game.py
+        {{ .SOURCE }} && python3 scripts/analyze_game.py {{.CLI_ARGS}}
 
   bootstrap:
     desc: Bootstrap the project
@@ -78,26 +72,15 @@ tasks:
   draft_prep:
     desc: Download data and create a draft strategy
     cmds:
-      - task: download_player_data
+      - task: download
+        vars: { DATA_TYPE: all }
       - task: live_draft_assistant
 
-  download_adp:
-    desc: Download Average Draft Position (ADP) data
+  download:
+    desc: "Download data. Usage: task download -- [all|stats|projections|adp]"
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/download_adp.py
-
-  download_player_data:
-    desc: Download player data from Sleeper API (with enhanced error handling)
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/download_data_improved.py
-
-  download_weekly_stats:
-    desc: "Download NFL player stats. Defaults to years specified in config.yaml. Usage: task download_weekly_stats -- --years 2022 2023"
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/download_stats.py {{ .CLI_ARGS }}
+        {{ .SOURCE }} && python3 scripts/data_manager.py {{.CLI_ARGS}}
 
   encrypt:
     desc: Encrypt secret and environment files using sops.
@@ -117,23 +100,11 @@ tasks:
       - |
         {{ .SOURCE }} && gemini -m gemini-{{ .VER }}-flash
 
-  generate_report:
-    desc: Generate a Markdown report from the analysis
+  report:
+    desc: "Generate a report. Usage: task report -- [markdown|terminal|html]"
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/generate_report.py
-
-  generate_draft_report_2025:
-    desc: Generate a draft report for the 2025 season
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/generate_draft_report_2025.py
-
-  generate_terminal_report:
-    desc: Output the analysis report to the terminal
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/terminal_report.py
+        {{ .SOURCE }} && python3 scripts/reporting.py {{.CLI_ARGS}}
 
   glite:
     desc: Run Gemini with the gemini-2.5-flash-lite model.
@@ -196,11 +167,7 @@ tasks:
       - |
         {{ .SOURCE }} && python3 scripts/draft_strategizer.py
 
-  render_html_report:
-    desc: Render the generated Markdown report to HTML and open in browser
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/render_report.py
+  
 
   run:
     desc: Run the Dockerfile
@@ -277,25 +244,14 @@ tasks:
   weekly_update:
     desc: "Run the full weekly update: download stats, update team, get available players, analyze, get suggestions, and generate report."
     cmds:
-      - task: download_weekly_stats
+      - task: download
+        vars: { DATA_TYPE: stats }
       - task: get_my_team_roster
       - task: get_available_players
       - task: suggest_pickups
       - task: suggest_trades
-      - task: generate_terminal_report
-
-  # Legacy compatibility tasks (use original scripts)
-  download_player_data_legacy:
-    desc: "[LEGACY] Download player data using original script (without enhanced error handling)"
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/download_data.py
-
-  get_my_team_roster_legacy:
-    desc: "[LEGACY] Get team roster using original script (without enhanced error handling)"
-    cmds:
-      - |
-        {{ .SOURCE }} && python3 scripts/get_my_team.py
+      - task: report
+        vars: { REPORT_TYPE: terminal }
 
   # Backup and utility tasks
   backup_data:

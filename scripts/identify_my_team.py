@@ -21,14 +21,15 @@ from tabulate import tabulate
 from datetime import datetime
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
 from fantasy_ai.errors import (
     APIError, AuthenticationError, ConfigurationError, 
     FileOperationError, DataValidationError, wrap_exception
 )
 from fantasy_ai.utils.retry import retry
-from fantasy_ai.utils.logging import setup_logging, get_logger
+from scripts.utils import load_config
 
 # Set up logging
 setup_logging(level='INFO', format_type='console', log_file='logs/identify_my_team.log')

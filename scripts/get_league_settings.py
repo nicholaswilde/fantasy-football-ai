@@ -19,14 +19,16 @@ import yaml
 from datetime import datetime
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
 from fantasy_ai.errors import (
     APIError, AuthenticationError, ConfigurationError, 
     FileOperationError, wrap_exception
 )
-from fantasy_ai.utils.retry import retry
+from scripts.utils import load_config
 from fantasy_ai.utils.logging import setup_logging, get_logger
+from fantasy_ai.utils.retry import retry
 
 # Set up logging
 setup_logging(level='INFO', format_type='console', log_file='logs/get_league_settings.log')
@@ -237,6 +239,9 @@ def extract_league_settings(league, existing_config, current_year):
         
         if 'my_team_id' in existing_config:
             config_data['my_team_id'] = existing_config['my_team_id']
+
+        if 'llm_settings' in existing_config:
+            config_data['llm_settings'] = existing_config['llm_settings']
         
         # Extract roster settings
         if hasattr(settings, 'position_slot_counts') and settings.position_slot_counts:
@@ -283,7 +288,6 @@ def save_config_file(config_data):
         
         logger.debug(f"Writing configuration to {CONFIG_FILE}")
         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-            f.write("---")
             yaml.dump(config_data, f, default_flow_style=False, sort_keys=False)
         
         logger.info(f"Successfully updated {CONFIG_FILE} with league settings")

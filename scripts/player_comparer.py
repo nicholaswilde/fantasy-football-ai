@@ -20,7 +20,8 @@ from tabulate import tabulate
 import sys
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
 from fantasy_ai.errors import (
     FileOperationError, DataValidationError, ConfigurationError, wrap_exception
@@ -31,7 +32,8 @@ from fantasy_ai.utils.logging import setup_logging, get_logger
 setup_logging(level='INFO', format_type='console', log_file='logs/player_comparer.log')
 logger = get_logger(__name__)
 
-from analysis import calculate_fantasy_points, get_advanced_draft_recommendations
+from scripts.utils import load_config
+from scripts.analysis import calculate_fantasy_points, get_advanced_draft_recommendations
 
 # Load environment variables
 load_dotenv()

@@ -19,7 +19,8 @@ from espn_api.football import League
 import sys
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
 from fantasy_ai.errors import (
     FileOperationError,
@@ -29,6 +30,7 @@ from fantasy_ai.errors import (
     NetworkError,
     wrap_exception
 )
+from scripts.utils import load_config
 from fantasy_ai.utils.logging import setup_logging, get_logger
 from fantasy_ai.utils.retry import retry
 

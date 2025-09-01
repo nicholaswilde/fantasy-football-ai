@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 ################################################################################
 #
-# Script Name: analyze_next_game.py
+# Script Name: analyze_last_game.py
 # ----------------
-# Analyzes the user's next fantasy football game, evaluates performance,
+# Analyzes the user's last fantasy football game, evaluates performance,
 # and suggests improvements.
 #
 # @author Nicholas Wilde, 0xb299a622
@@ -16,12 +16,11 @@ import os
 import pandas as pd
 import yaml
 from dotenv import load_dotenv
-from espn_api.football import League
-from datetime import datetime
 import sys
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
 from fantasy_ai.errors import (
     FileOperationError,
@@ -36,15 +35,18 @@ from fantasy_ai.utils.logging import setup_logging, get_logger
 from fantasy_ai.utils.retry import retry
 
 # Set up logging
-setup_logging(level='INFO', format_type='console', log_file='logs/analyze_next_game.log')
+setup_logging(level='INFO', format_type='console', log_file='logs/analyze_last_game.log')
 logger = get_logger(__name__)
 
-from analysis import ask_llm, configure_llm_api
+from scripts.llm import ask_llm, configure_llm_api
+from scripts.analysis import calculate_fantasy_points
+from scripts.data_manager import get_team_roster
+from scripts.utils import load_config
 
 # Load environment variables
 load_dotenv()
 
-# Configuration file paths
+# Configuration file path
 CONFIG_FILE = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), '..', 'config.yaml'
 )
@@ -130,7 +132,6 @@ def get_my_team_roster(file_path: str) -> list:
         with open(file_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
             
-            # Skip header and separator lines (first 3 lines after the comment and title)
             # So, actual data starts from line 5 (index 4)
             if len(lines) > 4:
                 for line in lines[4:]:
@@ -173,6 +174,21 @@ def get_my_team_roster(file_path: str) -> list:
             operation="read"
         )
 
+
+def normalize_player_name(name: str) -> str:
+    """
+    Normalizes player names to match the format in player_stats.csv (e.g., 'Patrick Mahomes' to 'P.Mahomes').
+    
+    Args:
+        name: The player's full name.
+        
+    Returns:
+        The normalized player name.
+    """
+    parts = name.split(' ')
+    if len(parts) > 1:
+        return f"{parts[0][0]}.{' '.join(parts[1:])}"
+    return name
 
 @retry(
     max_attempts=3,
@@ -256,40 +272,17 @@ def get_next_opponent_roster(league_year: int) -> tuple[list, str]:
             )
 
 
-def normalize_player_name(name: str) -> str:
+def analyze_game(game_type: str) -> str:
     """
-    Normalizes player names to match the format in player_stats.csv (e.g., 'Patrick Mahomes' to 'P.Mahomes').
+    Analyzes the user's last or next game performance and suggests improvements.
     
     Args:
-        name: The player's full name.
+        game_type: 'last' or 'next'
         
-    Returns:
-        The normalized player name.
-    """
-    parts = name.split(' ')
-    if len(parts) > 1:
-        return f"{parts[0][0]}.{' '.join(parts[1:])}"
-    return name
-
-
-def analyze_next_game(opponent_players_raw: list = None) -> str:
-    """
-    Analyzes the next game and provides suggestions to win.
-    If opponent_players_raw is None, it attempts to fetch the roster automatically.
-    
     Returns:
         AI analysis as a string.
-        
-    Raises:
-        ConfigurationError: If config settings are missing or invalid.
-        FileOperationError: If data files cannot be read.
-        DataValidationError: If data files are malformed or empty.
-        APIError: If LLM API call fails.
-        AuthenticationError: If LLM API key is missing.
-        NetworkError: If there's a network issue during LLM API call.
     """
-    logger.info("Starting next game analysis.")
-
+    logger.info(f"Starting {game_type} game analysis.")
     config = load_config()
     league_settings = config.get('league_settings', {})
     roster_settings = config.get('roster_settings', {})
@@ -301,12 +294,6 @@ def analyze_next_game(opponent_players_raw: list = None) -> str:
             "'year' not found in config.yaml under 'league_settings'. Please run 'task get_league_settings' first.",
             config_key="league_settings.year"
         )
-
-    if opponent_players_raw is None:
-        opponent_players_raw, error_message = get_next_opponent_roster(league_year)
-        if error_message:
-            if not opponent_players_raw:
-                raise wrap_exception(Exception(error_message), APIError, error_message)
 
     try:
         player_stats_df = pd.read_csv(PLAYER_STATS_FILE, low_memory=False)
@@ -360,15 +347,6 @@ def analyze_next_game(opponent_players_raw: list = None) -> str:
 
         my_team_players_normalized = [normalize_player_name(p) for p in my_team_players_raw]
 
-        if not opponent_players_raw:
-            raise DataValidationError(
-                "Opponent players list is empty. Cannot proceed with analysis.",
-                field_name="opponent_players_raw",
-                expected_type="non-empty list",
-                actual_value="empty list"
-            )
-        opponent_players_normalized = [normalize_player_name(p) for p in opponent_players_raw]
-
         current_year_stats = player_stats_df[player_stats_df['season'] == league_year]
 
         if current_year_stats.empty:
@@ -379,54 +357,141 @@ def analyze_next_game(opponent_players_raw: list = None) -> str:
                 actual_value="empty DataFrame"
             )
 
-        my_team_avg_points = current_year_stats[current_year_stats['player_name'].isin(my_team_players_normalized)]['fantasy_points'].mean()
-        opponent_avg_points = current_year_stats[current_year_stats['player_name'].isin(opponent_players_normalized)]['fantasy_points'].mean()
+        if game_type == 'last':
+            last_week = current_year_stats['week'].max()
+            if pd.isna(last_week):
+                raise DataValidationError(
+                    f"No weekly data found for the year {league_year}. Cannot determine last week.",
+                    field_name="last_week",
+                    expected_type="numeric week value",
+                    actual_value="NaN"
+                )
+
+            logger.info(f"Analyzing performance for Week {int(last_week)} of the {league_year} season...")
+
+            last_week_stats = current_year_stats[current_year_stats['week'] == last_week]
+            if last_week_stats.empty:
+                raise DataValidationError(
+                    f"No stats found for Week {int(last_week)} of the {league_year} season.",
+                    field_name="last_week_stats",
+                    expected_type="non-empty DataFrame",
+                    actual_value="empty DataFrame"
+                )
+
+            my_team_last_week_stats = last_week_stats[last_week_stats['player_name'].isin(my_team_players_normalized)]
+            if my_team_last_week_stats.empty:
+                logger.warning(f"No stats found for your team players in Week {int(last_week)}.")
+                my_team_total_points = 0.0
+            else:
+                my_team_last_week_stats = calculate_fantasy_points(my_team_last_week_stats.copy())
+                my_team_total_points = my_team_last_week_stats['fantasy_points'].sum()
+
+            logger.info(f"Your team scored {my_team_total_points:.2f} points in Week {int(last_week)}.")
+
+            player_performance_details = ""
+            if not my_team_last_week_stats.empty:
+                player_performance_details = my_team_last_week_stats[['player_name', 'fantasy_points', 'position']].to_markdown(index=False)
+            else:
+                player_performance_details = "No individual player stats found for your team this week."
+
+            llm_prompt = f"""
+            Analyze my fantasy football team's performance for Week {int(last_week)} of the {league_year} season.
+
+            **League Context:**
+
+            **1. League Settings:**
+            ```yaml
+            {yaml.dump(league_settings, default_flow_style=False)}
+            ```
+
+            **2. Roster Settings:**
+            ```yaml
+            {yaml.dump(roster_settings, default_flow_style=False)}
+            ```
+
+            **3. Scoring Rules:**
+            ```yaml
+            {yaml.dump(scoring_rules, default_flow_style=False)}
+            ```
+
+            **Analysis Details:**
+
+            My team's roster:
+            {', '.join(my_team_players_raw)}
+
+            My team's fantasy points for Week {int(last_week)}: {my_team_total_points:.2f}
+
+            Here are the individual player performances from my team for Week {int(last_week)}:
+{player_performance_details}
+
+            Based on this information, please provide:
+            1. An evaluation of my team's performance in Week {int(last_week)}. Did I do well or poorly, and why?
+            2. Specific suggestions for improvement, considering potential waiver wire pickups, trade targets, or lineup adjustments.
+            3. Identify any underperforming players on my team.
+            4. Suggest potential strategies for the upcoming weeks.
+            """
+        elif game_type == 'next':
+            opponent_players_raw, error_message = get_next_opponent_roster(league_year)
+            if error_message:
+                if not opponent_players_raw:
+                    raise wrap_exception(Exception(error_message), APIError, error_message)
+
+            if not opponent_players_raw:
+                raise DataValidationError(
+                    "Opponent players list is empty. Cannot proceed with analysis.",
+                    field_name="opponent_players_raw",
+                    expected_type="non-empty list",
+                    actual_value="empty list"
+                )
+            opponent_players_normalized = [normalize_player_name(p) for p in opponent_players_raw]
+
+            my_team_avg_points = current_year_stats[current_year_stats['player_name'].isin(my_team_players_normalized)]['fantasy_points'].mean()
+            opponent_avg_points = current_year_stats[current_year_stats['player_name'].isin(opponent_players_normalized)]['fantasy_points'].mean()
+
+            llm_prompt = f"""
+            Analyze the upcoming fantasy football game based on the following information.
+
+            **League Context:**
+
+            **1. League Settings:**
+            ```yaml
+            {yaml.dump(league_settings, default_flow_style=False)}
+            ```
+
+            **2. Roster Settings:**
+            ```yaml
+            {yaml.dump(roster_settings, default_flow_style=False)}
+            ```
+
+            **3. Scoring Rules:**
+            ```yaml
+            {yaml.dump(scoring_rules, default_flow_style=False)}
+            ```
+
+            **Matchup Details:**
+
+            My Team Roster:
+            {', '.join(my_team_players_raw)}
+            My Team Average Fantasy Points (Season-to-Date): {my_team_avg_points:.2f}
+
+            Opponent Team Roster:
+            {', '.join(opponent_players_raw)}
+            Opponent Team Average Fantasy Points (Season-to-Date): {opponent_avg_points:.2f}
+
+            Based on this, please provide:
+            1. An assessment of my team's strengths and weaknesses against the opponent.
+            2. Key player matchups to watch.
+            3. Strategic suggestions to win the game, considering potential lineup changes, waiver wire pickups, or trade targets.
+            4. Identify any players on either team who might be overperforming or underperforming based on their season averages.
+
+            Important Note: This analysis is based on season-to-date averages. For more accurate predictions, weekly projections would be ideal, but are not available for this analysis.
+            """
+        else:
+            raise ValueError("Invalid game_type specified. Must be 'last' or 'next'.")
+
     except (FileOperationError, DataValidationError) as e:
         logger.error(f"Error processing team data: {e.get_detailed_message()}")
         raise
-
-    league_settings_str = yaml.dump(league_settings, default_flow_style=False)
-    roster_settings_str = yaml.dump(roster_settings, default_flow_style=False)
-    scoring_rules_str = yaml.dump(scoring_rules, default_flow_style=False)
-
-    llm_prompt = f"""
-    Analyze the upcoming fantasy football game based on the following information.
-
-    **League Context:**
-
-    **1. League Settings:**
-    ```yaml
-    {league_settings_str}
-    ```
-
-    **2. Roster Settings:**
-    ```yaml
-    {roster_settings_str}
-    ```
-
-    **3. Scoring Rules:**
-    ```yaml
-    {scoring_rules_str}
-    ```
-
-    **Matchup Details:**
-
-    My Team Roster:
-    {', '.join(my_team_players_raw)}
-    My Team Average Fantasy Points (Season-to-Date): {my_team_avg_points:.2f}
-
-    Opponent Team Roster:
-    {', '.join(opponent_players_raw)}
-    Opponent Team Average Fantasy Points (Season-to-Date): {opponent_avg_points:.2f}
-
-    Based on this, please provide:
-    1. An assessment of my team's strengths and weaknesses against the opponent.
-    2. Key player matchups to watch.
-    3. Strategic suggestions to win the game, considering potential lineup changes, waiver wire pickups, or trade targets.
-    4. Identify any players on either team who might be overperforming or underperforming based on their season averages.
-
-    Important Note: This analysis is based on season-to-date averages. For more accurate predictions, weekly projections would be ideal, but are not available for this analysis.
-    """
 
     logger.info("Asking the AI for analysis...")
     configure_llm_api()
@@ -435,9 +500,20 @@ def analyze_next_game(opponent_players_raw: list = None) -> str:
 
 
 def main():
-    """Main function to run the next game analysis and handle errors."""
+    """Main function to run the game analysis and handle errors."""
+    import argparse
+    parser = argparse.ArgumentParser(description="Analyze a fantasy football game.")
+    parser.add_argument(
+        "game_type",
+        choices=["last", "next"],
+        help="The type of game to analyze.",
+        nargs='?',
+        default="last"
+    )
+    args = parser.parse_args()
+
     try:
-        analysis_output = analyze_next_game()
+        analysis_output = analyze_game(args.game_type)
         if analysis_output:
             print("\n--- AI Analysis ---")
             print(analysis_output)
@@ -447,8 +523,8 @@ def main():
             logger.error("AI analysis returned empty.")
             return 1
     except (ConfigurationError, FileOperationError, DataValidationError, APIError, AuthenticationError, NetworkError) as e:
-        logger.error(f"Next game analysis error: {e.get_detailed_message()}")
-        print(f"\n❌ Error during next game analysis: {e}")
+        logger.error(f"Game analysis error: {e.get_detailed_message()}")
+        print(f"\n❌ Error during game analysis: {e}")
         return 1
     except Exception as e:
         logger.critical(f"An unhandled critical error occurred: {e}", exc_info=True)

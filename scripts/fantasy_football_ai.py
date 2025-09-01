@@ -18,16 +18,20 @@ import openai
 from openai import OpenAI
 from dotenv import load_dotenv
 import time
+from pydantic import ValidationError
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
 from fantasy_ai.errors import (
     APIError, AuthenticationError, ConfigurationError, 
-    FileIOError, DataValidationError, RateLimitError, wrap_exception
+    FileOperationError, DataValidationError, RateLimitError, wrap_exception
 )
 from fantasy_ai.utils.retry import retry
 from fantasy_ai.utils.logging import setup_logging, get_logger
+from fantasy_ai.config_model import Config # Import the Pydantic Config model
+from scripts.utils import load_config
 
 # Set up logging
 setup_logging(level='INFO', format_type='console', log_file='logs/fantasy_football_ai.log')
@@ -44,48 +48,12 @@ CONFIG_FILE = os.path.join(
 # Global client variable
 CLIENT = None
 
-
-def load_config() -> dict:
-    """
-    Load configuration from config.yaml with proper error handling.
-    
-    Returns:
-        Configuration dictionary
-        
-    Raises:
-        ConfigurationError: If config file cannot be read or parsed
-    """
-    try:
-        logger.debug(f"Loading configuration from {CONFIG_FILE}")
-        with open(CONFIG_FILE, 'r') as f:
-            config = yaml.safe_load(f)
-        logger.info("Configuration loaded successfully")
-        return config
-    except FileNotFoundError as e:
-        raise ConfigurationError(
-            f"Configuration file not found: {CONFIG_FILE}. Please run 'task init' first.",
-            config_file=CONFIG_FILE,
-            original_error=e
-        )
-    except yaml.YAMLError as e:
-        raise ConfigurationError(
-            f"Invalid YAML in configuration file: {CONFIG_FILE}",
-            config_file=CONFIG_FILE,
-            original_error=e
-        )
-    except Exception as e:
-        raise wrap_exception(
-            e, ConfigurationError,
-            f"Failed to load configuration from {CONFIG_FILE}",
-            config_file=CONFIG_FILE
-        )
-
-def get_llm_settings(config: dict) -> tuple:
+def get_llm_settings(config: Config) -> tuple:
     """
     Extract LLM settings from configuration with validation.
     
     Args:
-        config: Configuration dictionary
+        config: Validated configuration object (Pydantic Config model)
         
     Returns:
         Tuple of (provider, model, request_delay)
@@ -94,9 +62,9 @@ def get_llm_settings(config: dict) -> tuple:
         ConfigurationError: If LLM settings are invalid
     """
     try:
-        llm_settings = config.get('llm_settings', {})
+        llm_settings = config.llm_settings
         
-        provider = llm_settings.get('provider', 'google')
+        provider = llm_settings.provider
         if provider not in ['google', 'openai']:
             raise ConfigurationError(
                 f"Unsupported LLM provider: {provider}. Supported providers: google, openai",
@@ -104,17 +72,12 @@ def get_llm_settings(config: dict) -> tuple:
                 config_file=CONFIG_FILE
             )
         
-        # Set default models based on provider
-        default_models = {
-            'google': 'gemini-pro',
-            'openai': 'gpt-3.5-turbo'
-        }
-        model = llm_settings.get('model', default_models[provider])
-        request_delay = llm_settings.get('openai_request_delay', 0)
+        model = llm_settings.model
+        request_delay = llm_settings.openai_request_delay if llm_settings.openai_request_delay is not None else 0
         
         logger.info(f"LLM settings: provider={provider}, model={model}, delay={request_delay}")
         return provider, model, request_delay
-        
+
     except ConfigurationError:
         raise  # Re-raise configuration errors
     except Exception as e:
