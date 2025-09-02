@@ -129,18 +129,17 @@ def compare_roster_positions(config_path: str, my_team_path: str) -> tuple[str, 
         'RB/WR': 'RB_WR', 'WR/TE': 'WR_TE',
     }
 
-    position_pattern = re.compile(r'##\s+([A-Z/]+)\s*\((\d+)\)')
     lines = my_team_content.split('\n')
-    current_position_raw = None
-    for line in lines:
-        match = position_pattern.match(line)
-        if match:
-            current_position_raw = match.group(1)
-            current_position_mapped = position_map.get(current_position_raw, current_position_raw)
-            actual_roster[current_position_mapped] = 0
-        elif line.strip().startswith('- ') and current_position_raw:
-            current_position_mapped = position_map.get(current_position_raw, current_position_raw)
-            actual_roster[current_position_mapped] += 1
+    # Skip header and separator lines (first 4 lines)
+    for line in lines[4:]:
+        line = line.strip()
+        if line.startswith('|') and '|' in line[1:]:
+            parts = [p.strip() for p in line.split('|')]
+            if len(parts) > 2: # Ensure there's at least a player name and position column
+                position = parts[2] # Assuming position is in the third column (index 2)
+                if position: # Ensure it's not empty
+                    mapped_position = position_map.get(position, position)
+                    actual_roster[mapped_position] = actual_roster.get(mapped_position, 0) + 1
 
     headers = ["Position", "Expected", "Actual", "Status"]
     table_data = []
