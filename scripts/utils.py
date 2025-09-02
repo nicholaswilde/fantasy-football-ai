@@ -162,3 +162,18 @@ def load_my_team(roster_file: str) -> list:
         return roster
     except FileNotFoundError:
         return [] # Return empty list if file not found
+
+import re
+
+def normalize_player_name(name: str) -> str:
+    """
+    Normalizes a player's name for consistent comparison.
+    Converts to lowercase, removes punctuation, and handles common suffixes.
+    """
+    if not isinstance(name, str):
+        return ""
+    name = name.lower()
+    name = re.sub(r'[^a-z0-9\s]', '', name) # Remove punctuation
+    name = re.sub(r'\s(jr|sr|ii|iii|iv|v)\.?', '', name) # Remove suffixes
+    name = name.replace(' ', '') # Remove spaces
+    return name

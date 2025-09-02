@@ -51,6 +51,7 @@ from scripts.data_manager import get_team_roster
 from scripts.analyze_game import analyze_game
 from scripts.compare_roster_positions import compare_roster_positions
 from scripts.utils import load_config
+from scripts.free_agent_analyzer import analyze_free_agents
 
 # Helper function to normalize player names, e.g., 'Patrick Mahomes' to 'P.Mahomes'
 def normalize_player_name(name):
@@ -133,7 +134,7 @@ def get_trade_suggestions(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]
     return sell_high, buy_low
 
 
-def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, output_dir, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df):
+def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, output_dir, my_team_raw, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df):
     """
     Generates a Markdown blog post from the analysis data for MkDocs Material.
 
@@ -295,20 +296,49 @@ tags:
 
     report_content += "\n\n---\n\n"
 
-    # Pickup Suggestions
-    report_content += "## Top Waiver Wire Pickups\n\n"
-    report_content += "Here are some of the top players available on the waiver wire, based on their recent performance and potential.\n\n"
-    pickup_display_df = pickup_suggestions_df[['player_name', 'position', 'recent_team', 'vor']].copy()
-    pickup_display_df.rename(columns={
-        'player_name': 'Player',
-        'position': 'Position',
-        'recent_team': 'Team',
-        'vor': 'VOR'
-    }, inplace=True)
-    report_content += pickup_display_df.to_markdown(index=False)
-    report_content += "\n"
+    # Waiver Wire Gems
+    report_content += "## Waiver Wire Gems (High Usage, Underperforming)\n\n"
+    if not waiver_gems_df.empty:
+        display_gems_df = waiver_gems_df.copy()
+        display_gems_df.rename(columns={
+            'player_display_name': 'Player',
+            'position': 'Position',
+            'recent_team': 'Team',
+            'recent_ppr_avg': 'Recent PPR Avg',
+            'season_ppr_avg': 'Season PPR Avg',
+            'recent_targets_avg': 'Recent Targets Avg',
+            'recent_carries_avg': 'Recent Carries Avg',
+            'target_share': 'Target Share',
+            'air_yards_share': 'Air Yards Share'
+        }, inplace=True)
+        
+        # Format percentages safely
+        try:
+            if 'Target Share' in display_gems_df.columns:
+                display_gems_df['Target Share'] = display_gems_df['Target Share'].apply(
+                    lambda x: f"{x:.1%}" if pd.notna(x) else "N/A"
+                )
+            if 'Air Yards Share' in display_gems_df.columns:
+                display_gems_df['Air Yards Share'] = display_gems_df['Air Yards Share'].apply(
+                    lambda x: f"{x:.1%}" if pd.notna(x) else "N/A"
+                )
+        except Exception as e:
+            logger.warning(f"Error formatting percentages: {e}")
+        
+        # Select and order columns for display
+        display_cols = [
+            'Player', 'Position', 'Team', 'Recent PPR Avg', 'Season PPR Avg',
+            'Recent Targets Avg', 'Recent Carries Avg', 'Target Share', 'Air Yards Share'
+        ]
+        # Filter out columns that might not exist in the DataFrame
+        display_cols = [col for col in display_cols if col in display_gems_df.columns]
 
-    report_content += "\n\n---\n\n"
+        report_content += display_gems_df[display_cols].to_markdown(index=False)
+        report_content += "\n\n"
+    else:
+        report_content += "No waiver wire gems identified at this time.\n\n"
+
+    report_content += "---\n\n"
 
     # Trade Suggestions
     report_content += "## Trade Suggestions\n\n"
@@ -364,7 +394,7 @@ tags:
             operation="write"
         )
 
-def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df):
+def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, sell_high_df, buy_low_df, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df):
     """
     Generates a terminal report from the analysis data.
     """
@@ -429,15 +459,45 @@ def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
     }, inplace=True)
     print(tabulate(trade_recs_display_df, headers='keys', tablefmt='fancy_grid', showindex=False))
 
-    print("\n--- Top Waiver Wire Pickups ---")
-    pickup_display_df = pickup_suggestions_df[['player_name', 'position', 'recent_team', 'vor']].copy()
-    pickup_display_df.rename(columns={
-        'player_name': 'Player',
-        'position': 'Position',
-        'recent_team': 'Team',
-        'vor': 'VOR'
-    }, inplace=True)
-    print(tabulate(pickup_display_df, headers='keys', tablefmt='fancy_grid', showindex=False))
+    print("\n--- Waiver Wire Gems (High Usage, Underperforming) ---")
+    if not waiver_gems_df.empty:
+        display_gems_df = waiver_gems_df.copy()
+        display_gems_df.rename(columns={
+            'player_display_name': 'Player',
+            'position': 'Position',
+            'recent_team': 'Team',
+            'recent_ppr_avg': 'Recent PPR Avg',
+            'season_ppr_avg': 'Season PPR Avg',
+            'recent_targets_avg': 'Recent Targets Avg',
+            'recent_carries_avg': 'Recent Carries Avg',
+            'target_share': 'Target Share',
+            'air_yards_share': 'Air Yards Share'
+        }, inplace=True)
+        
+        # Format percentages safely
+        try:
+            if 'Target Share' in display_gems_df.columns:
+                display_gems_df['Target Share'] = display_gems_df['Target Share'].apply(
+                    lambda x: f"{x:.1%}" if pd.notna(x) else "N/A"
+                )
+            if 'Air Yards Share' in display_gems_df.columns:
+                display_gems_df['Air Yards Share'] = display_gems_df['Air Yards Share'].apply(
+                    lambda x: f"{x:.1%}" if pd.notna(x) else "N/A"
+                )
+        except Exception as e:
+            logger.warning(f"Error formatting percentages: {e}")
+        
+        # Select and order columns for display
+        display_cols = [
+            'Player', 'Position', 'Team', 'Recent PPR Avg', 'Season PPR Avg',
+            'Recent Targets Avg', 'Recent Carries Avg', 'Target Share', 'Air Yards Share'
+        ]
+        # Filter out columns that might not exist in the DataFrame
+        display_cols = [col for col in display_cols if col in display_gems_df.columns]
+
+        print(tabulate(display_gems_df[display_cols], headers='keys', tablefmt='fancy_grid', showindex=False))
+    else:
+        print("No waiver wire gems identified at this time.")
 
     print("\n--- Trade Suggestions ---")
     print("### Sell-High Candidates")
@@ -547,8 +607,7 @@ def main():
         trade_recs = get_trade_recommendations(draft_recs, team_roster=my_team_normalized, config=config)
 
         # Get pickup and trade suggestions
-        available_players_df = draft_recs[~draft_recs['player_name'].isin(my_team_normalized)]
-        pickup_suggestions = get_pickup_suggestions(available_players_df)
+        waiver_gems_df = analyze_free_agents()
 
         sell_high_suggestions, buy_low_suggestions = get_trade_suggestions(stats_with_points)
 
@@ -575,16 +634,16 @@ def main():
 
         if args.report_type == "markdown":
             absolute_output_dir = os.path.abspath(args.output_dir)
-            generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, absolute_output_dir, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df)
+            generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, absolute_output_dir, my_team_raw, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df)
             print("✓ Markdown report generated successfully!")
         elif args.report_type == "terminal":
-            generate_terminal_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df)
+            generate_terminal_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, my_team_raw, sell_high_suggestions, buy_low_suggestions, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df)
             print("✓ Terminal report generated successfully!")
         elif args.report_type == "html":
             absolute_output_dir = os.path.abspath(args.output_dir)
             markdown_file = os.path.join(absolute_output_dir, f"{datetime.now().strftime('%Y-%m-%d')}-fantasy-football-analysis.md")
             html_file = os.path.join(absolute_output_dir, f"{datetime.now().strftime('%Y-%m-%d')}-fantasy-football-analysis.html")
-            generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, absolute_output_dir, my_team_raw, pickup_suggestions, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df)
+            generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, absolute_output_dir, my_team_raw, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df)
             render_markdown_to_html(markdown_file, html_file)
             webbrowser.open_new_tab(os.path.abspath(html_file))
             print("✓ HTML report generated and opened successfully!")

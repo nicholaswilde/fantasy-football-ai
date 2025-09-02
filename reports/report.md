@@ -91,9 +91,38 @@ Drafting strategically means planning for bye weeks. The following highly-ranked
 **Week 13**: 4 top players are on bye.
 **Week 16**: 3 top players are on bye.
 
----
+--- 
 
-## Smart Trade Targets
+## Waiver Wire Gems (High Usage, Underperforming)
+
+| Player              | Position   | Team   | Target Share   | Air Yards Share   |
+|:--------------------|:-----------|:-------|:---------------|:------------------|
+| Derrick Henry       | RB         | TEN    | 15.4%          | -0.8%             |
+| Deon Jackson        | RB         | IND    | 15.4%          | -2.8%             |
+| Jaleel McLaughlin   | RB         | DEN    | 11.9%          | -8.0%             |
+| Brian Robinson      | RB         | WAS    | 8.3%           | 3.5%              |
+| Javonte Williams    | RB         | DEN    | 10.3%          | -6.8%             |
+| Alexander Mattison  | RB         | LV     | 11.8%          | 0.7%              |
+| Bijan Robinson      | RB         | ATL    | 15.8%          | 2.1%              |
+| Brandin Cooks       | WR         | DAL    | 27.3%          | 22.0%             |
+| Calvin Ridley       | WR         | TEN    | 29.6%          | 54.1%             |
+| Keaontay Ingram     | RB         | ARI    | N/A            | N/A               |
+| Deuce Vaughn        | RB         | DAL    | 2.8%           | 0.4%              |
+| Zach Charbonnet     | RB         | SEA    | 3.6%           | -1.3%             |
+| Kavontae Turpin     | WR         | DAL    | 16.3%          | 14.1%             |
+| John Metchie        | WR         | HOU    | 25.0%          | 22.9%             |
+| Zach Ertz           | TE         | WAS    | 29.6%          | 23.0%             |
+| Amari Cooper        | WR         | CLE    | 24.2%          | 35.3%             |
+| Dalvin Cook         | RB         | NYJ    | 2.9%           | -2.1%             |
+| Tyjae Spears        | RB         | TEN    | 16.7%          | -2.4%             |
+| Sean Tucker         | RB         | TB     | N/A            | N/A               |
+| Garrett Wilson      | WR         | NYJ    | 28.6%          | 56.0%             |
+| Ke'Shawn Vaughn     | RB         | TB     | 5.4%           | -1.1%             |
+| Tee Higgins         | WR         | CIN    | 25.8%          | 64.0%             |
+| Clyde Edwards-Helaire | RB         | KC     | 2.9%           | -0.4%             |
+| Jaylen Wright       | RB         | MIA    | 2.5%           | 0.0%              |
+
+---
 
 Looking to make a move? These are potential trade targets based on their positional value and consistency. Acquiring one of these players could be the key to a championship run.
 
@@ -113,20 +142,7 @@ Looking to make a move? These are potential trade targets based on their positio
 
 ---
 
-## Top Waiver Wire Pickups
 
-Here are some of the top players available on the waiver wire, based on their recent performance and potential.
-
-| Player    | Position   | Team   |     VOR |
-|:----------|:-----------|:-------|--------:|
-| S.Barkley | RB         | PHI    | 9.62917 |
-| K.Allen   | WR         | LAC    | 6.56583 |
-| T.Hill    | TE         | NO     | 6.44333 |
-| A.Cooper  | WR         | CLE    | 6.10583 |
-| J.Chase   | WR         | CIN    | 6.00583 |
-
-
----
 
 ## Trade Suggestions
 

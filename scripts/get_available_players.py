@@ -33,6 +33,7 @@ from fantasy_ai.errors import (
 from scripts.utils import load_config
 from fantasy_ai.utils.logging import setup_logging, get_logger
 from fantasy_ai.utils.retry import retry
+from scripts.utils import normalize_player_name
 
 # Set up logging
 setup_logging(level='INFO', format_type='console', log_file='logs/get_available_players.log')
@@ -65,17 +66,91 @@ def get_available_players(league_id: int, espn_s2: str, swid: str) -> None:
         # Get free agents
         free_agents = league.free_agents(size=1000)
 
-        if not free_agents:
+        # Get all rostered players in the league
+        rostered_player_names = set()
+        for team in league.teams:
+            for player in team.roster:
+                rostered_player_names.add(normalize_player_name(player.name))
+
+        # Filter free agents to only include those not on any team's roster
+        truly_available_players = []
+        for player in free_agents:
+            normalized_free_agent_name = normalize_player_name(player.name)
+            if normalized_free_agent_name not in rostered_player_names:
+                truly_available_players.append(player)
+
+        if not truly_available_players:
             raise DataValidationError(
-                "No free agents found in the league. The league might be empty or inaccessible.",
-                field_name="free_agents",
+                "No truly available free agents found in the league after filtering rostered players.",
+                field_name="truly_available_players",
                 expected_type="non-empty list",
                 actual_value="empty list"
             )
 
         # Convert player data to a list of dictionaries
         players_data = []
-        for player in free_agents:
+                # Get all rostered players in the league
+        rostered_player_names = set()
+        for team in league.teams:
+            for player in team.roster:
+                rostered_player_names.add(player.name)
+
+        # Filter free agents to only include those not on any team's roster
+        truly_available_players = [
+            player for player in free_agents if player.name not in rostered_player_names
+        ]
+
+        if not truly_available_players:
+            raise DataValidationError(
+                "No truly available free agents found in the league after filtering rostered players.",
+                field_name="truly_available_players",
+                expected_type="non-empty list",
+                actual_value="empty list"
+            )
+
+        # Convert player data to a list of dictionaries
+        players_data = []
+                # Get all rostered players in the league
+        rostered_player_names = set()
+        for team in league.teams:
+            for player in team.roster:
+                rostered_player_names.add(normalize_player_name(player.name))
+        logger.info(f"Rostered players in league: {list(rostered_player_names)}")
+
+        # Filter free agents to only include those not on any team's roster
+        truly_available_players = [
+            player for player in free_agents if normalize_player_name(player.name) not in rostered_player_names
+        ]
+        logger.info(f"Truly available players after filtering: {[normalize_player_name(p.name) for p in truly_available_players]}")
+
+        if not truly_available_players:
+            raise DataValidationError(
+                "No truly available free agents found in the league after filtering rostered players.",
+                field_name="truly_available_players",
+                expected_type="non-empty list",
+                actual_value="empty list"
+            )
+
+        # Convert player data to a list of dictionaries
+        players_data = []
+        for player in truly_available_players: # Use truly_available_players here
+            players_data.append({
+                'name': player.name,
+                'normalized_name': normalize_player_name(player.name),
+                'position': player.position,
+                'pro_team': player.proTeam,
+                'total_points': player.total_points,
+                'projected_points': player.projected_points,
+                'percent_owned': player.percent_owned,
+            })
+            players_data.append({
+                'name': player.name,
+                'position': player.position,
+                'pro_team': player.proTeam,
+                'total_points': player.total_points,
+                'projected_points': player.projected_points,
+                'percent_owned': player.percent_owned,
+            })
             players_data.append({
                 'name': player.name,
                 'position': player.position,

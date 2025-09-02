@@ -12,6 +12,7 @@ from fantasy_ai.errors import (
 )
 from fantasy_ai.utils.logging import setup_logging, get_logger
 from scripts.utils import load_config
+from scripts.utils import normalize_player_name
 
 # Set up logging
 setup_logging(level='INFO', format_type='console', log_file='logs/analysis.log')
@@ -500,14 +501,20 @@ def recommend_pickups(available_players_df: pd.DataFrame, all_players_df: pd.Dat
     Returns:
         DataFrame with pickup recommendations.
     """
-    # Get the names of available players
-    available_player_names = available_players_df['name'].tolist()
+    # Get the normalized names of available players
+    available_player_normalized_names = available_players_df['normalized_name'].tolist()
 
-    # Filter all_players_df to only include available players
-    available_players_stats_df = all_players_df[all_players_df['player_display_name'].isin(available_player_names)]
+    # Normalize player_display_name in all_players_df for consistent comparison
+    all_players_df['normalized_name'] = all_players_df['player_display_name'].apply(normalize_player_name)
 
-    # Filter out players already on the team roster
-    available_players_stats_df = available_players_stats_df[~available_players_stats_df['player_display_name'].isin(team_roster)]
+    # Filter all_players_df to only include available players by normalized name
+    available_players_stats_df = all_players_df[all_players_df['normalized_name'].isin(available_player_normalized_names)]
+
+    # Normalize team_roster names for consistent comparison
+    normalized_team_roster = [normalize_player_name(name) for name in team_roster]
+
+    # Filter out players already on the team roster by normalized name
+    available_players_stats_df = available_players_stats_df[~available_players_stats_df['normalized_name'].isin(normalized_team_roster)]
 
     if 'vor' in available_players_stats_df.columns and 'consistency_std_dev' in available_players_stats_df.columns:
         pickup_targets = available_players_stats_df.sort_values(by=['vor', 'consistency_std_dev'], ascending=[False, True])
@@ -531,7 +538,7 @@ def find_waiver_gems(player_stats_df: pd.DataFrame, team_roster: list) -> pd.Dat
         DataFrame with waiver gem recommendations.
     """
     # Filter out players already on the team
-    waiver_players = player_stats_df[~player_stats_df['player_display_name'].isin(team_roster)]
+    waiver_players = player_stats_df[~player_stats_df['player_display_name'].isin(team_roster)].copy()
 
     # Calculate usage (targets + carries)
     waiver_players['usage'] = waiver_players.get('targets', 0) + waiver_players.get('carries', 0)
