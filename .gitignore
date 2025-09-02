@@ -26,3 +26,5 @@ data/my_team.md
 .aider*
 logs/
 settings.txt
+/backups/
+/docs/reports/posts/*.md
