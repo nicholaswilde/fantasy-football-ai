@@ -131,11 +131,16 @@ def compare_roster_positions(config_path: str, my_team_path: str) -> tuple[str, 
 
     lines = my_team_content.split('\n')
     # Skip header and separator lines (first 4 lines)
-    for line in lines[4:]:
+    for line in lines:
         line = line.strip()
+        # Skip empty lines and Markdown table separator lines
+        if not line or all(c in '|-:' for c in line):
+            continue
+        
         if line.startswith('|') and '|' in line[1:]:
             parts = [p.strip() for p in line.split('|')]
-            if len(parts) > 2: # Ensure there's at least a player name and position column
+            # Ensure there's at least a player name and position column and the position is not the separator
+            if len(parts) > 2 and parts[2] != ':----------':
                 position = parts[2] # Assuming position is in the third column (index 2)
                 if position: # Ensure it's not empty
                     mapped_position = position_map.get(position, position)
