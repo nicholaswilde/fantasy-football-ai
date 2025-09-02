@@ -220,6 +220,9 @@ def get_advanced_draft_recommendations(df: pd.DataFrame, config: dict) -> pd.Dat
             player_total_points = pos_df.groupby('player_name')['fantasy_points'].sum().reset_index()
             player_total_points.rename(columns={'fantasy_points': 'total_fantasy_points'}, inplace=True)
 
+            # Filter out players with 0 total fantasy points
+            player_total_points = player_total_points[player_total_points['total_fantasy_points'] > 0]
+
             replacement_level_count = 0
             if position == 'QB':
                 replacement_level_count = num_teams * roster_settings.get('QB', 1)
@@ -482,3 +485,65 @@ def get_trade_recommendations(df: pd.DataFrame, team_roster: list, config: dict)
             f"Missing expected key in DataFrame for trade recommendations: {e}",
             original_error=e
         )
+
+def recommend_pickups(available_players_df: pd.DataFrame, all_players_df: pd.DataFrame, team_roster: list, config: dict) -> pd.DataFrame:
+    """
+    Suggests potential waiver wire pickups based on player value and consistency.
+    Filters out players already on the team roster.
+    
+    Args:
+        available_players_df: DataFrame of players available on the waiver wire.
+        all_players_df: DataFrame with all player statistics and VOR/consistency metrics.
+        team_roster: List of player names on the user's team.
+        config: Configuration dictionary.
+        
+    Returns:
+        DataFrame with pickup recommendations.
+    """
+    # Get the names of available players
+    available_player_names = available_players_df['name'].tolist()
+
+    # Filter all_players_df to only include available players
+    available_players_stats_df = all_players_df[all_players_df['player_display_name'].isin(available_player_names)]
+
+    # Filter out players already on the team roster
+    available_players_stats_df = available_players_stats_df[~available_players_stats_df['player_display_name'].isin(team_roster)]
+
+    if 'vor' in available_players_stats_df.columns and 'consistency_std_dev' in available_players_stats_df.columns:
+        pickup_targets = available_players_stats_df.sort_values(by=['vor', 'consistency_std_dev'], ascending=[False, True])
+    else:
+        # Fallback to fantasy_points if VOR or consistency is not available
+        pickup_targets = available_players_stats_df.sort_values(by=['fantasy_points'], ascending=[False])
+
+    num_pickup_targets = config.get('analysis_settings', {}).get('num_pickup_targets', 10)
+    
+    return pickup_targets.head(num_pickup_targets)
+
+def find_waiver_gems(player_stats_df: pd.DataFrame, team_roster: list) -> pd.DataFrame:
+    """
+    Identifies waiver wire gems based on high usage but low performance.
+    
+    Args:
+        player_stats_df: DataFrame with all player statistics.
+        team_roster: List of player names on the user's team.
+        
+    Returns:
+        DataFrame with waiver gem recommendations.
+    """
+    # Filter out players already on the team
+    waiver_players = player_stats_df[~player_stats_df['player_display_name'].isin(team_roster)]
+
+    # Calculate usage (targets + carries)
+    waiver_players['usage'] = waiver_players.get('targets', 0) + waiver_players.get('carries', 0)
+
+    # Find players with high usage and low fantasy points
+    # This is a simple approach, more sophisticated methods could be used
+    high_usage_threshold = waiver_players['usage'].quantile(0.75)
+    low_points_threshold = waiver_players['fantasy_points'].quantile(0.25)
+
+    waiver_gems = waiver_players[
+        (waiver_players['usage'] >= high_usage_threshold) &
+        (waiver_players['fantasy_points'] <= low_points_threshold)
+    ]
+
+    return waiver_gems.sort_values(by='usage', ascending=False)
