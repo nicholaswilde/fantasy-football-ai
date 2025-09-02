@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
 from scripts.utils import load_config
+from fantasy_ai.utils.logging import setup_logging, get_logger
 
 # Set up logging
 setup_logging(level='INFO', format_type='console', log_file='logs/compare_roster_positions.log')

@@ -49,6 +49,7 @@ from scripts.analysis import (
 )
 from scripts.data_manager import get_team_roster
 from scripts.analyze_game import analyze_game
+from scripts.compare_roster_positions import compare_roster_positions
 from scripts.utils import load_config
 
 # Helper function to normalize player names, e.g., 'Patrick Mahomes' to 'P.Mahomes'
@@ -363,6 +364,106 @@ tags:
             operation="write"
         )
 
+def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, pickup_suggestions_df, sell_high_df, buy_low_df, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df):
+    """
+    Generates a terminal report from the analysis data.
+    """
+    print("--- My Team Analysis ---")
+    print("### Current Roster")
+    my_roster_display_df = my_team_df.drop_duplicates(subset=['player_name'])[['player_name', 'recent_team', 'position', 'vor', 'consistency_std_dev']].copy()
+    my_roster_display_df.rename(columns={
+        'player_name': 'Player',
+        'recent_team': 'Team',
+        'position': 'Position',
+        'vor': 'VOR',
+        'consistency_std_dev': 'Consistency (Std Dev)'
+    }, inplace=True)
+    print(tabulate(my_roster_display_df, headers='keys', tablefmt='fancy_grid', showindex=False))
+    
+    print("\n### Roster vs. League Settings Comparison")
+    print(roster_comparison_table)
+    if roster_mismatch_table:
+        print("\n#### Mismatches")
+        print(roster_mismatch_table)
+
+    print(team_analysis_str)
+    print("\n#### Positional Breakdown (VOR vs. League Average)")
+    print(tabulate(positional_breakdown_df, headers='keys', tablefmt='fancy_grid', showindex=False, floatfmt=".2f"))
+
+    print("\n--- Last Game Analysis ---")
+    print(last_game_analysis_str)
+
+    print("\n--- Next Game Analysis ---")
+    print(next_game_analysis_str)
+
+    print("\n--- Top Players to Target ---")
+    draft_recs_display_df = draft_recs_df[['player_name', 'recent_team', 'position', 'vor', 'consistency_std_dev']].head(10).copy()
+    draft_recs_display_df.rename(columns={
+        'player_name': 'Player',
+        'recent_team': 'Team',
+        'position': 'Position',
+        'vor': 'VOR',
+        'consistency_std_dev': 'Consistency (Std Dev)'
+    }, inplace=True)
+    print(tabulate(draft_recs_display_df, headers='keys', tablefmt='fancy_grid', showindex=False))
+
+    print("\n--- Bye Week Cheat Sheet ---")
+    if not bye_conflicts_df.empty:
+        print("### Heads Up! Potential Bye Week Conflicts")
+        for _, row in bye_conflicts_df.iterrows():
+            print(f"**Week {int(row['bye_week'])}**: {int(row['player_count'])} top players are on bye.")
+    else:
+        print("No major bye week conflicts were found among the top-ranked players. Smooth sailing!")
+
+    print("\n--- Smart Trade Targets ---")
+    trade_recs_df.rename(columns={'player_name': 'player_display_name'}, inplace=True)
+    trade_recs_display_df = trade_recs_df[['player_display_name', 'position', 'recent_team', 'vor', 'consistency_std_dev', 'fantasy_points_ppr', 'bye_week']].copy()
+    trade_recs_display_df.rename(columns={
+        'player_display_name': 'Player',
+        'position': 'Position',
+        'recent_team': 'Team',
+        'vor': 'VOR',
+        'consistency_std_dev': 'Consistency (Std Dev)',
+        'fantasy_points_ppr': 'PPR Points',
+        'bye_week': 'Bye'
+    }, inplace=True)
+    print(tabulate(trade_recs_display_df, headers='keys', tablefmt='fancy_grid', showindex=False))
+
+    print("\n--- Top Waiver Wire Pickups ---")
+    pickup_display_df = pickup_suggestions_df[['player_name', 'position', 'recent_team', 'vor']].copy()
+    pickup_display_df.rename(columns={
+        'player_name': 'Player',
+        'position': 'Position',
+        'recent_team': 'Team',
+        'vor': 'VOR'
+    }, inplace=True)
+    print(tabulate(pickup_display_df, headers='keys', tablefmt='fancy_grid', showindex=False))
+
+    print("\n--- Trade Suggestions ---")
+    print("### Sell-High Candidates")
+    sell_high_display_df = sell_high_df[['player_display_name', 'position', 'recent_team', 'fantasy_points', 'avg_fantasy_points', 'point_difference']].copy()
+    sell_high_display_df.rename(columns={
+        'player_display_name': 'Player',
+        'position': 'Position',
+        'recent_team': 'Team',
+        'fantasy_points': 'Current Week Pts',
+        'avg_fantasy_points': 'Avg Pts (Prev Weeks)',
+        'point_difference': 'Point Difference'
+    }, inplace=True)
+    print(tabulate(sell_high_display_df, headers='keys', tablefmt='fancy_grid', showindex=False))
+
+    print("\n### Buy-Low Candidates")
+    buy_low_display_df = buy_low_df[['player_display_name', 'position', 'recent_team', 'fantasy_points', 'avg_fantasy_points', 'point_difference']].copy()
+    buy_low_display_df.rename(columns={
+        'player_display_name': 'Player',
+        'position': 'Position',
+        'recent_team': 'Team',
+        'fantasy_points': 'Current Week Pts',
+        'avg_fantasy_points': 'Avg Pts (Prev Weeks)',
+        'point_difference': 'Point Difference'
+    }, inplace=True)
+    print(tabulate(buy_low_display_df, headers='keys', tablefmt='fancy_grid', showindex=False))
+
 
 def main():
     parser = argparse.ArgumentParser(description="Generate a fantasy football analysis report.")
@@ -419,7 +520,7 @@ def main():
                 actual_value="empty DataFrame"
             )
 
-        stats_with_points = calculate_fantasy_points(stats_df)
+        stats_with_points = calculate_fantasy_points(stats_df, config.get('scoring_rules', {}))
 
         # Add a placeholder bye_week column for demonstration purposes
         if 'week' in stats_with_points.columns:
@@ -428,12 +529,12 @@ def main():
             stats_with_points['bye_week'] = 0
 
         # Get analysis data
-        draft_recs = get_advanced_draft_recommendations(stats_with_points)
+        draft_recs = get_advanced_draft_recommendations(stats_with_points, config)
 
         # Merge recent_team into draft_recs
         draft_recs = pd.merge(draft_recs, stats_with_points[['player_name', 'recent_team']].drop_duplicates(), on='player_name', how='left')
 
-        bye_conflicts = check_bye_week_conflicts(stats_with_points)
+        bye_conflicts = check_bye_week_conflicts(stats_with_points, config)
 
         # Get team roster and analysis
         my_team_raw = get_team_roster(roster_file)
@@ -441,9 +542,9 @@ def main():
         my_team_normalized = [normalize_player_name(name) for name in my_team_raw]
         my_team_df = draft_recs[draft_recs['player_name'].isin(my_team_normalized)]
         
-        team_analysis_str, positional_breakdown_df = analyze_team_needs(my_team_df, draft_recs)
+        team_analysis_str, positional_breakdown_df = analyze_team_needs(my_team_df, draft_recs, config)
 
-        trade_recs = get_trade_recommendations(draft_recs, team_roster=my_team_normalized)
+        trade_recs = get_trade_recommendations(draft_recs, team_roster=my_team_normalized, config=config)
 
         # Get pickup and trade suggestions
         available_players_df = draft_recs[~draft_recs['player_name'].isin(my_team_normalized)]

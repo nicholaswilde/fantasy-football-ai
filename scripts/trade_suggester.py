@@ -16,7 +16,7 @@ from fantasy_ai.errors import (
 )
 from fantasy_ai.utils.logging import setup_logging, get_logger
 from scripts.utils import load_config
-from .analysis import get_trade_recommendations
+from scripts.reporting import get_trade_suggestions
 
 # Set up logging
 setup_logging(level='INFO', format_type='console', log_file='logs/trade_suggester.log')
@@ -40,11 +40,8 @@ def main():
         # Read the stats file
         stats_df = pd.read_csv(data_file, low_memory=False)
 
-        # Find the most recent week
-        most_recent_week = stats_df['week'].max()
-
         # Get trade suggestions
-        sell_high, buy_low = get_trade_recommendations(stats_df, most_recent_week)
+        sell_high, buy_low = get_trade_suggestions(stats_df)
 
         # Define the columns to display
         columns_to_display = [

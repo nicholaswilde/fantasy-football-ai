@@ -350,12 +350,7 @@ def analyze_game(game_type: str) -> str:
         current_year_stats = player_stats_df[player_stats_df['season'] == league_year]
 
         if current_year_stats.empty:
-            raise DataValidationError(
-                f"No player stats found for the year {league_year}. Please ensure data is available for this season.",
-                field_name="current_year_stats",
-                expected_type="non-empty DataFrame",
-                actual_value="empty DataFrame"
-            )
+            return f"No player stats found for the year {league_year}. Please ensure data is available for this season."
 
         if game_type == 'last':
             last_week = current_year_stats['week'].max()

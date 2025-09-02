@@ -13,9 +13,8 @@ from fantasy_ai.errors import (
     FileOperationError, DataValidationError, wrap_exception
 )
 from fantasy_ai.utils.logging import setup_logging, get_logger
-from scripts.utils import load_config
-from scripts.data_manager import load_available_players, load_player_stats, load_my_team
-from scripts.analysis import calculate_player_value, identify_team_needs, recommend_pickups, find_waiver_gems
+from scripts.utils import load_config, load_available_players, load_player_stats, load_my_team
+from scripts.analysis import calculate_fantasy_points, analyze_team_needs, recommend_pickups, find_waiver_gems
 
 # Set up logging
 setup_logging(level='INFO', format_type='console', log_file='logs/pickup_suggester.log')
@@ -73,7 +72,8 @@ def suggest_pickups() -> int:
         
         # Step 3: Calculate player values
         logger.info("Step 3: Calculating player values")
-        player_value = calculate_player_value(player_stats.copy())
+        scoring_rules = config.get('scoring_rules', {})
+        player_value = calculate_fantasy_points(player_stats.copy(), scoring_rules)
         
         # Step 4: Generate pickup recommendations
         logger.info("Step 4: Generating pickup recommendations")
@@ -83,12 +83,12 @@ def suggest_pickups() -> int:
         logger.info("Step 5: Displaying general recommendations")
         if not recommendations_df.empty:
             print("\n--- Top Waiver Wire Pickups ---")
-            display_df = recommendations_df[['player_display_name', 'position', 'recent_team', 'AvgPoints']].copy()
+            display_df = recommendations_df[['player_display_name', 'position', 'recent_team', 'fantasy_points_ppr']].copy()
             display_df.rename(columns={
                 'player_display_name': 'Player',
                 'position': 'Position',
                 'recent_team': 'Team',
-                'AvgPoints': 'Avg Pts/Game'
+                'fantasy_points_ppr': 'Avg Pts/Game'
             }, inplace=True)
             print(tabulate(display_df, headers='keys', tablefmt='fancy_grid'))
             logger.info(f"Displayed {len(display_df)} pickup recommendations")
