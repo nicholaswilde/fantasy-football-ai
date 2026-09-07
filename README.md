@@ -117,18 +117,23 @@ This task downloads the latest weekly stats, updates your roster, pulls availabl
 
 ---
 
-### :arrow_down: Download Weekly Player Stats
+### :arrow_down: Download Fantasy Data
 
-To download the latest player stats, run the following command:
-
-```bash
-task download_weekly_stats
-```
-
-You can also specify the years to download by passing the `--years` argument:
+Download historical stats, projections, or ADP data using the `download` task:
 
 ```bash
-task download_weekly_stats -- --years 2022 2023
+# Download all data sets
+task download -- all
+
+# Download historical player stats (defaults to years in config.yaml)
+task download -- stats
+
+# Download stats for specific years
+task download -- stats --years 2022 2023
+
+# Download projections or ADP data
+task download -- projections
+task download -- adp
 ```
 
 ### :clipboard: Get Available Players
@@ -156,74 +161,78 @@ To get your team's roster and create the `my_team.md` file, run:
 task get_my_team_roster
 ```
 
-### :video_game: Analyze Last Game
+### :video_game: Analyze Game Matchups
 
-To analyze your team's performance in the last game and get suggestions for improvement, run:
-
-```bash
-task analyze_last_game
-```
-
-### :trophy: Analyze Next Game
-
-To analyze your upcoming fantasy football game against an opponent, run:
+To analyze your team's performance or prepare for your upcoming matchup:
 
 ```bash
-task analyze_next_game
+# Analyze your team's performance in the last game
+task analyze -- last
+
+# Analyze your upcoming fantasy football matchup against an opponent
+task analyze -- next
 ```
 
-### :page_with_curl: Generate Report
+### :page_with_curl: Generate Reports
 
-To generate a comprehensive report with draft recommendations, bye week analysis, and trade suggestions, run:
+To generate comprehensive analysis reports:
 
 ```bash
-task generate_report
+# Generate report in markdown
+task report -- markdown
+
+# View report directly in the terminal
+task report -- terminal
 ```
 
-### :computer: View Report in Terminal
+### :gear: League & Player Analysis
 
-To view the generated report directly in your terminal, run:
-
-```bash
-task generate_terminal_report
-```
-
-### :gear: Get League Settings
-
-To download your league's settings, run the following command:
-
+#### Get League Settings
+Download your league's settings from ESPN:
 ```bash
 task get_league_settings
 ```
 
-### :mag_right: Suggest Pickups
+#### Refresh League Data
+Refresh both league settings and available players in one command:
+```bash
+task refresh
+```
 
-To get pickup recommendations based on available players, their performance, and your team's needs, run:
-
+#### Suggest Pickups
+Get waiver wire pickup recommendations based on available players and team needs:
 ```bash
 task suggest_pickups
 ```
 
-### :handshake: Suggest Trades
-
-To get trade suggestions based on the latest player stats, run:
-
+#### Suggest Trades
+Get trade suggestions based on player performance and stats:
 ```bash
 task suggest_trades
 ```
 
-### :clipboard: Download ADP Data
-
-To download the latest Average Draft Position (ADP) data from Fantasy Football Calculator, run:
-
+#### Compare Fantasy Players
+Compare fantasy football players side-by-side:
 ```bash
-task download_adp
+task compare_fantasy_players
 ```
 
-### :pencil: Live Draft Assistant
+#### Compare Roster Positions
+Compare league roster requirements against your current roster composition:
+```bash
+task compare_roster_positions
+```
 
-To run the interactive live draft assistant, which provides real-time suggestions based on VBD and team needs, run:
+### :pencil: Draft Management
 
+#### Draft Preparation
+Download all necessary draft data and start the draft assistant:
+```bash
+task draft_prep
+```
+
+#### Live Draft Assistant
+Run the interactive live draft assistant:
 ```bash
 task live_draft_assistant
 ```
@@ -234,6 +243,22 @@ To generate an optimal fantasy football lineup based on projected points and you
 
 ```bash
 task lineup_optimizer
+```
+
+### :stethoscope: Diagnostics & Utilities
+
+```bash
+# Check the health of all core systems and APIs
+task health_check
+
+# Show system status and recent activity
+task status
+
+# Create backup of important data files
+task backup_data
+
+# Clean old logs (keeps last 7 days)
+task clean_logs
 ```
 
 ---
