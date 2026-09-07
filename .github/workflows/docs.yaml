@@ -25,6 +25,6 @@ jobs:
         with:
           version: "latest"
       - name: Install Dependencies
-        run: uv pip install mkdocs-material mkdocs-minify-plugin --system
+        run: uv sync --group docs
       - name: Deploy to GitHub Pages
-        run: mkdocs gh-deploy --force
+        run: uv run mkdocs gh-deploy --force

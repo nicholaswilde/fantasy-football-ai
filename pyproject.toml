@@ -35,6 +35,10 @@ exclude = [
 dev = [
     "pytest>=9.1.1",
 ]
+docs = [
+    "mkdocs-material>=9.7.7",
+    "mkdocs-minify-plugin>=0.8.0",
+]
 
 [tool.pytest.ini_options]
 pythonpath = [
