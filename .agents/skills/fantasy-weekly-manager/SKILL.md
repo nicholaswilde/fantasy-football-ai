@@ -22,4 +22,3 @@ When the user asks you to run the weekly update or manage the week:
    - Top 2 waiver wire pickup targets (and who to drop).
    - Any immediate glaring lineup issues (e.g., players on Bye weeks or injured).
    - One high-value trade target to consider.
-4. **Next Steps**: Offer to execute the `fantasy-blog-generator` skill to output a comprehensive blog post summarizing the findings for the week directly to the console.

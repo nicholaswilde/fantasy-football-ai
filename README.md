@@ -79,6 +79,36 @@ To use the Gemini API, you need to configure your API key.
 
 This project uses `Taskfile.yml` to define and run tasks. You can see a list of all available tasks by running `task -l`.
 
+### :calendar: Weekly Management
+
+You can run the weekly workflow either with an AI agent or directly through the terminal:
+
+#### 1. Via AI Agent (`fantasy-weekly-manager` Skill)
+
+If you are using an AI coding assistant (such as Antigravity, Claude Code, or Gemini CLI), you can activate the built-in skill by prompting:
+
+> *"Run the weekly update"* or *"Execute the fantasy-weekly-manager skill"*
+
+The AI agent will:
+- Run `task weekly_update` in the background.
+- Review and evaluate the generated metrics and reports.
+- Present a concise, actionable summary covering:
+  - **Top waiver wire pickup targets** (and who to drop).
+  - **Immediate lineup issues** (bye week conflicts, injured starters).
+  - **High-value trade targets** to consider.
+
+#### 2. Via Terminal Task
+
+To execute the automated pipeline directly from your terminal:
+
+```bash
+task weekly_update
+```
+
+This task downloads the latest weekly stats, updates your roster, pulls available players, generates trade and pickup suggestions, and prints a formatted terminal report.
+
+---
+
 ### :arrow_down: Download Weekly Player Stats
 
 To download the latest player stats, run the following command:
