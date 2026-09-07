@@ -206,12 +206,17 @@ def get_next_opponent_roster(league_year: int) -> tuple[list, str]:
         NetworkError: If there's a network connectivity issue.
     """
     config = load_config()
-    my_team_id = config.get('my_team_id')
+    # Check .env first, then config.yaml
+    my_team_id = os.getenv('TEAM_ID')
+    if not my_team_id:
+        my_team_id = config.get('my_team_id')
+    
     if not my_team_id:
         raise ConfigurationError(
-            "'my_team_id' not found in config.yaml. Please run 'task identify_my_team' to set it.",
+            "'TEAM_ID' not found in .env and 'my_team_id' not found in config.yaml. Please set it.",
             config_key="my_team_id"
         )
+    my_team_id = int(my_team_id)
 
     league_id = os.getenv("LEAGUE_ID")
     espn_s2 = os.getenv("ESPN_S2")

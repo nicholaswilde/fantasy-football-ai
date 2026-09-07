@@ -1,0 +1,33 @@
+name: Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Get tag name
+        id: tag
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        
+      - name: Package Extension
+        run: |
+          # Package the extension directory with the outer folder included
+          python3 -c "import shutil; shutil.make_archive('espn-cookie-extractor-${{ steps.tag.outputs.VERSION }}', 'zip', '.', 'extension')"
+          
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: espn-cookie-extractor-${{ steps.tag.outputs.VERSION }}.zip
+          name: Release ${{ steps.tag.outputs.VERSION }}
+          prerelease: true
+          generate_release_notes: true

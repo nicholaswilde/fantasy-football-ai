@@ -147,12 +147,17 @@ def get_my_team_id() -> int:
         ConfigurationError: If team ID is not configured or invalid
     """
     try:
-        config = load_config()
-        my_team_id = config.get('my_team_id')
+        # First check environment variable
+        env_team_id = os.getenv('TEAM_ID')
+        if env_team_id is not None:
+            my_team_id = env_team_id
+        else:
+            config = load_config()
+            my_team_id = config.get('my_team_id')
         
         if my_team_id is None:
             raise ConfigurationError(
-                "my_team_id not found in config.yaml. Please run 'task identify_my_team' first.",
+                "TEAM_ID not found in .env and my_team_id not found in config.yaml.",
                 config_key="my_team_id",
                 config_file=CONFIG_FILE
             )

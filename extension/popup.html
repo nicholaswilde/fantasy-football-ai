@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body {
+  width: 320px;
+  padding: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  color: #333;
+}
+h2 { margin: 0 0 12px; font-size: 16px; }
+.status { margin-bottom: 12px; }
+.output-area { margin-top: 12px; }
+.output-area label {
+  display: block;
+  font-weight: 500;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.output-area textarea {
+  width: 100%;
+  height: 115px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-family: monospace;
+  font-size: 12px;
+  resize: none;
+}
+button {
+  width: 100%;
+  padding: 8px 16px;
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 12px;
+}
+button:hover { background: #1565c0; }
+.btn-login {
+  background: #c62828;
+}
+.btn-login:hover {
+  background: #b71c1c;
+}
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+  <h2>ESPN Cookie Extractor</h2>
+  <div class="status" id="status_area">Loading cookies...</div>
+  
+  <div id="success_container" class="hidden">
+    <div class="output-area">
+      <label>SWID & ESPN_S2</label>
+      <textarea id="output" readonly></textarea>
+    </div>
+    <button id="copyBtn">Copy to Clipboard</button>
+  </div>
+  
+  <div id="login_container" class="hidden">
+    <button id="loginBtn" class="btn-login">Open ESPN Login</button>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

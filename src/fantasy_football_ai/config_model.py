@@ -35,5 +35,5 @@ class Config(BaseModel):
     league_settings: LeagueSettings
     roster_settings: RosterSettings
     scoring_rules: ScoringRules
-    my_team_id: int
+    my_team_id: int | None = None
     llm_settings: LLMSettings

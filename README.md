@@ -47,9 +47,17 @@ To use the Gemini API, you need to configure your API key.
 
 1.  Obtain an API key from Google AI Studio: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
 
-2. Find your `LEAGUE_ID` from the URL of your ESPN fantasy football league.
+2. Find your `LEAGUE_ID` and `TEAM_ID` from the URL of your ESPN fantasy football league when viewing your team's page (e.g. `leagueId=123456&teamId=7`).
 
-3. Find your `ESPN_S2` and `SWID` cookies from your browser after logging into your ESPN account. See [this discussion](https://github.com/cwendt94/espn-api/discussions/150).
+3. Find your `ESPN_S2` and `SWID` cookies from your browser after logging into your ESPN account. 
+    * **Using the Browser Extension (Recommended):**
+        1. Download `espn-cookie-extractor.zip` from the [Releases](https://github.com/nicholaswilde/fantasy-football-ai/releases) page.
+        2. Extract the ZIP file.
+        3. Open Chrome/Edge and go to `chrome://extensions/`.
+        4. Enable **Developer mode** in the top right corner.
+        5. Click **Load unpacked** and select the extracted `extension` folder.
+        6. Log into your ESPN account and navigate to your specific fantasy team's page. Click the new extension icon to extract your `SWID`, `ESPN_S2`, `LEAGUE_ID`, and `TEAM_ID`, then click **Copy to Clipboard**.
+    * **Manual Method:** See [this discussion](https://github.com/cwendt94/espn-api/discussions/150) for instructions on using developer tools.
 
 4.  Create a `.env` file from the template:
 
