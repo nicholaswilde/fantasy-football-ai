@@ -1,7 +1,3 @@
-import os
-import sys
-import unittest
-
 import pandas as pd
 import pytest
 
@@ -702,6 +698,3 @@ class TestCalculateFantasyPoints:
         df = pd.DataFrame(data)
         df = analysis.calculate_fantasy_points(df, scoring_rules)
         assert df.loc[df['player_name'] == 'ZeroPlayer', 'fantasy_points'].iloc[0] == pytest.approx(0.0)
-
-if __name__ == '__main__':
-    unittest.main()
