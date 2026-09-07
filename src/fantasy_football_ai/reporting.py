@@ -147,7 +147,7 @@ def get_trade_suggestions(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]
 
 def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df, team_name: str = "My Team"):
     """
-    Generates a Markdown blog post from the analysis data for MkDocs Material.
+    Generates a Markdown blog post from the analysis data.
 
     Args:
         draft_recs_df (pd.DataFrame): DataFrame with draft recommendations.

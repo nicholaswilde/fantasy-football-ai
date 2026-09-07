@@ -1,2 +1,0 @@
-# :football: Reports & Analysis :memo:
-

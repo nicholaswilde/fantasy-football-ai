@@ -7,7 +7,6 @@ vars:
   VER: '2.5'
   # GEMINI_MODEL: 'gemini-1.5-flash-latest'
   GEMINI_MODEL: '{{.GEMINI_MODEL | default "gemini-2.5-flash"}}'
-  IMAGE: nicholaswilde/mkdocs-material
   PORT: 8000
   SOURCE: 'source venv/bin/activate'
     
@@ -186,13 +185,6 @@ tasks:
       - |
         uv run python -m fantasy_football_ai.fantasy_football_ai
 
-  serve:
-    desc: Serve the documentation locally using Docker.
-    cmds:
-      - >-
-        docker run --rm -it -p {{ .PORT }}:{{ .PORT}} -v ${PWD}:/docs
-        --platform linux/amd64 {{ .IMAGE }} serve
-        --dev-addr 0.0.0.0:{{ .PORT }} -f ./mkdocs.yml
 
   shell:
     desc: Open a shell inside the Docker container
