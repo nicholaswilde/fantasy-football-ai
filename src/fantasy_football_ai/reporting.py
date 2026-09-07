@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 ################################################################################
 #
 # Script Name: reporting.py
@@ -11,47 +10,43 @@
 #
 ################################################################################
 
-import pandas as pd
+import argparse
 import os
 import sys
 from datetime import datetime
-import argparse
+
+import pandas as pd
 from tabulate import tabulate
-import markdown
-import webbrowser
 
 # Add src to path for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
-
-from fantasy_ai.errors import (
-    FileOperationError,
-    DataValidationError,
-    ConfigurationError,
+from fantasy_football_ai.errors import (
     APIError,
     AuthenticationError,
+    ConfigurationError,
+    DataValidationError,
+    FileOperationError,
     NetworkError,
-    wrap_exception
 )
-from fantasy_ai.utils.logging import setup_logging, get_logger
+from fantasy_football_ai.utils.logging import get_logger, setup_logging
 
 # Set up logging
 setup_logging(level='INFO', format_type='console', log_file='logs/reporting.log')
 logger = get_logger(__name__)
 
 # Assume the analysis.py script is in the same directory and can be imported
-from scripts.analysis import (
-    get_advanced_draft_recommendations,
-    check_bye_week_conflicts,
-    get_trade_recommendations,
+from fantasy_football_ai.analysis import (
+    analyze_team_needs,
     calculate_fantasy_points,
-    analyze_team_needs
+    check_bye_week_conflicts,
+    get_advanced_draft_recommendations,
+    get_trade_recommendations,
 )
-from scripts.data_manager import get_team_roster
-from scripts.analyze_game import analyze_game
-from scripts.compare_roster_positions import compare_roster_positions
-from scripts.utils import load_config
-from scripts.free_agent_analyzer import analyze_free_agents
+from fantasy_football_ai.analyze_game import analyze_game
+from fantasy_football_ai.compare_roster_positions import compare_roster_positions
+from fantasy_football_ai.data_manager import get_team_roster
+from fantasy_football_ai.data_utils import load_config
+from fantasy_football_ai.free_agent_analyzer import analyze_free_agents
+
 
 # Helper function to normalize player names, e.g., 'Patrick Mahomes' to 'P.Mahomes'
 def normalize_player_name(name):
@@ -134,7 +129,7 @@ def get_trade_suggestions(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]
     return sell_high, buy_low
 
 
-def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, output_dir, my_team_raw, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df):
+def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df):
     """
     Generates a Markdown blog post from the analysis data for MkDocs Material.
 
@@ -143,7 +138,6 @@ def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
         bye_conflicts_df (pd.DataFrame): DataFrame with bye week conflicts.
         trade_recs_df (pd.DataFrame): DataFrame with trade recommendations.
         team_analysis_str (str): Markdown string with team analysis.
-        output_dir (str): The directory to save the report in.
         my_team_raw (list): List of player names in my team.
         pickup_suggestions_df (pd.DataFrame): DataFrame with pickup suggestions.
         sell_high_df (pd.DataFrame): DataFrame with sell-high trade suggestions.
@@ -153,14 +147,7 @@ def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
         last_game_analysis_str (str): AI analysis of the last game.
         next_game_analysis_str (str): AI analysis of the next game.
     """
-    current_date = datetime.now().strftime('%Y-%m-%d')
-    output_file = os.path.join(output_dir, f"{current_date}-fantasy-football-analysis.md")
-
-    # Create the blog directory if it doesn't exist
-    try:
-        os.makedirs(output_dir, exist_ok=True)
-    except OSError as e:
-        raise FileOperationError(f"Could not create output directory '{output_dir}': {e}") from e
+    current_date = datetime.now().strftime('%Y-%m-%d')  # noqa: DTZ005
 
     # Correctly formatted YAML Front Matter
     front_matter = f'''---\ntitle: 'Fantasy Football Analysis: {current_date}'
@@ -322,7 +309,7 @@ tags:
                 display_gems_df['Air Yards Share'] = display_gems_df['Air Yards Share'].apply(
                     lambda x: f"{x:.1%}" if pd.notna(x) else "N/A"
                 )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(f"Error formatting percentages: {e}")
         
         # Select and order columns for display
@@ -365,35 +352,9 @@ tags:
         'point_difference': 'Point Difference'
     }, inplace=True)
     report_content += buy_low_display_df.to_markdown(index=False)
-    report_content += "\n"
-
-    try:
-        with open(output_file, "w", encoding='utf-8') as f:
-            f.write(report_content)
-
-        logger.info(f"Blog post successfully generated at '{output_file}'!")
-    except PermissionError as e:
-        raise FileOperationError(
-            f"Permission denied writing report to {output_file}",
-            file_path=output_file,
-            operation="write",
-            original_error=e
-        )
-    except IOError as e:
-        raise FileOperationError(
-            f"IO error writing report to {output_file}: {e}",
-            file_path=output_file,
-            operation="write",
-            original_error=e
-        )
-    except Exception as e:
-        raise wrap_exception(
-            e, FileOperationError,
-            f"Failed to write report to {output_file}",
-            file_path=output_file,
-            operation="write"
-        )
-
+    print(report_content)
+    logger.info("Blog post successfully generated and printed to console!")
+    return report_content
 def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, sell_high_df, buy_low_df, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df):
     """
     Generates a terminal report from the analysis data.
@@ -484,7 +445,7 @@ def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
                 display_gems_df['Air Yards Share'] = display_gems_df['Air Yards Share'].apply(
                     lambda x: f"{x:.1%}" if pd.notna(x) else "N/A"
                 )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(f"Error formatting percentages: {e}")
         
         # Select and order columns for display
@@ -529,22 +490,17 @@ def main():
     parser = argparse.ArgumentParser(description="Generate a fantasy football analysis report.")
     parser.add_argument(
         "report_type",
-        choices=["markdown", "terminal", "html"],
+        choices=["markdown", "terminal"],
         help="The type of report to generate.",
         nargs='?',
         default="terminal"
-    )
-    parser.add_argument(
-        "--output-dir",
-        default="docs/reports/posts",
-        help="The directory to save the report in."
     )
     args = parser.parse_args()
 
     try:
         # Initialize analysis globals (config, scoring rules, etc.)
         config = load_config()
-        analysis_globals = {
+        analysis_globals = {  # noqa: F841
             '_CONFIG': config,
             '_SCORING_RULES': config.get('scoring_rules', {})
         }
@@ -633,20 +589,12 @@ def main():
         next_game_analysis_str = analyze_game(game_type="next")
 
         if args.report_type == "markdown":
-            absolute_output_dir = os.path.abspath(args.output_dir)
-            generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, absolute_output_dir, my_team_raw, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df)
+            generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, my_team_raw, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df)
             print("✓ Markdown report generated successfully!")
         elif args.report_type == "terminal":
             generate_terminal_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, my_team_raw, sell_high_suggestions, buy_low_suggestions, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df)
             print("✓ Terminal report generated successfully!")
-        elif args.report_type == "html":
-            absolute_output_dir = os.path.abspath(args.output_dir)
-            markdown_file = os.path.join(absolute_output_dir, f"{datetime.now().strftime('%Y-%m-%d')}-fantasy-football-analysis.md")
-            html_file = os.path.join(absolute_output_dir, f"{datetime.now().strftime('%Y-%m-%d')}-fantasy-football-analysis.html")
-            generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, absolute_output_dir, my_team_raw, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df)
-            render_markdown_to_html(markdown_file, html_file)
-            webbrowser.open_new_tab(os.path.abspath(html_file))
-            print("✓ HTML report generated and opened successfully!")
+
 
         return 0
 
