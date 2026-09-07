@@ -1,6 +1,6 @@
 # :football: Fantasy Football AI :robot:
 [![task](https://img.shields.io/badge/Task-Enabled-brightgreen?style=for-the-badge&logo=task&logoColor=white)](https://taskfile.dev/#/)
-[![docs](https://img.shields.io/github/actions/workflow/status/nicholaswilde/fantasy-football-ai/docs.yaml?label=docs&style=for-the-badge&branch=main)](https://github.com/nicholaswilde/fantast-football-ai/actions/workflows/docs.yaml)
+[![docs](https://img.shields.io/github/actions/workflow/status/nicholaswilde/fantasy-football-ai/docs.yaml?label=docs&style=for-the-badge&branch=main)](https://github.com/nicholaswilde/fantasy-football-ai/actions/workflows/docs.yaml)
 
 Using AI to dominate your fantasy football league. It's like having a secret weapon, but for nerds.
 
@@ -13,14 +13,21 @@ This project leverages Google's Gemini AI to provide data-driven insights and an
 
 1.  **Initial Setup**
     ```shell
+    # Initialize env files
     task init
-    # Edit .env with your credentials
+    
+    # Edit .env with your credentials!
+    
+    # Bootstrap project using uv (creates virtual environment and installs dependencies)
     task bootstrap
-    # Identity which team is yours
+    
+    # Identify which team is yours and update config.yaml
+    task identify_my_team
     ```
 
 2.  **Weekly Update**
     ```shell
+    # Automates data fetching, waiver wire analysis, trade suggestions, and reporting
     task weekly_update
     ```
 
