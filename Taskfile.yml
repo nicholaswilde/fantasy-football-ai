@@ -248,6 +248,8 @@ tasks:
 
   weekly_update:
     desc: "Run the full weekly update: download stats, update team, get available players, analyze, get suggestions, and generate report."
+    env:
+      LOG_LEVEL: WARNING
     cmds:
       - task: download
         vars: { DATA_TYPE: stats }
