@@ -29,5 +29,5 @@ jobs:
         with:
           files: espn-cookie-extractor-${{ steps.tag.outputs.VERSION }}.zip
           name: Release ${{ steps.tag.outputs.VERSION }}
-          prerelease: true
+          draft: true
           generate_release_notes: true

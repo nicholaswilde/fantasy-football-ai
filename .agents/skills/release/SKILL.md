@@ -7,7 +7,7 @@ description: Automates the versioning, tagging, and deployment process for the p
 Automates the versioning, tagging, and deployment process for the project.
 
 ## Description
-This skill handles the release process by tagging the repository with the next version and pushing the tags. This triggers the GitHub Actions workflow which automatically builds the `espn-cookie-extractor` extension zip and publishes it to GitHub Releases as a pre-release.
+This skill handles the release process by tagging the repository with the next version and pushing the tags. This triggers the GitHub Actions workflow which automatically builds the `espn-cookie-extractor` extension zip and publishes it to GitHub Releases as a draft release.
 
 ## Protocol
 
@@ -16,7 +16,7 @@ This skill handles the release process by tagging the repository with the next v
    ```bash
    rtk git tag <version>
    ```
-3. Push the tags to the remote repository. This will automatically trigger the `.github/workflows/release.yaml` workflow to package the extension and create a pre-release in GitHub Releases.
+3. Push the tags to the remote repository. This will automatically trigger the `.github/workflows/release.yaml` workflow to package the extension and create a draft release in GitHub Releases.
    ```bash
    rtk git push origin main --tags
    ```
