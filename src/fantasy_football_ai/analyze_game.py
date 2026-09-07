@@ -44,13 +44,13 @@ load_dotenv()
 
 # Configuration file path
 CONFIG_FILE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'config.yaml'
+    os.path.dirname(os.path.abspath(__file__)), '..', '..', 'config.yaml'
 )
 PLAYER_STATS_FILE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'player_stats.csv'
+    os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'player_stats.csv'
 )
 MY_TEAM_FILE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'my_team.md'
+    os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'my_team.md'
 )
 
 def load_config() -> dict:  # noqa: F811

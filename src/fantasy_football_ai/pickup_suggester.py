@@ -16,14 +16,14 @@ setup_logging(level='INFO', format_type='console', log_file='logs/pickup_suggest
 logger = get_logger(__name__)
 
 # Define file paths
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 AVAILABLE_PLAYERS_PATH = os.path.join(PROJECT_ROOT, 'data', 'available_players.csv')
 PLAYER_STATS_PATH = os.path.join(PROJECT_ROOT, 'data', 'player_stats.csv')
 MY_TEAM_PATH = os.path.join(PROJECT_ROOT, 'data', 'my_team.md')
 
 # Load configuration from config.yaml
 CONFIG_FILE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'config.yaml'
+    os.path.dirname(os.path.abspath(__file__)), '..', '..', 'config.yaml'
 )
 
 def suggest_pickups() -> int:

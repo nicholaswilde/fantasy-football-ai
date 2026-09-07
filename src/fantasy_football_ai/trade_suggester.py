@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 # Load configuration from config.yaml
 CONFIG_FILE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'config.yaml'
+    os.path.dirname(os.path.abspath(__file__)), '..', '..', 'config.yaml'
 )
 
 def main():

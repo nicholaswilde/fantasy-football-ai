@@ -29,7 +29,7 @@ setup_logging(level='INFO', format_type='console', log_file='logs/free_agent_ana
 logger = get_logger(__name__)
 
 # Define file paths
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PLAYER_STATS_PATH = os.path.join(PROJECT_ROOT, 'data', 'player_stats.csv')
 MY_TEAM_PATH = os.path.join(PROJECT_ROOT, 'data', 'my_team.md')
 

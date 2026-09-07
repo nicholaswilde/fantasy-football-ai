@@ -35,7 +35,7 @@ setup_logging(level='INFO', format_type='console', log_file='logs/get_league_set
 logger = get_logger(__name__)
 
 CONFIG_FILE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'config.yaml'
+    os.path.dirname(os.path.abspath(__file__)), '..', '..', 'config.yaml'
 )
 
 def validate_credentials():

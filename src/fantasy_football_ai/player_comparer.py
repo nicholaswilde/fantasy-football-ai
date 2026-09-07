@@ -35,16 +35,16 @@ load_dotenv()
 
 # Configuration file path
 CONFIG_FILE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'config.yaml'
+    os.path.dirname(os.path.abspath(__file__)), '..', '..', 'config.yaml'
 )
 PLAYER_STATS_FILE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'player_stats.csv'
+    os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'player_stats.csv'
 )
 PLAYER_ADP_FILE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'player_adp.csv'
+    os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'player_adp.csv'
 )
 PLAYER_PROJECTIONS_FILE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'player_projections.csv'
+    os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'player_projections.csv'
 )
 
 def load_config() -> dict:  # noqa: F811

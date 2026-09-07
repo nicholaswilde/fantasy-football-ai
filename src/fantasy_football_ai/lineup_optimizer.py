@@ -29,7 +29,7 @@ setup_logging(level='INFO', format_type='console', log_file='logs/lineup_optimiz
 logger = get_logger(__name__)  # noqa: F821
 
 # Define file paths
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CONFIG_FILE = os.path.join(PROJECT_ROOT, 'config.yaml')
 PLAYER_PROJECTIONS_PATH = os.path.join(PROJECT_ROOT, 'data', 'player_projections.csv')
 MY_TEAM_FILE = os.path.join(PROJECT_ROOT, 'data', 'my_team.md')

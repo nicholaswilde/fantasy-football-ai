@@ -41,7 +41,7 @@ load_dotenv()
 
 # Configuration file path
 CONFIG_FILE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'config.yaml'
+    os.path.dirname(os.path.abspath(__file__)), '..', '..', 'config.yaml'
 )
 
 
@@ -404,7 +404,7 @@ def download_adp_data():
     """
     CONFIG = load_config()
     ADP_URL = f"https://fantasyfootballcalculator.com/api/v1/adp/standard?teams={CONFIG['league_settings']['number_of_teams']}&year={CONFIG['league_settings']['year']}&position=all"
-    ADP_OUTPUT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'player_adp.csv')
+    ADP_OUTPUT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data', 'player_adp.csv')
 
     logger.info(f"Fetching ADP data from {ADP_URL}...")
     try:
@@ -477,7 +477,7 @@ def get_team_roster(roster_file: str = None) -> list:  # noqa: RUF013
     """
     if roster_file is None:
         roster_file = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'my_team.md'
+            os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'my_team.md'
         )
     
     if not os.path.exists(roster_file):

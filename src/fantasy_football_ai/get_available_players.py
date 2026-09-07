@@ -13,7 +13,7 @@
 
 import os
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -168,7 +168,7 @@ def get_available_players(league_id: int, espn_s2: str, swid: str) -> None:
         df.to_csv(output_path, index=False)
 
         mod_time = os.path.getmtime(output_path)
-        dt_string = datetime.now().astimezone().fromtimestamp(mod_time, tz=datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        dt_string = datetime.now().astimezone().fromtimestamp(mod_time, tz=UTC).strftime("%Y-%m-%d %H:%M:%S")
 
         logger.info(f"Successfully saved available players to {output_path}")
         logger.info(f"Last updated: {dt_string}")

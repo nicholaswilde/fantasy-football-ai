@@ -1,8 +1,6 @@
 import pandas as pd
 import pytest
 
-
-
 from fantasy_football_ai import analysis
 
 

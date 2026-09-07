@@ -29,7 +29,7 @@ logger = get_logger(__name__)
 
 # --- Configuration and Data Paths ---
 CONFIG_FILE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'config.yaml'
+    os.path.dirname(os.path.abspath(__file__)), '..', '..', 'config.yaml'
 )
 PLAYER_ADP_PATH = 'data/player_adp.csv'
 PLAYER_PROJECTIONS_PATH = 'data/player_projections.csv'
