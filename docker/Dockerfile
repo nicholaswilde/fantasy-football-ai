@@ -27,14 +27,13 @@ RUN groupadd -g ${PGID} abc && \
     usermod -aG users abc
 
 # Copy the requirements file into the container
-COPY ../requirements.txt .
+COPY ../pyproject.toml ../uv.lock ./
 
-# Install the Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install uv
+RUN pip install uv
 
-# Copy the rest of the project files into the container
-# Create the virtual environment directory
-RUN python3 -m venv venv
+# Install dependencies
+RUN uv sync --frozen
 
 # Copy the rest of the project files into the container
 COPY ../ .

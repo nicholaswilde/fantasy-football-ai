@@ -354,7 +354,7 @@ Existing code continues to work, but should be gradually migrated to use the new
 Run the error handling test suite to verify functionality:
 
 ```bash
-python3 scripts/test_error_handling.py
+uv run scripts/test_error_handling.py
 ```
 
 This test demonstrates:

@@ -348,7 +348,7 @@ def fetch_espn_data(league_id, credentials):
 - **Full Documentation**: `docs/error-handling.md`
 - **API Reference**: See docstrings in `src/fantasy_ai/errors.py`
 - **Examples**: `scripts/*_improved.py` files
-- **Testing**: Run `python3 scripts/test_error_handling.py`
+- **Testing**: Run `uv run scripts/test_error_handling.py`
 
 The error handling system is now production-ready and provides a solid foundation for reliable Fantasy Football AI operations. The architecture is extensible and can be enhanced as new requirements emerge.
 

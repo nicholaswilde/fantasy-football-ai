@@ -11,7 +11,7 @@
 2.  **Install `task`:**
     Follow the instructions at [taskfile.dev/installation](https://taskfile.dev/installation) to install `task`.
 
-3. **Install `python3 & pip`:**
+3. **Install `uv`:**
     Follow the instructions at [python.org](https://www.python.org/downloads/) to install `python3` and `pip`.
 
 ### :gear: Configuration
@@ -69,17 +69,17 @@ To use the OpenAI API, you need to configure your API key.
 
         2. **Activate the virtual environment:**
         ```bash
-        source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+        source .venv/bin/activate  # On Windows use `venv\Scripts\activate`
         ```
     
     === "Manual"
 
         ```shell
-        python3 -m venv venv
-        source venv/bin/activate
-        pip install -r requirements.txt
-        python3 scripts/get_league_settings.py
-        python3 scripts/identify_my_team.py
+        uv venv
+        source .venv/bin/activate
+        uv sync
+        uv run scripts/get_league_settings.py
+        uv run scripts/identify_my_team.py
         ```
 
 ## :gear: Options
@@ -98,7 +98,7 @@ To use the OpenAI API, you need to configure your API key.
     === "Manual"
     
         ```bash
-        python3 scripts/get_league_settings.py
+        uv run scripts/get_league_settings.py
         ```
     
     ```yaml

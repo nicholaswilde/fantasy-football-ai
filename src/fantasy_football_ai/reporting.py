@@ -48,6 +48,22 @@ from fantasy_football_ai.data_utils import load_config
 from fantasy_football_ai.free_agent_analyzer import analyze_free_agents
 
 
+def get_team_name(roster_file: str) -> str:
+    """Extract team name from roster file markdown header or return default."""
+    if os.path.exists(roster_file):
+        try:
+            with open(roster_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    stripped = line.strip()
+                    if stripped.startswith("# My Team:"):
+                        name = stripped.replace("# My Team:", "").strip()
+                        if name:
+                            return name
+        except (OSError, UnicodeDecodeError) as e:
+            logger.debug(f"Could not read team name from {roster_file}: {e}")
+    return "My Team"
+
+
 # Helper function to normalize player names, e.g., 'Patrick Mahomes' to 'P.Mahomes'
 def normalize_player_name(name):
     parts = name.split()
@@ -129,7 +145,7 @@ def get_trade_suggestions(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]
     return sell_high, buy_low
 
 
-def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df):
+def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, sell_high_df, buy_low_df, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df, team_name: str = "My Team"):
     """
     Generates a Markdown blog post from the analysis data for MkDocs Material.
 
@@ -146,6 +162,7 @@ def generate_markdown_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
         roster_mismatch_table (str): Formatted table showing roster mismatches.
         last_game_analysis_str (str): AI analysis of the last game.
         next_game_analysis_str (str): AI analysis of the next game.
+        team_name (str): Name of the current team.
     """
     current_date = datetime.now().strftime('%Y-%m-%d')  # noqa: DTZ005
 
@@ -170,7 +187,7 @@ tags:
     report_content += "---\n\n"
 
     # Team Analysis
-    report_content += "## My Team Analysis\n\n"
+    report_content += f"## My Team Analysis ({team_name})\n\n"
 
     report_content += "### Current Roster\n\n"
     
@@ -260,7 +277,7 @@ tags:
         'bye_week': 'Bye'
     }, inplace=True)
     
-    report_content += trade_recs_display_df.to_markdown(index=False)
+    report_content += trade_recs_display_df.head(5).to_markdown(index=False)
     report_content += "\n"
 
     report_content += "\n\n---\n\n"
@@ -320,7 +337,7 @@ tags:
         # Filter out columns that might not exist in the DataFrame
         display_cols = [col for col in display_cols if col in display_gems_df.columns]
 
-        report_content += display_gems_df[display_cols].to_markdown(index=False)
+        report_content += display_gems_df[display_cols].head(5).to_markdown(index=False)
         report_content += "\n\n"
     else:
         report_content += "No waiver wire gems identified at this time.\n\n"
@@ -339,7 +356,7 @@ tags:
         'avg_fantasy_points': 'Avg Pts (Prev Weeks)',
         'point_difference': 'Point Difference'
     }, inplace=True)
-    report_content += sell_high_display_df.to_markdown(index=False)
+    report_content += sell_high_display_df.head(5).to_markdown(index=False)
     report_content += "\n\n"
     report_content += "### Buy-Low Candidates\n\n"
     buy_low_display_df = buy_low_df[['player_display_name', 'position', 'recent_team', 'fantasy_points', 'avg_fantasy_points', 'point_difference']].copy()
@@ -351,15 +368,15 @@ tags:
         'avg_fantasy_points': 'Avg Pts (Prev Weeks)',
         'point_difference': 'Point Difference'
     }, inplace=True)
-    report_content += buy_low_display_df.to_markdown(index=False)
+    report_content += buy_low_display_df.head(5).to_markdown(index=False)
     print(report_content)
     logger.info("Blog post successfully generated and printed to console!")
     return report_content
-def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, sell_high_df, buy_low_df, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df):
+def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, team_analysis_str, my_team_raw, sell_high_df, buy_low_df, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df, team_name: str = "My Team"):
     """
     Generates a terminal report from the analysis data.
     """
-    print("--- My Team Analysis ---")
+    print(f"--- My Team Analysis ({team_name}) ---")
     print("### Current Roster")
     my_roster_display_df = my_team_df.drop_duplicates(subset=['player_name'])[['player_name', 'recent_team', 'position', 'vor', 'consistency_std_dev']].copy()
     my_roster_display_df.rename(columns={
@@ -418,7 +435,7 @@ def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
         'fantasy_points_ppr': 'PPR Points',
         'bye_week': 'Bye'
     }, inplace=True)
-    print(tabulate(trade_recs_display_df, headers='keys', tablefmt='fancy_grid', showindex=False))
+    print(tabulate(trade_recs_display_df.head(5), headers='keys', tablefmt='fancy_grid', showindex=False))
 
     print("\n--- Waiver Wire Gems (High Usage, Underperforming) ---")
     if not waiver_gems_df.empty:
@@ -456,7 +473,7 @@ def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
         # Filter out columns that might not exist in the DataFrame
         display_cols = [col for col in display_cols if col in display_gems_df.columns]
 
-        print(tabulate(display_gems_df[display_cols], headers='keys', tablefmt='fancy_grid', showindex=False))
+        print(tabulate(display_gems_df[display_cols].head(5), headers='keys', tablefmt='fancy_grid', showindex=False))
     else:
         print("No waiver wire gems identified at this time.")
 
@@ -471,7 +488,7 @@ def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
         'avg_fantasy_points': 'Avg Pts (Prev Weeks)',
         'point_difference': 'Point Difference'
     }, inplace=True)
-    print(tabulate(sell_high_display_df, headers='keys', tablefmt='fancy_grid', showindex=False))
+    print(tabulate(sell_high_display_df.head(5), headers='keys', tablefmt='fancy_grid', showindex=False))
 
     print("\n### Buy-Low Candidates")
     buy_low_display_df = buy_low_df[['player_display_name', 'position', 'recent_team', 'fantasy_points', 'avg_fantasy_points', 'point_difference']].copy()
@@ -483,7 +500,7 @@ def generate_terminal_report(draft_recs_df, bye_conflicts_df, trade_recs_df, tea
         'avg_fantasy_points': 'Avg Pts (Prev Weeks)',
         'point_difference': 'Point Difference'
     }, inplace=True)
-    print(tabulate(buy_low_display_df, headers='keys', tablefmt='fancy_grid', showindex=False))
+    print(tabulate(buy_low_display_df.head(5), headers='keys', tablefmt='fancy_grid', showindex=False))
 
 
 def main():
@@ -579,8 +596,14 @@ def main():
             'Jonathan Taylor', "Ja'Marr Chase", 'Josh Allen', 'Austin Ekeler'
         ]
 
+        # Extract team name
+        team_name = get_team_name(roster_file)
+
         # Roster comparison
-        roster_comparison_table, roster_mismatch_table = compare_roster_positions("config.yaml", roster_file)
+        roster_tablefmt = "github" if args.report_type == "markdown" else "fancy_grid"
+        roster_comparison_table, roster_mismatch_table = compare_roster_positions(
+            "config.yaml", roster_file, tablefmt=roster_tablefmt
+        )
 
         # Analyze last game
         last_game_analysis_str = analyze_game(game_type="last")
@@ -589,10 +612,24 @@ def main():
         next_game_analysis_str = analyze_game(game_type="next")
 
         if args.report_type == "markdown":
-            generate_markdown_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, my_team_raw, sell_high_suggestions, buy_low_suggestions, simulated_roster, simulated_draft_order, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df)
+            generate_markdown_report(
+                draft_recs, bye_conflicts, trade_recs, team_analysis_str,
+                my_team_raw, sell_high_suggestions, buy_low_suggestions,
+                simulated_roster, simulated_draft_order, positional_breakdown_df,
+                roster_comparison_table, roster_mismatch_table,
+                last_game_analysis_str, next_game_analysis_str, my_team_df,
+                waiver_gems_df, team_name=team_name
+            )
             print("✓ Markdown report generated successfully!")
         elif args.report_type == "terminal":
-            generate_terminal_report(draft_recs, bye_conflicts, trade_recs, team_analysis_str, my_team_raw, sell_high_suggestions, buy_low_suggestions, positional_breakdown_df, roster_comparison_table, roster_mismatch_table, last_game_analysis_str, next_game_analysis_str, my_team_df, waiver_gems_df)
+            generate_terminal_report(
+                draft_recs, bye_conflicts, trade_recs, team_analysis_str,
+                my_team_raw, sell_high_suggestions, buy_low_suggestions,
+                positional_breakdown_df, roster_comparison_table,
+                roster_mismatch_table, last_game_analysis_str,
+                next_game_analysis_str, my_team_df, waiver_gems_df,
+                team_name=team_name
+            )
             print("✓ Terminal report generated successfully!")
 
 

@@ -125,3 +125,29 @@ tags:
   - <relevant-tag>
 ---
 ```
+## Tool Integration & Customizations
+- **RTK (Rust Token Killer)**: All commands should be prefixed with `rtk` (e.g., `rtk git status`, `rtk gh issue list`) to optimize token usage. See global rules for details.
+- **Caveman Mode**: Use the local `.agents/skills/caveman*` skills for compressed communication and commit messages when token efficiency is requested (e.g., `/caveman`, `/caveman-commit`).
+- **Codegraph**: Utilize the `codegraph_explore` MCP tool for code exploration and semantic searching.
+- **Context Mode**: Use context-mode tools (`ctx_execute_file`, etc.) for reading/analyzing files and data-heavy commands instead of native tools.
+- **Ponytail**: Switch intensity levels (`ponytail-audit`, etc.) to review code for over-engineering or unnecessary complexity.
+
+## RTK Command Guidelines
+- **Git Operations**: Prefix `git` commands with `rtk` (e.g., `rtk git status`, `rtk git diff`, `rtk git log`, `rtk git commit`, `rtk git push`).
+- **GitHub CLI**: Prefix `gh` commands with `rtk`. You **MUST ALWAYS** pipe every `gh` command to `cat` (e.g., `rtk gh issue list | cat`, `rtk gh issue create ... | cat`) to bypass interactive prompts and pagers. Failure to do so may freeze the terminal execution.
+- **File & Directory Inspection**: Use `rtk ls`, `rtk tree`, `rtk find`, or `rtk read` when listing or reading files to get token-optimized output.
+- **Searching**: Always prefer `rtk rg` (ripgrep) over `grep` for line search pattern matching to save tokens and automatically respect `.gitignore`. Use limiting options like `-m <N>` or `-l` (files with matches) when scanning large codebases.
+- **Build & Test Outputs**: Use `rtk err` or `rtk test` when running build/test commands to filter output to errors/failures only (e.g. `rtk test pio test -e native`).
+
+## What To Do Next
+- When asked "what to do next" (or similar), **always check the remote repository issues first** using `gh`:
+  ```bash
+  rtk gh issue list | cat
+  ```
+
+## Issue Creation
+- When asked to create an issue, use your best guess to determine if it is a new feature or a bug fix.
+- Prefix the issue title with `[feat]: <description>` or `[bug]: <description>`.
+- Add the `enhancement` or `bug` label to the issue accordingly using the `--label` flag with the `gh` command.
+
+- **Python Execution & Dependencies**: Always use the `uv` binary when running Python scripts or commands (e.g., `uv run script.py` instead of `python script.py`). When adding or managing dependencies, always update the `pyproject.toml` and `uv.lock` files using the appropriate `uv` commands (e.g., `uv add <package>`).

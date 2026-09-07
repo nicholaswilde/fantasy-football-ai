@@ -28,3 +28,4 @@ logs/
 settings.txt
 /backups/
 /docs/reports/posts/*.md
+.codegraph

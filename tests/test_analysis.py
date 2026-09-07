@@ -1,15 +1,16 @@
-import unittest
-import pandas as pd
-import sys
 import os
-from unittest.mock import patch
+import sys
+import unittest
 
-# Add the scripts directory to the Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'scripts')))
+import pandas as pd
+import pytest
 
-import analysis
 
-class TestCalculateFantasyPoints(unittest.TestCase):
+
+from fantasy_football_ai import analysis
+
+
+class TestCalculateFantasyPoints:
 
     def test_basic_scoring(self):
         scoring_rules = {
@@ -45,15 +46,15 @@ class TestCalculateFantasyPoints(unittest.TestCase):
         # QB1: (250/25)*1 + 2*4 + 1*(-2) = 10 + 8 - 2 = 16
         # RB1: (100/10)*1 + 1*6 + 1*(-2) = 10 + 6 - 2 = 14
         # WR1: (50/10)*1 + 1*6 + (5/5)*1 = 5 + 6 + 1 = 12
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'QB1', 'fantasy_points'].iloc[0], 16.0)
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'RB1', 'fantasy_points'].iloc[0], 14.0)
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'WR1', 'fantasy_points'].iloc[0], 12.0)
+        assert df.loc[df['player_name'] == 'QB1', 'fantasy_points'].iloc[0] == pytest.approx(16.0)
+        assert df.loc[df['player_name'] == 'RB1', 'fantasy_points'].iloc[0] == pytest.approx(14.0)
+        assert df.loc[df['player_name'] == 'WR1', 'fantasy_points'].iloc[0] == pytest.approx(12.0)
 
     def test_empty_dataframe(self):
         df = pd.DataFrame()
         scoring_rules = {}
         df = analysis.calculate_fantasy_points(df, scoring_rules)
-        self.assertTrue(df.empty)
+        assert df.empty
 
     def test_missing_columns(self):
         scoring_rules = {
@@ -66,7 +67,7 @@ class TestCalculateFantasyPoints(unittest.TestCase):
         }
         df = pd.DataFrame(data)
         df = analysis.calculate_fantasy_points(df, scoring_rules)
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'QB1', 'fantasy_points'].iloc[0], 10.0) # Only passing_yards should count
+        assert df.loc[df['player_name'] == 'QB1', 'fantasy_points'].iloc[0] == pytest.approx(10.0) # Only passing_yards should count
 
     def test_kicking_scoring(self):
         scoring_rules = {
@@ -91,7 +92,7 @@ class TestCalculateFantasyPoints(unittest.TestCase):
         df = pd.DataFrame(data)
         df = analysis.calculate_fantasy_points(df, scoring_rules)
         # Expected points: (1*5) + (1*3) + (1*3) + (1*-1) + (2*1) + (1*-1) = 5 + 3 + 3 - 1 + 2 - 1 = 11
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'K1', 'fantasy_points'].iloc[0], 11.0)
+        assert df.loc[df['player_name'] == 'K1', 'fantasy_points'].iloc[0] == pytest.approx(11.0)
 
     def test_dst_scoring(self):
         scoring_rules = {
@@ -151,7 +152,7 @@ class TestCalculateFantasyPoints(unittest.TestCase):
         # Points Allowed (10 points): 5.0 (from 7-13 range)
         # Yards Allowed (250 yards): 5.0 (from 200-299 range)
         # Total: 1 + 3 + 2 + 2 + 6 + 1 + 1 + 3 + 3 + 5 + 5 = 32.0
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'DST1', 'fantasy_points'].iloc[0], 32.0)
+        assert df.loc[df['player_name'] == 'DST1', 'fantasy_points'].iloc[0] == pytest.approx(32.0)
 
     def test_offensive_bonus_scoring(self):
         scoring_rules = {
@@ -210,7 +211,7 @@ class TestCalculateFantasyPoints(unittest.TestCase):
         #   40 yard receiving TD: 40+ bonus (1.0)
         #   200+ yard receiving game: 4.0
         # Total: 14.0 + 6.0 + 3.0 + 3.0 + 15.0 + 6.0 + 1.0 + 3.0 + 21.0 + 6.0 + 1.0 + 4.0 = 83.0
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'BonusPlayer', 'fantasy_points'].iloc[0], 83.0)
+        assert df.loc[df['player_name'] == 'BonusPlayer', 'fantasy_points'].iloc[0] == pytest.approx(83.0)
 
     def test_dst_points_and_yards_allowed_scoring(self):
         scoring_rules = {
@@ -236,43 +237,43 @@ class TestCalculateFantasyPoints(unittest.TestCase):
         # 6 points allowed (upper bound of 1-6 range)
         data_pa_6 = {'player_name': ['DST_PA_6'], 'position': ['DST'], 'defensivePointsAllowed': [6], 'defensiveYardsAllowed': [0]}
         df_pa_6 = analysis.calculate_fantasy_points(pd.DataFrame(data_pa_6), scoring_rules)
-        self.assertAlmostEqual(df_pa_6.loc[df_pa_6['player_name'] == 'DST_PA_6', 'fantasy_points'].iloc[0], 7.5 + 10.0) # 7.5 + 10.0 (for 0 yards)
+        assert df_pa_6.loc[df_pa_6['player_name'] == 'DST_PA_6', 'fantasy_points'].iloc[0] == pytest.approx(7.5 + 10.0) # 7.5 + 10.0 (for 0 yards)
 
         # 7 points allowed (lower bound of 7-13 range)
         data_pa_7 = {'player_name': ['DST_PA_7'], 'position': ['DST'], 'defensivePointsAllowed': [7], 'defensiveYardsAllowed': [0]}
         df_pa_7 = analysis.calculate_fantasy_points(pd.DataFrame(data_pa_7), scoring_rules)
-        self.assertAlmostEqual(df_pa_7.loc[df_pa_7['player_name'] == 'DST_PA_7', 'fantasy_points'].iloc[0], 5.0 + 10.0)
+        assert df_pa_7.loc[df_pa_7['player_name'] == 'DST_PA_7', 'fantasy_points'].iloc[0] == pytest.approx(5.0 + 10.0)
 
         # 13 points allowed (upper bound of 7-13 range)
         data_pa_13 = {'player_name': ['DST_PA_13'], 'position': ['DST'], 'defensivePointsAllowed': [13], 'defensiveYardsAllowed': [0]}
         df_pa_13 = analysis.calculate_fantasy_points(pd.DataFrame(data_pa_13), scoring_rules)
-        self.assertAlmostEqual(df_pa_13.loc[df_pa_13['player_name'] == 'DST_PA_13', 'fantasy_points'].iloc[0], 5.0 + 10.0)
+        assert df_pa_13.loc[df_pa_13['player_name'] == 'DST_PA_13', 'fantasy_points'].iloc[0] == pytest.approx(5.0 + 10.0)
 
         # 14 points allowed (lower bound of 14-17 range)
         data_pa_14 = {'player_name': ['DST_PA_14'], 'position': ['DST'], 'defensivePointsAllowed': [14], 'defensiveYardsAllowed': [0]}
         df_pa_14 = analysis.calculate_fantasy_points(pd.DataFrame(data_pa_14), scoring_rules)
-        self.assertAlmostEqual(df_pa_14.loc[df_pa_14['player_name'] == 'DST_PA_14', 'fantasy_points'].iloc[0], 2.5 + 10.0)
+        assert df_pa_14.loc[df_pa_14['player_name'] == 'DST_PA_14', 'fantasy_points'].iloc[0] == pytest.approx(2.5 + 10.0)
 
         # Yards Allowed Edge Cases
         # 99 yards allowed (upper bound of <100 range)
         data_ya_99 = {'player_name': ['DST_YA_99'], 'position': ['DST'], 'defensivePointsAllowed': [0], 'defensiveYardsAllowed': [99]}
         df_ya_99 = analysis.calculate_fantasy_points(pd.DataFrame(data_ya_99), scoring_rules)
-        self.assertAlmostEqual(df_ya_99.loc[df_ya_99['player_name'] == 'DST_YA_99', 'fantasy_points'].iloc[0], 10.0 + 10.0)
+        assert df_ya_99.loc[df_ya_99['player_name'] == 'DST_YA_99', 'fantasy_points'].iloc[0] == pytest.approx(10.0 + 10.0)
 
         # 100 yards allowed (lower bound of 100-199 range)
         data_ya_100 = {'player_name': ['DST_YA_100'], 'position': ['DST'], 'defensivePointsAllowed': [0], 'defensiveYardsAllowed': [100]}
         df_ya_100 = analysis.calculate_fantasy_points(pd.DataFrame(data_ya_100), scoring_rules)
-        self.assertAlmostEqual(df_ya_100.loc[df_ya_100['player_name'] == 'DST_YA_100', 'fantasy_points'].iloc[0], 10.0 + 7.5)
+        assert df_ya_100.loc[df_ya_100['player_name'] == 'DST_YA_100', 'fantasy_points'].iloc[0] == pytest.approx(10.0 + 7.5)
 
         # 199 yards allowed (upper bound of 100-199 range)
         data_ya_199 = {'player_name': ['DST_YA_199'], 'position': ['DST'], 'defensivePointsAllowed': [0], 'defensiveYardsAllowed': [199]}
         df_ya_199 = analysis.calculate_fantasy_points(pd.DataFrame(data_ya_199), scoring_rules)
-        self.assertAlmostEqual(df_ya_199.loc[df_ya_199['player_name'] == 'DST_YA_199', 'fantasy_points'].iloc[0], 10.0 + 7.5)
+        assert df_ya_199.loc[df_ya_199['player_name'] == 'DST_YA_199', 'fantasy_points'].iloc[0] == pytest.approx(10.0 + 7.5)
 
         # 200 yards allowed (lower bound of 200-299 range)
         data_ya_200 = {'player_name': ['DST_YA_200'], 'position': ['DST'], 'defensivePointsAllowed': [0], 'defensiveYardsAllowed': [200]}
         df_ya_200 = analysis.calculate_fantasy_points(pd.DataFrame(data_ya_200), scoring_rules)
-        self.assertAlmostEqual(df_ya_200.loc[df_ya_200['player_name'] == 'DST_YA_200', 'fantasy_points'].iloc[0], 10.0 + 5.0)
+        assert df_ya_200.loc[df_ya_200['player_name'] == 'DST_YA_200', 'fantasy_points'].iloc[0] == pytest.approx(10.0 + 5.0)
 
     def test_offensive_yardage_bonus_edge_cases(self):
         scoring_rules = {
@@ -291,64 +292,64 @@ class TestCalculateFantasyPoints(unittest.TestCase):
         # 299 passing yards (below 300-399 bonus)
         data_pass_299 = {'player_name': ['QB_Pass_299'], 'passing_yards': [299]}
         df_pass_299 = analysis.calculate_fantasy_points(pd.DataFrame(data_pass_299), scoring_rules)
-        self.assertAlmostEqual(df_pass_299.loc[df_pass_299['player_name'] == 'QB_Pass_299', 'fantasy_points'].iloc[0], (299/25)*1.0)
+        assert df_pass_299.loc[df_pass_299['player_name'] == 'QB_Pass_299', 'fantasy_points'].iloc[0] == pytest.approx((299/25)*1.0)
 
         # 300 passing yards (lower bound of 300-399 bonus)
         data_pass_300 = {'player_name': ['QB_Pass_300'], 'passing_yards': [300]}
         df_pass_300 = analysis.calculate_fantasy_points(pd.DataFrame(data_pass_300), scoring_rules)
-        self.assertAlmostEqual(df_pass_300.loc[df_pass_300['player_name'] == 'QB_Pass_300', 'fantasy_points'].iloc[0], (300/25)*1.0 + 3.0)
+        assert df_pass_300.loc[df_pass_300['player_name'] == 'QB_Pass_300', 'fantasy_points'].iloc[0] == pytest.approx((300/25)*1.0 + 3.0)
 
         # 399 passing yards (upper bound of 300-399 bonus)
         data_pass_399 = {'player_name': ['QB_Pass_399'], 'passing_yards': [399]}
         df_pass_399 = analysis.calculate_fantasy_points(pd.DataFrame(data_pass_399), scoring_rules)
-        self.assertAlmostEqual(df_pass_399.loc[df_pass_399['player_name'] == 'QB_Pass_399', 'fantasy_points'].iloc[0], (399/25)*1.0 + 3.0)
+        assert df_pass_399.loc[df_pass_399['player_name'] == 'QB_Pass_399', 'fantasy_points'].iloc[0] == pytest.approx((399/25)*1.0 + 3.0)
 
         # 400 passing yards (lower bound of 400+ bonus)
         data_pass_400 = {'player_name': ['QB_Pass_400'], 'passing_yards': [400]}
         df_pass_400 = analysis.calculate_fantasy_points(pd.DataFrame(data_pass_400), scoring_rules)
-        self.assertAlmostEqual(df_pass_400.loc[df_pass_400['player_name'] == 'QB_Pass_400', 'fantasy_points'].iloc[0], (400/25)*1.0 + 4.0)
+        assert df_pass_400.loc[df_pass_400['player_name'] == 'QB_Pass_400', 'fantasy_points'].iloc[0] == pytest.approx((400/25)*1.0 + 4.0)
 
         # Rushing Yardage Edge Cases
         # 99 rushing yards (below 100-199 bonus)
         data_rush_99 = {'player_name': ['RB_Rush_99'], 'rushing_yards': [99]}
         df_rush_99 = analysis.calculate_fantasy_points(pd.DataFrame(data_rush_99), scoring_rules)
-        self.assertAlmostEqual(df_rush_99.loc[df_rush_99['player_name'] == 'RB_Rush_99', 'fantasy_points'].iloc[0], (99/10)*1.0)
+        assert df_rush_99.loc[df_rush_99['player_name'] == 'RB_Rush_99', 'fantasy_points'].iloc[0] == pytest.approx((99/10)*1.0)
 
         # 100 rushing yards (lower bound of 100-199 bonus)
         data_rush_100 = {'player_name': ['RB_Rush_100'], 'rushing_yards': [100]}
         df_rush_100 = analysis.calculate_fantasy_points(pd.DataFrame(data_rush_100), scoring_rules)
-        self.assertAlmostEqual(df_rush_100.loc[df_rush_100['player_name'] == 'RB_Rush_100', 'fantasy_points'].iloc[0], (100/10)*1.0 + 3.0)
+        assert df_rush_100.loc[df_rush_100['player_name'] == 'RB_Rush_100', 'fantasy_points'].iloc[0] == pytest.approx((100/10)*1.0 + 3.0)
 
         # 199 rushing yards (upper bound of 100-199 bonus)
         data_rush_199 = {'player_name': ['RB_Rush_199'], 'rushing_yards': [199]}
         df_rush_199 = analysis.calculate_fantasy_points(pd.DataFrame(data_rush_199), scoring_rules)
-        self.assertAlmostEqual(df_rush_199.loc[df_rush_199['player_name'] == 'RB_Rush_199', 'fantasy_points'].iloc[0], (199/10)*1.0 + 3.0)
+        assert df_rush_199.loc[df_rush_199['player_name'] == 'RB_Rush_199', 'fantasy_points'].iloc[0] == pytest.approx((199/10)*1.0 + 3.0)
 
         # 200 rushing yards (lower bound of 200+ bonus)
         data_rush_200 = {'player_name': ['RB_Rush_200'], 'rushing_yards': [200]}
         df_rush_200 = analysis.calculate_fantasy_points(pd.DataFrame(data_rush_200), scoring_rules)
-        self.assertAlmostEqual(df_rush_200.loc[df_rush_200['player_name'] == 'RB_Rush_200', 'fantasy_points'].iloc[0], (200/10)*1.0 + 4.0)
+        assert df_rush_200.loc[df_rush_200['player_name'] == 'RB_Rush_200', 'fantasy_points'].iloc[0] == pytest.approx((200/10)*1.0 + 4.0)
 
         # Receiving Yardage Edge Cases
         # 99 receiving yards (below 100-199 bonus)
         data_rec_99 = {'player_name': ['WR_Rec_99'], 'receiving_yards': [99]}
         df_rec_99 = analysis.calculate_fantasy_points(pd.DataFrame(data_rec_99), scoring_rules)
-        self.assertAlmostEqual(df_rec_99.loc[df_rec_99['player_name'] == 'WR_Rec_99', 'fantasy_points'].iloc[0], (99/10)*1.0)
+        assert df_rec_99.loc[df_rec_99['player_name'] == 'WR_Rec_99', 'fantasy_points'].iloc[0] == pytest.approx((99/10)*1.0)
 
         # 100 receiving yards (lower bound of 100-199 bonus)
         data_rec_100 = {'player_name': ['WR_Rec_100'], 'receiving_yards': [100]}
         df_rec_100 = analysis.calculate_fantasy_points(pd.DataFrame(data_rec_100), scoring_rules)
-        self.assertAlmostEqual(df_rec_100.loc[df_rec_100['player_name'] == 'WR_Rec_100', 'fantasy_points'].iloc[0], (100/10)*1.0 + 3.0)
+        assert df_rec_100.loc[df_rec_100['player_name'] == 'WR_Rec_100', 'fantasy_points'].iloc[0] == pytest.approx((100/10)*1.0 + 3.0)
 
         # 199 receiving yards (upper bound of 100-199 bonus)
         data_rec_199 = {'player_name': ['WR_Rec_199'], 'receiving_yards': [199]}
         df_rec_199 = analysis.calculate_fantasy_points(pd.DataFrame(data_rec_199), scoring_rules)
-        self.assertAlmostEqual(df_rec_199.loc[df_rec_199['player_name'] == 'WR_Rec_199', 'fantasy_points'].iloc[0], (199/10)*1.0 + 3.0)
+        assert df_rec_199.loc[df_rec_199['player_name'] == 'WR_Rec_199', 'fantasy_points'].iloc[0] == pytest.approx((199/10)*1.0 + 3.0)
 
         # 200 receiving yards (lower bound of 200+ bonus)
         data_rec_200 = {'player_name': ['WR_Rec_200'], 'receiving_yards': [200]}
         df_rec_200 = analysis.calculate_fantasy_points(pd.DataFrame(data_rec_200), scoring_rules)
-        self.assertAlmostEqual(df_rec_200.loc[df_rec_200['player_name'] == 'WR_Rec_200', 'fantasy_points'].iloc[0], (200/10)*1.0 + 4.0)
+        assert df_rec_200.loc[df_rec_200['player_name'] == 'WR_Rec_200', 'fantasy_points'].iloc[0] == pytest.approx((200/10)*1.0 + 4.0)
 
     def test_fumbles_scoring(self):
         scoring_rules = {
@@ -367,9 +368,9 @@ class TestCalculateFantasyPoints(unittest.TestCase):
         # The calculate_fantasy_points function sums rushing_fumbles_lost and receiving_fumbles_lost
         # It does not explicitly handle 'passing_fumbles_lost' in the current implementation.
         # So, QB_Fumble should have 0 points from fumbles.
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'RB_Fumble', 'fantasy_points'].iloc[0], -2.0)
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'WR_Fumble', 'fantasy_points'].iloc[0], -2.0)
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'QB_Fumble', 'fantasy_points'].iloc[0], 0.0)
+        assert df.loc[df['player_name'] == 'RB_Fumble', 'fantasy_points'].iloc[0] == pytest.approx(-2.0)
+        assert df.loc[df['player_name'] == 'WR_Fumble', 'fantasy_points'].iloc[0] == pytest.approx(-2.0)
+        assert df.loc[df['player_name'] == 'QB_Fumble', 'fantasy_points'].iloc[0] == pytest.approx(0.0)
 
     def test_two_point_conversions(self):
         scoring_rules = {
@@ -387,9 +388,9 @@ class TestCalculateFantasyPoints(unittest.TestCase):
         df = pd.DataFrame(data)
         df = analysis.calculate_fantasy_points(df, scoring_rules)
 
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'QB_2pt', 'fantasy_points'].iloc[0], 2.0)
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'RB_2pt', 'fantasy_points'].iloc[0], 2.0)
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'WR_2pt', 'fantasy_points'].iloc[0], 2.0)
+        assert df.loc[df['player_name'] == 'QB_2pt', 'fantasy_points'].iloc[0] == pytest.approx(2.0)
+        assert df.loc[df['player_name'] == 'RB_2pt', 'fantasy_points'].iloc[0] == pytest.approx(2.0)
+        assert df.loc[df['player_name'] == 'WR_2pt', 'fantasy_points'].iloc[0] == pytest.approx(2.0)
 
     def test_special_teams_td_scoring(self):
         scoring_rules = {
@@ -418,8 +419,8 @@ class TestCalculateFantasyPoints(unittest.TestCase):
         # It does not differentiate between different types of special teams TDs.
         # So, ST_Player1 should get 6.0 points for special_teams_tds.
         # ST_Player2 should get 0 points from special_teams_tds, but 3.0 from 2pt_return.
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'ST_Player1', 'fantasy_points'].iloc[0], 6.0)
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'ST_Player2', 'fantasy_points'].iloc[0], 3.0)
+        assert df.loc[df['player_name'] == 'ST_Player1', 'fantasy_points'].iloc[0] == pytest.approx(6.0)
+        assert df.loc[df['player_name'] == 'ST_Player2', 'fantasy_points'].iloc[0] == pytest.approx(3.0)
 
     def test_combined_player_stats(self):
         scoring_rules = {
@@ -497,7 +498,7 @@ class TestCalculateFantasyPoints(unittest.TestCase):
         #   1 special teams TD: 1 * 6.0 = 6.0
         #   1 2pt return: 1 * 3.0 = 3.0
         # Total: 10.0 + 4.0 - 2.0 + 2.0 + 3.0 + 7.5 + 6.0 + 1.0 + 12.0 + 6.0 + 1.2 + 1.0 - 2.0 + 6.0 + 3.0 = 61.7
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'HybridPlayer', 'fantasy_points'].iloc[0], 61.7)
+        assert df.loc[df['player_name'] == 'HybridPlayer', 'fantasy_points'].iloc[0] == pytest.approx(61.7)
 
     def test_negative_scoring_scenarios(self):
         scoring_rules = {
@@ -525,7 +526,7 @@ class TestCalculateFantasyPoints(unittest.TestCase):
         df_off_neg = pd.DataFrame(data_off_neg)
         df_off_neg = analysis.calculate_fantasy_points(df_off_neg, scoring_rules)
         # Expected: (3 * -3.0) + (3 * -2.0) = -9.0 - 6.0 = -15.0
-        self.assertAlmostEqual(df_off_neg.loc[df_off_neg['player_name'] == 'OffensiveNegative', 'fantasy_points'].iloc[0], -15.0)
+        assert df_off_neg.loc[df_off_neg['player_name'] == 'OffensiveNegative', 'fantasy_points'].iloc[0] == pytest.approx(-15.0)
 
         # Scenario 2: Kicker with missed kicks
         data_k_neg = {
@@ -537,7 +538,7 @@ class TestCalculateFantasyPoints(unittest.TestCase):
         df_k_neg = pd.DataFrame(data_k_neg)
         df_k_neg = analysis.calculate_fantasy_points(df_k_neg, scoring_rules)
         # Expected: (2 * -1.0) + (3 * -1.0) = -2.0 - 3.0 = -5.0
-        self.assertAlmostEqual(df_k_neg.loc[df_k_neg['player_name'] == 'KickerNegative', 'fantasy_points'].iloc[0], -5.0)
+        assert df_k_neg.loc[df_k_neg['player_name'] == 'KickerNegative', 'fantasy_points'].iloc[0] == pytest.approx(-5.0)
 
         # Scenario 3: DST with high points and yards allowed
         data_dst_neg = {
@@ -549,10 +550,10 @@ class TestCalculateFantasyPoints(unittest.TestCase):
         df_dst_neg = pd.DataFrame(data_dst_neg)
         df_dst_neg = analysis.calculate_fantasy_points(df_dst_neg, scoring_rules)
         # Expected: -10.0 (46+ points allowed) + -25.0 (550+ yards allowed) = -35.0
-        self.assertAlmostEqual(df_dst_neg.loc[df_dst_neg['player_name'] == 'DSTNegative', 'fantasy_points'].iloc[0], -35.0)
+        assert df_dst_neg.loc[df_dst_neg['player_name'] == 'DSTNegative', 'fantasy_points'].iloc[0] == pytest.approx(-35.0)
 
     def test_get_advanced_draft_recommendations(self):
-        scoring_rules = {
+        scoring_rules = {  # noqa: F841
             'every_25_passing_yards': 1.0,
             'td_pass': 4.0,
             'every_10_rushing_yards': 1.0,
@@ -604,24 +605,24 @@ class TestCalculateFantasyPoints(unittest.TestCase):
         # RB1: [16, 18] -> std dev = 1.4142135623730951
         # WR1: [20, 11.6] -> std dev = 5.93969690997963
 
-        self.assertFalse(recommendations_df.empty)
-        self.assertTrue('vor' in recommendations_df.columns)
-        self.assertTrue('consistency_std_dev' in recommendations_df.columns)
+        assert not recommendations_df.empty
+        assert 'vor' in recommendations_df.columns
+        assert 'consistency_std_dev' in recommendations_df.columns
 
         # Verify VOR values
-        self.assertAlmostEqual(recommendations_df.loc[recommendations_df['player_name'] == 'QB1', 'vor'].iloc[0], 5.0)
-        self.assertAlmostEqual(recommendations_df.loc[recommendations_df['player_name'] == 'QB2', 'vor'].iloc[0], -5.0)
-        self.assertAlmostEqual(recommendations_df.loc[recommendations_df['player_name'] == 'RB1', 'vor'].iloc[0], 0.0)
-        self.assertAlmostEqual(recommendations_df.loc[recommendations_df['player_name'] == 'WR1', 'vor'].iloc[0], 0.0)
+        assert recommendations_df.loc[recommendations_df['player_name'] == 'QB1', 'vor'].iloc[0] == pytest.approx(5.0)
+        assert recommendations_df.loc[recommendations_df['player_name'] == 'QB2', 'vor'].iloc[0] == pytest.approx(-5.0)
+        assert recommendations_df.loc[recommendations_df['player_name'] == 'RB1', 'vor'].iloc[0] == pytest.approx(0.0)
+        assert recommendations_df.loc[recommendations_df['player_name'] == 'WR1', 'vor'].iloc[0] == pytest.approx(0.0)
 
         # Verify consistency values
-        self.assertAlmostEqual(recommendations_df.loc[recommendations_df['player_name'] == 'QB1', 'consistency_std_dev'].iloc[0], 1.4142135623730951, places=5)
-        self.assertAlmostEqual(recommendations_df.loc[recommendations_df['player_name'] == 'QB2', 'consistency_std_dev'].iloc[0], 1.4142135623730951, places=5)
-        self.assertAlmostEqual(recommendations_df.loc[recommendations_df['player_name'] == 'RB1', 'consistency_std_dev'].iloc[0], 1.4142135623730951, places=5)
-        self.assertAlmostEqual(recommendations_df.loc[recommendations_df['player_name'] == 'WR1', 'consistency_std_dev'].iloc[0], 5.93969690997963, places=5)
+        assert recommendations_df.loc[recommendations_df['player_name'] == 'QB1', 'consistency_std_dev'].iloc[0], 1.4142135623730951 == pytest.approx(places=5)
+        assert recommendations_df.loc[recommendations_df['player_name'] == 'QB2', 'consistency_std_dev'].iloc[0], 1.4142135623730951 == pytest.approx(places=5)
+        assert recommendations_df.loc[recommendations_df['player_name'] == 'RB1', 'consistency_std_dev'].iloc[0], 1.4142135623730951 == pytest.approx(places=5)
+        assert recommendations_df.loc[recommendations_df['player_name'] == 'WR1', 'consistency_std_dev'].iloc[0], 5.93969690997963 == pytest.approx(places=5)
 
         # Verify sorting (highest VOR first)
-        self.assertEqual(recommendations_df.iloc[0]['player_name'], 'QB1')
+        assert recommendations_df.iloc[0]['player_name'] == 'QB1'
 
     def test_zero_stats_player(self):
         scoring_rules = {
@@ -700,7 +701,7 @@ class TestCalculateFantasyPoints(unittest.TestCase):
         }
         df = pd.DataFrame(data)
         df = analysis.calculate_fantasy_points(df, scoring_rules)
-        self.assertAlmostEqual(df.loc[df['player_name'] == 'ZeroPlayer', 'fantasy_points'].iloc[0], 0.0)
+        assert df.loc[df['player_name'] == 'ZeroPlayer', 'fantasy_points'].iloc[0] == pytest.approx(0.0)
 
 if __name__ == '__main__':
     unittest.main()

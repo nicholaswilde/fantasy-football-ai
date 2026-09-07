@@ -9,7 +9,7 @@ This skill automates the creation of a MkDocs Material blog post documenting the
 
 ## Instructions
 When invoked to generate a blog post:
-1. **Data Collection**: Ensure the latest reports have been generated (e.g., by checking `task report` output or the `reports/` directory).
+1. **Data Collection**: Ensure the latest analysis has been generated (e.g., by checking `task report` output).
 2. **Draft Content**: Write a comprehensive, engaging blog post analyzing the current state of the fantasy league.
 3. **Front Matter**: Prepend the content with the exact YAML front matter template defined in `AGENTS.md`:
    ```yaml

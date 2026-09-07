@@ -16,13 +16,13 @@ tasks:
     desc: "Analyze a game. Usage: task analyze -- [last|next]"
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/analyze_game.py {{.CLI_ARGS}}
+        uv run python -m fantasy_football_ai.analyze_game {{.CLI_ARGS}}
 
   bootstrap:
     desc: Bootstrap the project
     preconditions:
       - test -f .env
-      - sh: 'python3 --version'
+      - sh: 'uv run python --version'
         msg: 'Python 3 is not installed or not in your PATH. Please install it to run this task.'
     cmds:
       - python3 -m venv venv
@@ -39,13 +39,13 @@ tasks:
     desc: Compare fantasy football players side-by-side
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/player_comparer.py
+        uv run python -m fantasy_football_ai.player_comparer
 
   compare_roster_positions:
     desc: Compare roster settings with actual team composition
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/compare_roster_positions.py
+        uv run python -m fantasy_football_ai.compare_roster_positions
 
   decrypt:
     desc: Decrypt secret and environment files using sops.
@@ -62,7 +62,7 @@ tasks:
     desc: Install Python dependencies
     cmds:
       - |
-        {{ .SOURCE }} && pip install -r requirements.txt
+        uv sync
 
   docker:
     desc: Run a task inside the Docker container
@@ -80,7 +80,7 @@ tasks:
     desc: "Download data. Usage: task download -- [all|stats|projections|adp]"
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/data_manager.py {{.CLI_ARGS}}
+        uv run python -m fantasy_football_ai.data_manager {{.CLI_ARGS}}
 
   encrypt:
     desc: Encrypt secret and environment files using sops.
@@ -98,49 +98,55 @@ tasks:
     desc: Run Gemini with the gemini-2.5-flash model.
     cmds:
       - |
-        {{ .SOURCE }} && gemini -m gemini-{{ .VER }}-flash
+        uv run gemini -m gemini-{{ .VER }}-flash
 
   report:
     desc: "Generate a report. Usage: task report -- [markdown|terminal|html]"
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/reporting.py {{.CLI_ARGS}}
+        uv run python -m fantasy_football_ai.reporting {{.CLI_ARGS}}
 
   glite:
     desc: Run Gemini with the gemini-2.5-flash-lite model.
     cmds:
       - |
-        {{ .SOURCE }} && gemini -m gemini-{{ .VER }}-flash-lite
+        uv run gemini -m gemini-{{ .VER }}-flash-lite
 
   gpro:
     desc: 'Run Gemini with the gemini-{{ .VER }}-pro model.'
     cmds:
       - |
-        {{ .SOURCE }} && gemini -m gemini-{{ .VER }}-pro
+        uv run gemini -m gemini-{{ .VER }}-pro
 
   get_available_players:
     desc: Get available players from your league and create available_players.csv
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/get_available_players.py
+        uv run python -m fantasy_football_ai.get_available_players
       
   get_league_settings:
     desc: Get your league settings
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/get_league_settings.py
+        uv run python -m fantasy_football_ai.get_league_settings
 
   get_my_team_roster:
     desc: Get your fantasy football team and create my_team.md (with enhanced error handling)
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/get_my_team_improved.py
+        uv run python -m fantasy_football_ai.get_my_team_improved
 
   identify_my_team:
     desc: Identify your team and save it to config.yaml
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/identify_my_team.py
+        uv run python -m fantasy_football_ai.identify_my_team
+
+  refresh:
+    desc: Refresh league settings and available players from ESPN
+    cmds:
+      - uv run python -m fantasy_football_ai.get_league_settings
+      - uv run python -m fantasy_football_ai.get_available_players
 
   init:
     desc: Initialize the project by creating environment file from templates.
@@ -153,19 +159,19 @@ tasks:
   lint:
     desc: "Lint the code with flake8"
     cmds:
-      - flake8 .
+      - uv run ruff check .
 
   lineup_optimizer:
     desc: Generate an optimal fantasy football lineup
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/lineup_optimizer.py
+        uv run python -m fantasy_football_ai.lineup_optimizer
 
   live_draft_assistant:
     desc: Run the interactive live draft assistant
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/draft_strategizer.py
+        uv run python -m fantasy_football_ai.draft_strategizer
 
   
 
@@ -178,7 +184,7 @@ tasks:
     desc: Interact with the Fantasy Football AI assistant.
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/fantasy_football_ai.py
+        uv run python -m fantasy_football_ai.fantasy_football_ai
 
   serve:
     desc: Serve the documentation locally using Docker.
@@ -197,38 +203,37 @@ tasks:
     desc: Get pickup recommendations based on available players and team needs
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/pickup_suggester.py
+        uv run python -m fantasy_football_ai.pickup_suggester
 
   suggest_trades:
     desc: Get trade suggestions based on player stats
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/trade_suggester.py
+        uv run python -m fantasy_football_ai.trade_suggester
 
   test:
     desc: Run unit tests
     cmds:
       - |
-        {{ .SOURCE }} && python3 -m unittest discover tests
+        uv run pytest
 
   test_error_handling:
     desc: Test the error handling system (comprehensive test suite)
     cmds:
       - |
-        {{ .SOURCE }} && python3 scripts/test_error_handling.py
+        uv run python -m fantasy_football_ai.test_error_handling
 
   test:all:
     desc: "Test all python scripts in the scripts/ directory for syntax errors."
     cmds:
-      - for f in scripts/*.py; do echo "Testing $f"; python3 -m py_compile "$f"; done
+      - for f in scripts/*.py; do echo "Testing $f"; uv run python -m py_compile "$f"; done
 
   health_check:
     desc: Check the health of all core systems and APIs
     cmds:
       - |
-        {{ .SOURCE }} && python3 -c "
-        import sys; sys.path.insert(0, 'src')
-        from fantasy_ai.utils.logging import setup_logging, get_logger
+        uv run python -c "
+        from fantasy_football_ai.utils.logging import setup_logging, get_logger
         setup_logging(level='INFO')
         logger = get_logger('health_check')
         logger.info('🏥 Health Check: All systems operational')
